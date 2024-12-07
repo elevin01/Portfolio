@@ -17,6 +17,9 @@
                 <li><a href="#contact">Contact</a></li>
                 <li><a href="https://elevin01.github.io/HireMe-/" target="_blank">Please?</a></li>
             </ul>
+            <button id="mode-toggle" class="mode-toggle">
+                <img id="toggle-icon" src="images/moon.svg" alt="Toggle Theme">
+            </button>
         </nav>
     </header>
     <section id="about">
@@ -41,7 +44,7 @@
                 to its potential to revolutionize data management in education.</p>
             <ul>
                 <li>Led project management and handled client communications, ensuring requirements were understood and met.</li>
-                <li>Critical features Implemented:
+                <li>Critical features implemented:
                     <ul>
                         <li><strong>Checklist Page:</strong> Fixed a counter bug, enhanced section creation functionality, and integrated a rating system.</li>
                         <li><strong>Student Profile Page:</strong> Designed and implemented dynamic profiles with modular data grouping capabilities.</li>
@@ -56,12 +59,12 @@
                 <h4>Screenshots</h4>
                 <div class="image-row">
                     <div class="image-container">
-                        <img src="images/checklist_page.PNG" alt="Student Profile Screen">
-                        <figcaption>Student Profile Screen</figcaption>
+                        <img src="images/checklist_page.PNG" alt="Checklist Page">
+                        <figcaption>Checklist Page</figcaption>
                     </div>
                     <div class="image-container">
-                        <img src="images/student_profile.PNG" alt="Observation Checklist Page">
-                        <figcaption>Observation Checklist Page</figcaption>
+                        <img src="images/student_profile.PNG" alt="Student Profile Page">
+                        <figcaption>Student Profile Page</figcaption>
                     </div>
                     <div class="image-container">
                         <img src="images/home_screen.PNG" alt="Home Screen">
@@ -69,108 +72,10 @@
                     </div>
                 </div>
             </div>
-            
-            <p><strong>Links:</strong></p>
-    <ul>
-        <li><a href="https://www.figma.com/design/pqn4Yp57LnA5tRfVbVVe58/DOR?node-id=5-19&t=TeNGgJr6kRC5P4aV-1" target="_blank">View Figma Design</a></li>
-    </ul>
         </div>
-        <div class="project">
-            <h3>Matrix Calculator</h3>
-            <p><strong>Role:</strong> Developer</p>
-            <p><strong>Summary:</strong> This project was aimed at engineering a high-performance iOS app for advanced matrix operations, optimized for speed and usability.
-                Leveraged C++ for computation and Objective-C++ to seamlessly bridge the backend with Swift-based UI components.</p>
-            <ul>
-                <li>Implemented Gauss and Gauss-Jordan elimination methods, achieving up to 50% faster computation times.</li>
-                <li>Bridged C++ with Swift using Objective-C++ to integrate a robust backend seamlessly with the UI.</li>
-                <li>Designed and developed dynamic UI components for matrix operation results and interactive input handling.</li>
-            </ul>
-            <div class="screenshots">
-                <h4>Screenshots</h4>
-                <div class="image-row">
-                    <div class="image-container">
-                        <img src="images/matrix_home.png" alt="Matrix Calculator Home Screen">
-                        <figcaption>Home Screen</figcaption>
-                    </div>
-                    <div class="image-container">
-                        <img src="images/matrix_result.png" alt="Matrix Calculator Result Screen">
-                        <figcaption>Result Screen</figcaption>
-                    </div>
-                </div>
-            </div>
-            
-            <p><strong>Links:</strong></p>
-            <ul>
-                <li><a href="https://www.figma.com/design/1XfQEsHopPjwN5zXA8ZKdD/NumComp-Project?t=55tMDvTMjGb1WVKr-1" target="_blank">View Figma Design</a></li>
-            </ul>
-        </div>        
-        <div class="project">
-            <h3>Detecting Inconsistencies in the Modeling of SNOMED CT</h3>
-            <p><strong>Role:</strong> Researcher and Developer</p>
-            <p><strong>Summary:</strong> This project aimed to identify and address inconsistencies in SNOMED CT, the world's most sophisticated clinical terminology database, using machine learning, lexical similarity analysis, and advanced database management techniques.</p>
-            <ul>
-                <li>
-                    Designed and implemented a methodology to identify inconsistencies in SNOMED CT by leveraging sibling concepts and attribute modeling.
-                </li>
-                <li>
-                    Developed and utilized a Word2Vec-based lexical similarity algorithm to calculate semantic similarities between sibling terms, achieving a similarity score threshold of 0.9.
-                </li>
-                <li>
-                    Created database pipelines to manage and query SNOMED CT concepts efficiently, ensuring seamless integration of term data for analysis.
-                </li>
-                <li>
-                    Automated data processing and validation using Python scripts:
-                    <ul>
-                        <li><strong>Data Retrieval:</strong> Extracted and processed concepts based on tags such as "disorder," "procedure," and "findings."</li>
-                        <li><strong>Database Management:</strong> Implemented robust functions to validate files, populate tables, and query attribute counts and relationships.</li>
-                        <li><strong>Inconsistency Detection:</strong> Flagged concepts with attribute discrepancies for manual audits, significantly reducing the workload for experts.</li>
-                    </ul>
-                </li>
-                <li>
-                    Results:
-                    <ul>
-                        <li>Identified 70 sets of lexically similar terms from 150 input terms, with 20 flagged for inconsistencies.</li>
-                        <li>Demonstrated the potential of computational techniques to streamline manual audits and enhance SNOMED CT's accuracy.</li>
-                    </ul>
-                </li>
-            </ul>
-            <div class="screenshots">
-                <h4>Screenshots</h4>
-                <div class="image-row">
-                    <div class="image-container">
-                        <img src="images/fig4.png" alt="Similarity Results Visualization">
-                        <figcaption>Similarity Results Visualization</figcaption>
-                    </div>
-                    <div class="image-container">
-                        <img src="images/fig5.png" alt="Inconsistency Audit Results">
-                        <figcaption>Inconsistency Audit Results</figcaption>
-                    </div>
-                </div>
-            </div>
-            <p><strong>Key Features:</strong></p>
-            <ul>
-                <li>
-                    <strong>Word2Vec Algorithm:</strong> Utilized a two-layer neural network to map words to distinct vectors, leveraging a corpus of PubMed and Wikipedia articles for high-context accuracy.
-                </li>
-                <li>
-                    <strong>Database Functions:</strong> Implemented efficient query and data manipulation methods, including:
-                    <ul>
-                        <li>Validation of file headers and data integrity.</li>
-                        <li>Dynamic retrieval of parent-child relationships for concepts.</li>
-                        <li>Automated population of database tables with tagged concept data.</li>
-                    </ul>
-                </li>
-                <li>
-                    <strong>Lexical Analysis:</strong> Compared sibling concepts using cosine similarity, highlighting attribute discrepancies for further analysis.
-                </li>
-            </ul>
-            <p><strong>Links:</strong></p>
-            <ul>
-                <li><a href="https://github.com/elevin01/Summer-Research?tab=readme-ov-file" target="_blank">View Project Code on GitHub</a></li>
-            </ul>
-        </div>
-           
+        <!-- Add other projects similarly -->
     </section>
+
     <section id="skills">
         <h2>Skills</h2>
         <ul>
@@ -183,15 +88,43 @@
             <li><strong>Tools & Frameworks:</strong> Docker, Kubernetes, Firebase, Git, Power Apps, Power BI, Power Automate</li>
             <li><strong>Testing:</strong> XCTest, Unit Testing, QA Testing</li>
             <li><strong>UI/UX Design:</strong> Figma, Agile Design Prototyping</li>
-            <li><strong>Soft Skills:</strong> Leadership, Collaboration, Client Communication, Problem-Solving, Critical Thinking</li>
         </ul>
-    </section>    
+    </section>
+
     <section id="contact">
         <h2>Contact</h2>
-        <p>Feel free to reach out to me at <a href="mailto:emiltlevin@gamil.com">emiltlevin@gmail.com</a>.</p>
+        <p>Feel free to reach out to me at <a href="mailto:emiltlevin@gmail.com">emiltlevin@gmail.com</a>.</p>
     </section>
+
     <footer>
-        <p>&copy; 2024 My Portfolio</p>
+        <p>&copy; 2024 Emil Levin</p>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modeToggle = document.getElementById('mode-toggle');
+            const toggleIcon = document.getElementById('toggle-icon');
+            const body = document.body;
+
+            // Set initial theme from localStorage or default to dark mode
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            body.classList.add(currentTheme + '-mode');
+            toggleIcon.src = currentTheme === 'dark' ? 'images/moon.svg' : 'images/sun.svg';
+
+            // Toggle theme on button click
+            modeToggle.addEventListener('click', () => {
+                if (body.classList.contains('dark-mode')) {
+                    body.classList.replace('dark-mode', 'light-mode');
+                    toggleIcon.src = 'images/sun.svg';
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.classList.replace('light-mode', 'dark-mode');
+                    toggleIcon.src = 'images/moon.svg';
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
+
