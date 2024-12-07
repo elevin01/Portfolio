@@ -42,6 +42,33 @@ section {
 .project h3 {
     color: #00aaff;
 }
+.image-row {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.image-container {
+    text-align: center;
+    flex: 1;
+}
+
+.image-container img {
+    width: 100%;
+    max-width: 200px; /* Set a maximum width for the images */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.image-container figcaption {
+    font-size: 0.9rem;
+    color: #cccccc;
+    margin-top: 5px;
+}
+
 .screenshots img {
     width: 100%;
     max-width: 400px;

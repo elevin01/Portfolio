@@ -43,13 +43,22 @@
             </ul>
             <div class="screenshots">
                 <h4>Screenshots</h4>
-                <img src="images/student_profile.PNG" alt="Student Profile Screen">
-                <figcaption>Student Profile Screen</figcaption>
-                <img src="images/checklist_page.PNG" alt="Observation Checklist Page">
-                <figcaption>Observation Checklist Page</figcaption>
-                <img src="images/home_screen.PNG" alt="Home Screen">
-                <figcaption>Home Screen for Student Account Creation</figcaption>
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="images/student_profile.PNG" alt="Student Profile Screen">
+                        <figcaption>Student Profile Screen</figcaption>
+                    </div>
+                    <div class="image-container">
+                        <img src="images/checklist_page.PNG" alt="Observation Checklist Page">
+                        <figcaption>Observation Checklist Page</figcaption>
+                    </div>
+                    <div class="image-container">
+                        <img src="images/home_screen.PNG" alt="Home Screen">
+                        <figcaption>Home Screen</figcaption>
+                    </div>
+                </div>
             </div>
+            
             <p><strong>Links:</strong></p>
     <ul>
         <li><a href="https://www.figma.com/design/pqn4Yp57LnA5tRfVbVVe58/DOR?node-id=5-19&t=TeNGgJr6kRC5P4aV-1" target="_blank">View Figma Design</a></li>
@@ -66,38 +75,105 @@
             </ul>
             <div class="screenshots">
                 <h4>Screenshots</h4>
-                <img src="images/matrix_home.png" alt="Matrix Calculator Home Screen">
-                <figcaption>Home Screen</figcaption>
-                <img src="images/matrix_result.png" alt="Matrix Calculator Result Screen">
-                <figcaption>Result Screen</figcaption>
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="images/matrix_home.png" alt="Matrix Calculator Home Screen">
+                        <figcaption>Home Screen</figcaption>
+                    </div>
+                    <div class="image-container">
+                        <img src="images/matrix_result.png" alt="Matrix Calculator Result Screen">
+                        <figcaption>Result Screen</figcaption>
+                    </div>
+                </div>
             </div>
+            
             <p><strong>Links:</strong></p>
             <ul>
                 <li><a href="https://www.figma.com/design/1XfQEsHopPjwN5zXA8ZKdD/NumComp-Project?t=55tMDvTMjGb1WVKr-1" target="_blank">View Figma Design</a></li>
             </ul>
         </div>        
-        <div class="project">
-            <h3>Research Project - Machine Learning</h3>
+        <<div class="project">
+            <h3>Detecting Inconsistencies in the Modeling of SNOMED CT</h3>
             <p><strong>Role:</strong> Researcher and Developer</p>
-            <p><strong>Summary:</strong> Explored semantic similarity in medical databases using a custom-trained Word2Vec model, achieving practical improvements in data accuracy and retrieval performance.</p>
+            <p><strong>Summary:</strong> This project aimed to identify and address inconsistencies in SNOMED CT, the world's most sophisticated clinical terminology database, using machine learning, lexical similarity analysis, and advanced database management techniques.</p>
             <ul>
-                <li>Trained a Word2Vec model with over 80% accuracy, identifying semantic similarities and cataloging missing attributes in medical datasets.</li>
-                <li>Implemented data validation and optimization pipelines using Python and MySQL, reducing database errors by 30%.</li>
-                <li>Documented research findings with detailed process diagrams, algorithm design, and accuracy metrics for publication.</li>
+                <li>
+                    Designed and implemented a methodology to identify inconsistencies in SNOMED CT by leveraging sibling concepts and attribute modeling.
+                </li>
+                <li>
+                    Developed and utilized a Word2Vec-based lexical similarity algorithm to calculate semantic similarities between sibling terms, achieving a similarity score threshold of 0.9.
+                </li>
+                <li>
+                    Created database pipelines to manage and query SNOMED CT concepts efficiently, ensuring seamless integration of term data for analysis.
+                </li>
+                <li>
+                    Automated data processing and validation using Python scripts:
+                    <ul>
+                        <li><strong>Data Retrieval:</strong> Extracted and processed concepts based on tags such as "disorder," "procedure," and "findings."</li>
+                        <li><strong>Database Management:</strong> Implemented robust functions to validate files, populate tables, and query attribute counts and relationships.</li>
+                        <li><strong>Inconsistency Detection:</strong> Flagged concepts with attribute discrepancies for manual audits, significantly reducing the workload for experts.</li>
+                    </ul>
+                </li>
+                <li>
+                    Results:
+                    <ul>
+                        <li>Identified 70 sets of lexically similar terms from 150 input terms, with 20 flagged for inconsistencies.</li>
+                        <li>Demonstrated the potential of computational techniques to streamline manual audits and enhance SNOMED CT's accuracy.</li>
+                    </ul>
+                </li>
             </ul>
-        </div>        
+            <div class="screenshots">
+                <h4>Screenshots</h4>
+                <div class="image-row">
+                    <div class="image-container">
+                        <img src="images/fig4.png" alt="Similarity Results Visualization">
+                        <figcaption>Similarity Results Visualization</figcaption>
+                    </div>
+                    <div class="image-container">
+                        <img src="images/fig5.png" alt="Inconsistency Audit Results">
+                        <figcaption>Inconsistency Audit Results</figcaption>
+                    </div>
+                </div>
+            </div>
+            <p><strong>Key Features:</strong></p>
+            <ul>
+                <li>
+                    <strong>Word2Vec Algorithm:</strong> Utilized a two-layer neural network to map words to distinct vectors, leveraging a corpus of PubMed and Wikipedia articles for high-context accuracy.
+                </li>
+                <li>
+                    <strong>Database Functions:</strong> Implemented efficient query and data manipulation methods, including:
+                    <ul>
+                        <li>Validation of file headers and data integrity.</li>
+                        <li>Dynamic retrieval of parent-child relationships for concepts.</li>
+                        <li>Automated population of database tables with tagged concept data.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Lexical Analysis:</strong> Compared sibling concepts using cosine similarity, highlighting attribute discrepancies for further analysis.
+                </li>
+            </ul>
+            <p><strong>Links:</strong></p>
+            <ul>
+                <li><a href="https://github.com/elevin01/Summer-Research?tab=readme-ov-file" target="_blank">View Project Code on GitHub</a></li>
+            </ul>
+        </div>
+           
     </section>
     <section id="skills">
         <h2>Skills</h2>
         <ul>
-            <li>iOS Development (Swift, Objective-C)</li>
-            <li>Python, MySQL</li>
-            <li>Machine Learning (Word2Vec, Gensim)</li>
-            <li>UI/UX Design (Figma)</li>
-            <li>Project Management and Client Communication</li>
-            <li>Testing and Documentation</li>
+            <li><strong>Programming Languages:</strong> Python, Swift, C++, Objective-C, Java, JavaScript</li>
+            <li><strong>Web Development:</strong> HTML, CSS, JavaScript, Flask</li>
+            <li><strong>Database Management:</strong> MySQL, PostgreSQL, MongoDB (NoSQL)</li>
+            <li><strong>Machine Learning:</strong> Word2Vec, Gensim, Neural Networks, Data Analysis</li>
+            <li><strong>Mobile Development:</strong> iOS App Development (Swift, SwiftUI, Objective-C++)</li>
+            <li><strong>Optimization:</strong> Workflow Automation, Data Validation, Performance Optimization</li>
+            <li><strong>Tools & Frameworks:</strong> Docker, Firebase, Git, Power Apps, Power BI</li>
+            <li><strong>Testing:</strong> XCTest, Unit Testing, QA Testing</li>
+            <li><strong>UI/UX Design:</strong> Figma, Agile Design Prototyping</li>
+            <li><strong>Soft Skills:</strong> Leadership, Collaboration, Client Communication, Problem-Solving, Critical Thinking</li>
         </ul>
-    </section>
+    </section>    
     <section id="contact">
         <h2>Contact</h2>
         <p>Feel free to reach out to me at <a href="mailto:emiltlevin@gamil.com">emiltlevin@gmail.com</a>.</p>
