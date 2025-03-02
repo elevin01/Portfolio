@@ -1,260 +1,278 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emil Levin Portfolio</title>
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Emil Levin Portfolio</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Import a modern font -->
+  <link href="https://fonts.googleapis.com/css?family=Inter:400,700&display=swap" rel="stylesheet" />
 </head>
 <body>
-    <header>
+  <!-- Sidebar: fixed, 450px wide -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="profile">
         <h1>Emil Thomas Levin</h1>
-        <nav>
-            <ul>
-                <li><a href="#about">About Me</a></li>
-                <li><a href="#projects">Projects</a></li>
-                <li><a href="#skills">Skills</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-    <section id="about">
-        <h2>About Me</h2>
-        <p>
-            I am a software engineer with a strong foundation in iOS application development, database management, and machine learning. 
-            My passion lies in creating innovative solutions that optimize workflows, enhance system performance, and deliver tangible results.
-            Currently, I am interning at Orange and Rockland Utilities (a Con Edison subsidiary), where I am developing internal tools, automating processes, and 
-            designing robust systems to streamline operations and improve efficiency. My work spans across full-stack development, 
-            workflow optimization, and database integration, leveraging a combination of technical expertise and problem-solving skills.
-            I thrive in environments that challenge me to build scalable, efficient, and impactful solutions.
+        <p class="title">Software Engineer</p>
+        <p class="statement">
+          I design and develop innovative software solutions to streamline workflows and drive business growth.
         </p>
-        
-  <h3>Experience</h3>
-  <div class="timeline">
-    
-    <div class="timeline-item">
-      <div class="timeline-header">
-        <h4 class="role">Software Engineering Intern</h4>
-        <span class="company">Orange & Rockland Utilities (Con Edison Subsidiary)</span>
-        <span class="date">April 2024 – Present</span>
-      </div>
-      <ul class="timeline-details">
-        <li>Automated report generation, boosting workflow efficiency by 45% and reducing document stagnation by 40%.</li>
-        <li>Designed & developed 3+ internal tools with Power Apps using Agile, cutting errors by 60%.</li>
-        <li>Collaborated on the SF6 inventory management system to track and report discrepancies.</li>
-        <li>Led QA testing, conducted training for 20+ end-users, and produced detailed documentation.</li>
-      </ul>
-    </div>
-    
-    <div class="timeline-item">
-      <div class="timeline-header">
-        <h4 class="role">Student Researcher</h4>
-        <span class="company">Manhattan College School of Science Summer Research</span>
-        <span class="date">June 2023 – August 2023</span>
-      </div>
-      <ul class="timeline-details">
-        <li>Developed a Word2Vec-based machine learning model achieving 80% accuracy in semantic analysis.</li>
-        <li>Implemented data validation procedures to reduce errors in a medical database.</li>
-        <li>Optimized database queries, increasing data retrieval speed and overall performance by 30%.</li>
-      </ul>
-    </div>
-    
-    <div class="timeline-item">
-      <div class="timeline-header">
-        <h4 class="role">Peer Mentor (Tutor/IT Associate)</h4>
-        <span class="company">Manhattan College Opportunity Programs</span>
-        <span class="date">June 2022 – August 2023</span>
-      </div>
-      <ul class="timeline-details">
-        <li>Diagnosed and resolved IDE setup and hardware/software issues on site.</li>
-        <li>Led a team of 7 in training sessions and workshops for 30+ incoming students.</li>
-        <li>Mentored students in C/C++ and calculus, coordinated social events, and managed a group of 5.</li>
-      </ul>
-    </div>
-    
-    <div class="timeline-item">
-      <div class="timeline-header">
-        <h4 class="role">Co-founder </h4>
-        <span class="company">Aeon Scans, Digital Manga Company</span>
-        <span class="date">May 2020 – August 2022</span>
-      </div>
-      <ul class="timeline-details">
-        <li>Oversaw a team of 50, streamlined project management and automation, reducing manual tasks by 30%.</li>
-      </ul>
-    </div>
-    
-  </div>
-
-    </section>
-    
-    <section id="projects">
-        <h2>Projects</h2>
-        <div class="project">
-            <h3>DOR - Digitized Observation Checklist</h3>
-            <p><strong>Role:</strong> Project Manager, Developer, Designer</p>
-            <p><strong>Summary:</strong> Developed an iOS app that digitizes the observation checklist process, streamlining data collection, 
-                organization, and reporting for educational institutions. The project earned client approval and interest in future funding due 
-                to its potential to revolutionize data management in education.</p>
-            <ul>
-                <li>Led project management and handled client communications, ensuring requirements were understood and met.</li>
-                <li>Critical features Implemented:
-                    <ul>
-                        <li><strong>Checklist Page:</strong> Fixed a counter bug, enhanced section creation functionality, and integrated a rating system.</li>
-                        <li><strong>Student Profile Page:</strong> Designed and implemented dynamic profiles with modular data grouping capabilities.</li>
-                        <li><strong>Home Screen:</strong> Enabled seamless student account creation and streamlined navigation.</li>
-                    </ul>
-                </li>
-                <li>Created comprehensive technical documentation, including system specifications and architectural diagrams.</li>
-                <li>Designed the UI/UX using Figma, incorporating user feedback for iterative improvements.</li>
-                <li>Presented the project and demoed the application to the client, securing approval and alignment on future development plans.</li>
-            </ul>
-            <div class="screenshots">
-                <h4>Screenshots</h4>
-                <div class="image-row">
-                    <div class="image-container">
-                        <img src="images/checklist_page.PNG" alt="Student Profile Screen">
-                        <figcaption>Student Profile Screen</figcaption>
-                    </div>
-                    <div class="image-container">
-                        <img src="images/student_profile.PNG" alt="Observation Checklist Page">
-                        <figcaption>Observation Checklist Page</figcaption>
-                    </div>
-                    <div class="image-container">
-                        <img src="images/home_screen.PNG" alt="Home Screen">
-                        <figcaption>Home Screen</figcaption>
-                    </div>
-                </div>
-            </div>
-            
-            <p><strong>Links:</strong></p>
-    <ul>
-        <li><a href="https://www.figma.com/design/pqn4Yp57LnA5tRfVbVVe58/DOR?node-id=5-19&t=TeNGgJr6kRC5P4aV-1" target="_blank">View Figma Design</a></li>
-        <li><a href="https://github.com/CodeWithTejpratab/OrchenIPadApp" target="_blank">View GitHub</a></li>
-    </ul>
+        <!-- Social buttons -->
+        <div class="social-links">
+          <!-- Email Button -->
+          <a href="mailto:emiltlevin@gmail.com" class="social-btn">
+            <!-- Envelope SVG icon -->
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v.217l-8 4.8-8-4.8V4zm0 2.383l7.555 4.533a.5.5 0 0 0 .89 0L16 6.383V12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6.383z"/>
+            </svg>
+            <span>Email</span>
+          </a>
+          <!-- LinkedIn Button -->
+          <a href="https://linkedin.com/in/elevin01" target="_blank" class="social-btn">
+            <!-- LinkedIn SVG icon -->
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M0 1.146C0 .513.324 0 .725 0h14.55c.4 0 .725.513.725 1.146v13.708c0 .633-.324 1.146-.725 1.146H.725A.723.723 0 0 1 0 14.854V1.146zm4.943 12.248V6.169H2.542v7.225h2.401zm-1.2-8.213c.837 0 1.357-.554 1.357-1.248-.015-.709-.52-1.248-1.341-1.248-.821 0-1.357.54-1.357 1.248 0 .694.52 1.248 1.327 1.248h.014zm4.908 8.213V9.359c0-.224.016-.448.083-.608.182-.448.597-.913 1.293-.913.913 0 1.279.689 1.279 1.699v4.043h2.4V9.276c0-2.227-1.184-3.259-2.765-3.259-1.275 0-1.845.7-2.165 1.19h.03V6.169H8.651c.03.608 0 7.225 0 7.225h2.4z"/>
+            </svg>
+            <span>LinkedIn</span>
+          </a>
+          <!-- GitHub Button -->
+          <a href="https://github.com/elevin01" target="_blank" class="social-btn">
+            <!-- GitHub SVG icon -->
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.074.55-.174.55-.388 0-.192-.007-.7-.01-1.376-2.23.484-2.7-1.076-2.7-1.076-.364-.924-.89-1.17-.89-1.17-.727-.497.055-.487.055-.487.803.057 1.225.825 1.225.825.715 1.224 1.874.87 2.33.666.072-.517.28-.87.508-1.07-1.78-.202-3.644-.89-3.644-3.96 0-.876.312-1.59.823-2.15-.083-.203-.357-1.017.078-2.12 0 0 .67-.214 2.2.82a7.61 7.61 0 0 1 2-.268c.68.003 1.36.092 2 .268 1.53-1.034 2.2-.82 2.2-.82.435 1.104.16 1.918.078 2.12.513.56.823 1.274.823 2.15 0 3.08-1.867 3.756-3.65 3.954.288.248.543.737.543 1.486 0 1.07-.01 1.93-.01 2.19 0 .216.15.466.55.387A8.001 8.001 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            <span>GitHub</span>
+          </a>
+          <!-- Download Resume Button -->
+          <a href="Resume_Emil.pdf" class="download-btn" download>
+            <!-- Download SVG icon -->
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M.5 9.9V14a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V9.9a.5.5 0 0 0-1 0V14H1.5V9.9a.5.5 0 0 0-1 0z"/>
+              <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+            </svg>
+            <span>Resume</span>
+          </a>
         </div>
-        <div class="project">
-            <h3>Matrix Calculator</h3>
-            <p><strong>Role:</strong> Developer</p>
-            <p><strong>Summary:</strong> This project was aimed at engineering a high-performance iOS app for advanced matrix operations, optimized for speed and usability.
-                Leveraged C++ for computation and Objective-C++ to seamlessly bridge the backend with Swift-based UI components.</p>
-            <ul>
-                <li>Implemented Gauss and Gauss-Jordan elimination methods, achieving up to 50% faster computation times.</li>
-                <li>Bridged C++ with Swift using Objective-C++ to integrate a robust backend seamlessly with the UI.</li>
-                <li>Designed and developed dynamic UI components for matrix operation results and interactive input handling.</li>
-            </ul>
-            <div class="screenshots">
-                <h4>Screenshots</h4>
-                <div class="image-row">
-                    <div class="image-container">
-                        <img src="images/matrix_home.png" alt="Matrix Calculator Home Screen">
-                        <figcaption>Home Screen</figcaption>
-                    </div>
-                    <div class="image-container">
-                        <img src="images/matrix_result.png" alt="Matrix Calculator Result Screen">
-                        <figcaption>Result Screen</figcaption>
-                    </div>
-                </div>
-            </div>
-            
-            <p><strong>Links:</strong></p>
-            <ul>
-                <li><a href="https://www.figma.com/design/1XfQEsHopPjwN5zXA8ZKdD/NumComp-Project?t=55tMDvTMjGb1WVKr-1" target="_blank">View Figma Design</a></li>
-                <li><a href="https://github.com/CodeWithTejpratab/IOS-app-Matrix-calculator" target="_blank">View GitHub</a></li>
-            </ul>
-        </div>        
-        <div class="project">
-            <h3>Detecting Inconsistencies in the Modeling of SNOMED CT</h3>
-            <p><strong>Role:</strong> Researcher and Developer</p>
-            <p><strong>Summary:</strong> This project aimed to identify and address inconsistencies in SNOMED CT, the world's most sophisticated clinical terminology database, using machine learning, lexical similarity analysis, and advanced database management techniques.</p>
-            <ul>
-                <li>
-                    Designed and implemented a methodology to identify inconsistencies in SNOMED CT by leveraging sibling concepts and attribute modeling.
-                </li>
-                <li>
-                    Developed and utilized a Word2Vec-based lexical similarity algorithm to calculate semantic similarities between sibling terms, achieving a similarity score threshold of 0.9.
-                </li>
-                <li>
-                    Created database pipelines to manage and query SNOMED CT concepts efficiently, ensuring seamless integration of term data for analysis.
-                </li>
-                <li>
-                    Automated data processing and validation using Python scripts:
-                    <ul>
-                        <li><strong>Data Retrieval:</strong> Extracted and processed concepts based on tags such as "disorder," "procedure," and "findings."</li>
-                        <li><strong>Database Management:</strong> Implemented robust functions to validate files, populate tables, and query attribute counts and relationships.</li>
-                        <li><strong>Inconsistency Detection:</strong> Flagged concepts with attribute discrepancies for manual audits, significantly reducing the workload for experts.</li>
-                    </ul>
-                </li>
-                <li>
-                    Results:
-                    <ul>
-                        <li>Identified 70 sets of lexically similar terms from 150 input terms, with 20 flagged for inconsistencies.</li>
-                        <li>Demonstrated the potential of computational techniques to streamline manual audits and enhance SNOMED CT's accuracy.</li>
-                    </ul>
-                </li>
-            </ul>
-            <div class="screenshots">
-                <h4>Screenshots</h4>
-                <div class="image-row">
-                    <div class="image-container">
-                        <img src="images/fig4.png" alt="Similarity Results Visualization">
-                        <figcaption>Similarity Results Visualization</figcaption>
-                    </div>
-                    <div class="image-container">
-                        <img src="images/fig5.png" alt="Inconsistency Audit Results">
-                        <figcaption>Inconsistency Audit Results</figcaption>
-                    </div>
-                </div>
-            </div>
-            <p><strong>Key Features:</strong></p>
-            <ul>
-                <li>
-                    <strong>Word2Vec Algorithm:</strong> Utilized a two-layer neural network to map words to distinct vectors, leveraging a corpus of PubMed and Wikipedia articles for high-context accuracy.
-                </li>
-                <li>
-                    <strong>Database Functions:</strong> Implemented efficient query and data manipulation methods, including:
-                    <ul>
-                        <li>Validation of file headers and data integrity.</li>
-                        <li>Dynamic retrieval of parent-child relationships for concepts.</li>
-                        <li>Automated population of database tables with tagged concept data.</li>
-                    </ul>
-                </li>
-                <li>
-                    <strong>Lexical Analysis:</strong> Compared sibling concepts using cosine similarity, highlighting attribute discrepancies for further analysis.
-                </li>
-            </ul>
-            <p><strong>Links:</strong></p>
-            <ul>
-                <li><a href="https://github.com/elevin01/Summer-Research?tab=readme-ov-file" target="_blank">View Project Code on GitHub</a></li>
-            </ul>
-        </div>
-           
-    </section>
-    <section id="skills">
-        <h2>Skills</h2>
+      </div>
+    </div>
+    <div class="sidebar-middle">
+      <nav class="nav">
         <ul>
-            <li><strong>Programming Languages:</strong> Python, Swift, C++, Objective-C, Java, JavaScript</li>
-            <li><strong>Web Development:</strong> HTML, CSS, JavaScript, Flask, PHP</li>
-            <li><strong>Database Management:</strong> MySQL, PostgreSQL, MongoDB (NoSQL)</li>
-            <li><strong>Machine Learning:</strong> Word2Vec, Gensim, Neural Networks, Data Analysis</li>
-            <li><strong>Mobile Development:</strong> iOS App Development (Swift, SwiftUI, Objective-C++), Kotlin</li>
-            <li><strong>Optimization:</strong> Workflow Automation, Data Validation, Performance Optimization</li>
-            <li><strong>Tools & Frameworks:</strong> Docker, Kubernetes, Firebase, Git, Power Apps, Power BI, Power Automate</li>
-            <li><strong>Testing:</strong> XCTest, Unit Testing, QA Testing</li>
-            <li><strong>UI/UX Design:</strong> Figma, Agile Design Prototyping</li>
-            <li><strong>Soft Skills:</strong> Leadership, Collaboration, Client Communication, Problem-Solving, Critical Thinking</li>
+          <li class="active"><a href="#about">About Me</a></li>
+          <li><a href="#projects">Projects</a></li>
         </ul>
-    </section>    
-    <section id="contact">
-        <h2>Contact</h2>
-        <p>Feel free to reach out to me at <a href="mailto:emiltlevin@gmail.com">emiltlevin@gmail.com</a>.</p>
-        <p>
-            Connect with me on:
-            <a href="https://linkedin.com/in/elevin01" target="_blank">LinkedIn</a> |
-            <a href="https://github.com/elevin01" target="_blank">GitHub</a>
-        </p>
+      </nav>
+    </div>
+    <div class="sidebar-bottom">
+      <footer class="sidebar-footer">
+        <p>&copy; 2024 Emil Levin</p>
+      </footer>
+    </div>
+  </aside>
+
+  <!-- Main content area: scrollable on the right -->
+  <main class="content">
+    <!-- About Section -->
+    <section id="about" class="section">
+      <h2>About Me</h2>
+      <p>
+        Computer Science major at Manhattan University with 2+ years of experience in software engineering and automation. Proficient in Python, SQL, and DevOps, with expertise in real-time control systems and workflow automation. Skilled in integrating technologies to enhance system efficiency and optimize business processes. Improved system efficiency by 45% and reduced manual tasks by 30%.
+      </p>
+      <div class="skills">
+        <h3>Technical Skills</h3>
+        <ul class="skills-list">
+          <li><strong>Programming:</strong> <br>Python, Swift, C++, Objective-C, Java, JavaScript</li>
+          <li><strong>Web Development:</strong> <br>HTML, CSS, JavaScript, Flask, PHP</li>
+          <li><strong>Database:</strong> <br>MySQL, PostgreSQL, MongoDB (NoSQL)</li>
+          <li><strong>Mobile Development:</strong> <br>iOS (Swift, SwiftUI, Objective-C++), Kotlin</li>
+          <li><strong>Tools &amp; Frameworks:</strong> <br>Docker, Kubernetes, Firebase, Git, Power Apps, Power BI, Power Automate</li>
+        </ul>
+      </div>
     </section>
-    <footer>
-        <p>&copy; 2024 Emil Levin Portfolio</p>
-    </footer>
+
+    <h2>Experience</h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-header">
+          <h4 class="role">Software Engineering Intern</h4>
+          <span class="company">Orange & Rockland Utilities (Con Edison Subsidiary)</span>
+          <span class="date">April 2024 – Present</span>
+        </div>
+        <ul class="timeline-details">
+          <li>Automated report generation, boosting workflow efficiency by 45% and reducing document stagnation by 40%.</li>
+          <li>Designed & developed 3+ internal tools with Power Apps using Agile, cutting errors by 60%.</li>
+          <li>Collaborated on the SF6 inventory management system to track and report discrepancies.</li>
+          <li>Led QA testing, conducted training for 20+ end-users, and produced detailed documentation.</li>
+        </ul>
+      </div>
+      
+      <div class="timeline-item">
+        <div class="timeline-header">
+          <h4 class="role">Student Researcher</h4>
+          <span class="company">Manhattan College School of Science Summer Research</span>
+          <span class="date">June 2023 – August 2023</span>
+        </div>
+        <ul class="timeline-details">
+          <li>Developed a Word2Vec-based machine learning model achieving 80% accuracy in semantic analysis.</li>
+          <li>Implemented data validation procedures to reduce errors in a medical database.</li>
+          <li>Optimized database queries, increasing data retrieval speed and overall performance by 30%.</li>
+        </ul>
+      </div>
+      
+      <div class="timeline-item">
+        <div class="timeline-header">
+          <h4 class="role">Peer Mentor (Tutor/IT Associate)</h4>
+          <span class="company">Manhattan College Opportunity Programs</span>
+          <span class="date">June 2022 – August 2023</span>
+        </div>
+        <ul class="timeline-details">
+          <li>Diagnosed and resolved IDE setup and hardware/software issues on site.</li>
+          <li>Led a team of 7 in training sessions and workshops for 30+ incoming students.</li>
+          <li>Mentored students in C/C++ and calculus, coordinated social events, and managed a group of 5.</li>
+        </ul>
+      </div>
+      
+      <div class="timeline-item">
+        <div class="timeline-header">
+          <h4 class="role">Co-founder</h4>
+          <span class="company">Aeon Scans, Digital Manga Company</span>
+          <span class="date">May 2020 – August 2022</span>
+        </div>
+        <ul class="timeline-details">
+          <li>Oversaw a team of 50, streamlined project management and automation, reducing manual tasks by 30%.</li>
+        </ul>
+      </div>
+      
+    </div>
+
+    <!-- Projects Section -->
+    <section id="projects" class="section">
+      <h2>Projects</h2>
+      <!-- Project 1 -->
+      <div class="project">
+        <h3>DOR - Digitized Observation Checklist</h3>
+        <p><strong>Role:</strong> Project Manager, Developer, Designer</p>
+        <p><strong>Summary:</strong> Developed an iOS app to digitize observation checklists for educational institutions, improving data collection and streamlining reporting.</p>
+        <ul>
+          <li>Managed client communications and defined project requirements.</li>
+          <li>Implemented key features across multiple screens.</li>
+          <li>Produced technical documentation and designed the UI/UX in Figma.</li>
+        </ul>
+        <div class="screenshots">
+          <h4>Screenshots</h4>
+          <div class="image-row">
+            <div class="image-container">
+              <img src="images/checklist_page.PNG" alt="Checklist Page" />
+              <figcaption>Checklist Page</figcaption>
+            </div>
+            <div class="image-container">
+              <img src="images/student_profile.PNG" alt="Student Profile" />
+              <figcaption>Student Profile</figcaption>
+            </div>
+            <div class="image-container">
+              <img src="images/home_screen.PNG" alt="Home Screen" />
+              <figcaption>Home Screen</figcaption>
+            </div>
+          </div>
+        </div>
+        <p><strong>Links:</strong></p>
+        <ul>
+          <li><a href="https://www.figma.com/design/pqn4Yp57LnA5tRfVbVVe58/DOR?node-id=5-19&t=TeNGgJr6kRC5P4aV-1" target="_blank">View Figma Design</a></li>
+          <li><a href="https://github.com/CodeWithTejpratab/OrchenIPadApp" target="_blank">View GitHub</a></li>
+        </ul>
+      </div>
+
+      <!-- Project 2 -->
+      <div class="project">
+        <h3>Matrix Calculator</h3>
+        <p><strong>Role:</strong> Developer</p>
+        <p><strong>Summary:</strong> Engineered a high-performance iOS app for advanced matrix operations, leveraging C++ and Objective-C++ for robust computation and smooth UI integration.</p>
+        <ul>
+          <li>Implemented Gauss and Gauss-Jordan elimination for rapid calculations.</li>
+          <li>Bridged C++ with Swift for seamless backend and UI integration.</li>
+          <li>Designed dynamic UI components for intuitive interactions.</li>
+        </ul>
+        <div class="screenshots">
+          <h4>Screenshots</h4>
+          <div class="image-row">
+            <div class="image-container">
+              <img src="images/matrix_home.png" alt="Matrix Home Screen" />
+              <figcaption>Home Screen</figcaption>
+            </div>
+            <div class="image-container">
+              <img src="images/matrix_result.png" alt="Matrix Result Screen" />
+              <figcaption>Result Screen</figcaption>
+            </div>
+          </div>
+        </div>
+        <p><strong>Links:</strong></p>
+        <ul>
+          <li><a href="https://www.figma.com/design/1XfQEsHopPjwN5zXA8ZKdD/NumComp-Project?t=55tMDvTMjGb1WVKr-1" target="_blank">View Figma Design</a></li>
+          <li><a href="https://github.com/CodeWithTejpratab/IOS-app-Matrix-calculator" target="_blank">View GitHub</a></li>
+        </ul>
+      </div>
+
+      <!-- Project 3 -->
+      <div class="project">
+        <h3>Detecting Inconsistencies in the Modeling of SNOMED CT</h3>
+        <p><strong>Role:</strong> Researcher and Developer</p>
+        <p><strong>Summary:</strong> Optimized clinical terminology accuracy by addressing inconsistencies in SNOMED CT using machine learning, lexical analysis, and robust database management techniques.</p>
+        <ul>
+          <li>Developed a methodology leveraging sibling concepts and attribute modeling.</li>
+          <li>Implemented a Word2Vec-based algorithm with a 0.9 similarity threshold.</li>
+          <li>Built efficient database pipelines for seamless data integration.</li>
+          <li>Automated data processing with Python, reducing manual audits.</li>
+        </ul>
+        <div class="screenshots">
+          <h4>Screenshots</h4>
+          <div class="image-row">
+            <div class="image-container">
+              <img src="images/fig4.png" alt="Similarity Visualization" />
+              <figcaption>Similarity Visualization</figcaption>
+            </div>
+            <div class="image-container">
+              <img src="images/fig5.png" alt="Audit Results" />
+              <figcaption>Audit Results</figcaption>
+            </div>
+          </div>
+        </div>
+        <p><strong>Links:</strong></p>
+        <ul>
+          <li><a href="https://github.com/elevin01/Summer-Research?tab=readme-ov-file" target="_blank">View Project Code on GitHub</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section">
+      <h2>Contact</h2>
+      <p>
+        Reach out to me at <a href="mailto:emiltlevin@gmail.com">emiltlevin@gmail.com</a> or connect with me on LinkedIn and GitHub.
+      </p>
+    </section>
+  </main>
+
+  <!-- Optional: JavaScript for scroll spy to update active nav link -->
+  <script>
+    const sections = document.querySelectorAll('section');
+    const navItems = document.querySelectorAll('.nav ul li');
+
+    window.addEventListener('scroll', () => {
+      let currentSection = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - 60) {
+          currentSection = section.getAttribute('id');
+        }
+      });
+      navItems.forEach(li => {
+        li.classList.remove('active');
+        if (li.querySelector('a').getAttribute('href').substring(1) === currentSection) {
+          li.classList.add('active');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
