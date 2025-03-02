@@ -2,9 +2,9 @@
 :root {
   --primary-color: #e0e0e0;
   --secondary-color: #b0b0b0;
-  --accent-color: #4d90fe; /* Blue accent */
+  --accent-color: #4d90fe; 
   --background-color: #121212;
-  --sidebar-bg: #1c1c2c;   /* Dark blue-grey */
+  --sidebar-bg: #1c1c2c;  
   --font-family: 'Inter', sans-serif;
 }
 
@@ -27,7 +27,7 @@ body {
   top: 0;
   left: 0;
   bottom: 0;
-  width: 35%; /* 35% of screen */
+  width: 35%;
   background: var(--sidebar-bg);
   padding: 20px;
   display: flex;
@@ -151,7 +151,7 @@ body {
 /* MAIN CONTENT (65% width) */
 .content {
   position: relative;
-  margin-left: 35%; /* match sidebar width */
+  margin-left: 35%; 
   width: 65%;
   padding: 40px;
   overflow-y: auto;
@@ -170,12 +170,12 @@ body {
   padding-bottom: 5px;
 }
 
-/* ABOUT SECTION TWEAKS */
+/* ABOUT SECTION */
 #about.section {
-  margin-bottom: 20px; /* reduce gap before next section */
+  margin-bottom: 20px; 
 }
 
-/* EXPERIENCE HEADING (optional if you use a class) */
+/* EXPERIENCE HEADING */
 .experience-heading {
   font-size: 1.4em;
   margin-top: 0;
@@ -243,9 +243,9 @@ body {
 }
 
 .skills h3 {
-  font-size: 1.4em;     /* Slightly smaller than About (2em) */
+  font-size: 1.4em;    
   margin-bottom: 10px;
-  color: var(--primary-color); /* White text, not blue */
+  color: var(--primary-color); 
 }
 
 /* SKILLS GRID */
@@ -259,10 +259,10 @@ body {
 }
 
 .skills-list li {
-  background: rgba(77, 144, 254, 0.1); /* Subtle blue tint */
+  background: rgba(77, 144, 254, 0.1); 
   padding: 8px 10px;
   border-radius: 4px;
-  margin-bottom: 0; /* remove extra spacing if needed */
+  margin-bottom: 0; 
   line-height: 1.4;
 }
 
@@ -275,7 +275,7 @@ body {
 }
 
 .project h3 {
-  color: #00aaff; /* bright project heading color */
+  color: #00aaff; 
 }
 
 /* IMAGES */
