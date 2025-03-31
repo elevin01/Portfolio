@@ -356,7 +356,7 @@ body {
   }
 
   .social-links {
-    padding: 50px;
+    padding-inline: 40px;
     display: flex;
     justify-content: center;
   }
