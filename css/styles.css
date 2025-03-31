@@ -356,8 +356,14 @@ body {
   }
 
   .social-links {
+    padding: 20px;
     display: flex;
     justify-content: center;
+  }
+
+  .profile h1 {
+    font-size: 4em;
+    margin-bottom: 10px;
   }
 }
 
