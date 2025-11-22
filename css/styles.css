@@ -183,6 +183,61 @@ body {
   margin-bottom: 20px; 
 }
 
+.education-section {
+  margin-top: 10px;
+}
+
+.education-list {
+  border-left: 2px solid #2f2f2f;
+  padding-left: 18px;
+  max-width: 750px;
+}
+
+.education-item {
+  margin-bottom: 26px;
+}
+
+.education-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.edu-school {
+  font-size: 1.2em;
+  font-weight: 700;
+}
+
+.edu-note {
+  color: var(--secondary-color);
+  font-size: 0.9em;
+}
+
+.edu-degree {
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+.education-meta {
+  color: #a0a0a0;
+  font-size: 0.95em;
+}
+
+.edu-highlights {
+  list-style: disc;
+  padding-left: 18px;
+  margin-top: 6px;
+}
+
+.edu-highlights li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+
 /* EXPERIENCE HEADING */
 .experience-heading {
   font-size: 1.4em;
@@ -286,6 +341,14 @@ body {
   color: #00aaff; 
 }
 
+.project-summary {
+  background: linear-gradient(90deg, rgba(77, 144, 254, 0.15), rgba(28, 28, 44, 0.6));
+  border-left: 3px solid var(--accent-color);
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+
 /* IMAGES */
 .image-row {
   display: flex;
@@ -328,6 +391,76 @@ body {
   text-align: center;
 }
 
+.project a {
+  color: #7ab8ff;          
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.project a:hover {
+  color: #a7cdff;          
+  border-bottom: 1px solid #a7cdff;
+}
+
+.contact-card {
+  background: #1b1b1b;
+  border: 1px solid #2f2f2f;
+  border-radius: 10px;
+  padding: 16px 18px;
+  width: 100%;
+  max-width: none;
+}
+
+.contact-card p {
+  color: var(--primary-color);
+  margin-bottom: 12px;
+}
+
+.contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.contact-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 600;
+  background: transparent;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.contact-btn.secondary {
+  border-color: #4a4a4a;
+  color: var(--primary-color);
+}
+
+.contact-btn:hover {
+  background: var(--accent-color);
+  color: var(--background-color);
+}
+
+.contact-btn.secondary:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+/* Responsive tweaks */
+@media (max-width: 1200px) {
+  .nav li.hide-on-medium {
+    display: none;
+  }
+}
+
+
 @media (max-width: 700px) {
   .sidebar {
     position: static;
@@ -362,5 +495,3 @@ body {
   }
 
 }
-
-
