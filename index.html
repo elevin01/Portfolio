@@ -88,11 +88,54 @@
       <div class="skills">
         <h3>Technical Skills</h3>
         <ul class="skills-list">
-          <li><strong>Programming:</strong> <br>Python, C++, C#, Java</li>
-          <li><strong>Web Development:</strong> <br>HTML, CSS, JavaScript, PHP</li>
-          <li><strong>Database:</strong> <br>SQL (MySQL, PostgreSQL)</li>
-          <li><strong>Mobile Development:</strong> <br>iOS (Swift, Objective-C++), Android (Kotlin)</li>
-          <li><strong>Tools &amp; Frameworks:</strong> <br>Docker, Kubernetes, Firebase, Git, Power Apps, Power BI, Power Automate</li>
+          <li>
+            <span class="skill-label">Programming</span>
+            <div class="skill-badges">
+              <span class="skill-badge python">Python</span>
+              <span class="skill-badge cpp">C++</span>
+              <span class="skill-badge csharp">C#</span>
+              <span class="skill-badge java">Java</span>
+            </div>
+          </li>
+          <li>
+            <span class="skill-label">Web</span>
+            <div class="skill-badges">
+              <span class="skill-badge html">HTML</span>
+              <span class="skill-badge css">CSS</span>
+              <span class="skill-badge js">JavaScript</span>
+              <span class="skill-badge php">PHP</span>
+            </div>
+          </li>
+          <li>
+            <span class="skill-label">Database</span>
+            <div class="skill-badges">
+              <span class="skill-badge sql">SQL</span>
+              <span class="skill-badge mysql">MySQL</span>
+              <span class="skill-badge postgres">PostgreSQL</span>
+            </div>
+          </li>
+          <li>
+            <span class="skill-label">Mobile</span>
+            <div class="skill-badges">
+              <span class="skill-badge ios">iOS</span>
+              <span class="skill-badge swift">Swift</span>
+              <span class="skill-badge objc">Objective-C++</span>
+              <span class="skill-badge android">Android</span>
+              <span class="skill-badge kotlin">Kotlin</span>
+            </div>
+          </li>
+          <li>
+            <span class="skill-label">Tools &amp; Frameworks</span>
+            <div class="skill-badges">
+              <span class="skill-badge docker">Docker</span>
+              <span class="skill-badge k8s">Kubernetes</span>
+              <span class="skill-badge firebase">Firebase</span>
+              <span class="skill-badge git">Git</span>
+              <span class="skill-badge power-apps">Power Apps</span>
+              <span class="skill-badge power-bi">Power BI</span>
+              <span class="skill-badge power-automate">Power Automate</span>
+            </div>
+          </li>
         </ul>
       </div>
     </section>
@@ -401,6 +444,8 @@
     let grid = [];
     let score = 0;
     let gameOpen = false;
+    let lastNewTile = null;
+    let mergedThisMove = [];
 
     const size = 4;
     const directions = {
@@ -446,22 +491,32 @@
       if (empty.length === 0) return;
       const [r, c] = empty[Math.floor(Math.random() * empty.length)];
       grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+      lastNewTile = `${r}-${c}`;
     }
 
     function rotateClockwise(matrix) {
       return matrix[0].map((_, i) => matrix.map(row => row[i]).reverse());
     }
 
+    function mapBack(row, col, direction) {
+      if (direction === 'left') return { r: row, c: col };
+      if (direction === 'right') return { r: row, c: size - 1 - col };
+      if (direction === 'up') return { r: size - 1 - col, c: row };
+      // down
+      return { r: col, c: size - 1 - row };
+    }
+
     function move(direction) {
       let changed = false;
       let workingGrid = grid.map(row => row.slice());
+      const mergePositionsOrientation = [];
 
       // Rotate grid so we can always move left
       if (direction === 'up') workingGrid = rotateClockwise(rotateClockwise(rotateClockwise(workingGrid)));
       if (direction === 'down') workingGrid = rotateClockwise(workingGrid);
       if (direction === 'right') workingGrid = workingGrid.map(row => row.reverse());
 
-      const newGrid = workingGrid.map(row => {
+      const newGrid = workingGrid.map((row, baseRow) => {
         const filtered = row.filter(n => n !== 0);
         const merged = [];
         let skip = false;
@@ -472,6 +527,7 @@
             merged.push(val);
             score += val;
             skip = true;
+            mergePositionsOrientation.push({ rowIndex: merged.length - 1, baseRow });
           } else {
             merged.push(filtered[i]);
           }
@@ -485,6 +541,11 @@
       if (direction === 'up') restored = rotateClockwise(restored);
       if (direction === 'down') restored = rotateClockwise(rotateClockwise(rotateClockwise(restored)));
       if (direction === 'right') restored = restored.map(row => row.reverse());
+
+      mergedThisMove = mergePositionsOrientation.map(pos => {
+        const mapped = mapBack(pos.baseRow, pos.rowIndex, direction);
+        return `${mapped.r}-${mapped.c}`;
+      });
 
       // Check change
       for (let r = 0; r < size; r++) {
@@ -523,6 +584,9 @@
           if (val) {
             tile.textContent = val;
             tile.classList.add(`t-${val}`);
+            const key = `${rIdx}-${cIdx}`;
+            if (key === lastNewTile) tile.classList.add('new');
+            if (mergedThisMove.includes(key)) tile.classList.add('merged');
           }
           tile.dataset.pos = `${rIdx}-${cIdx}`;
           gameGridEl.appendChild(tile);
@@ -535,6 +599,8 @@
       } else {
         gameStatusEl.textContent = '';
       }
+      mergedThisMove = [];
+      lastNewTile = null;
     }
 
     function handleKeydown(e) {

@@ -314,19 +314,88 @@ body {
 /* SKILLS GRID */
 .skills-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
   list-style: none;
   padding: 0;
   font-size: 0.95em;
 }
 
 .skills-list li {
-  background: rgba(77, 144, 254, 0.1); 
-  padding: 8px 10px;
-  border-radius: 4px;
+  background: #1b1f2d;
+  border: 1px solid rgba(122, 184, 255, 0.25);
+  padding: 10px 12px;
+  border-radius: 8px;
   margin-bottom: 0; 
-  line-height: 1.4;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.skill-label {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #dce7ff;
+  text-transform: uppercase;
+  font-size: 0.85em;
+}
+
+.skill-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skill-badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(77, 144, 254, 0.12);
+  border: 1px solid rgba(122, 184, 255, 0.4);
+  color: var(--primary-color);
+  font-size: 0.9em;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skill-badge::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(122, 184, 255, 0.9), rgba(77, 144, 254, 0.7));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.skill-badge.python::before {
+  background: linear-gradient(135deg, #3675b5, #ffd43b);
+}
+.skill-badge.cpp::before { background: linear-gradient(135deg, #00599c, #659ad2); }
+.skill-badge.csharp::before { background: linear-gradient(135deg, #68217a, #8a2be2); }
+.skill-badge.java::before { background: linear-gradient(135deg, #f89820, #5382a1); }
+.skill-badge.html::before { background: linear-gradient(135deg, #e44d26, #f16529); }
+.skill-badge.css::before { background: linear-gradient(135deg, #264de4, #2965f1); }
+.skill-badge.js::before { background: linear-gradient(135deg, #f7df1e, #d8c200); }
+.skill-badge.php::before { background: linear-gradient(135deg, #4f5b93, #8892bf); }
+.skill-badge.sql::before { background: linear-gradient(135deg, #3d7db8, #51a2e9); }
+.skill-badge.mysql::before { background: linear-gradient(135deg, #005e86, #f29111); }
+.skill-badge.postgres::before { background: linear-gradient(135deg, #336791, #4f8cc5); }
+.skill-badge.ios::before { background: linear-gradient(135deg, #c0c0c0, #f0f0f0); }
+.skill-badge.swift::before { background: linear-gradient(135deg, #ff6f00, #ff8f00); }
+.skill-badge.objc::before { background: linear-gradient(135deg, #0a84ff, #004d99); }
+.skill-badge.android::before { background: linear-gradient(135deg, #3ddc84, #2baf63); }
+.skill-badge.kotlin::before { background: linear-gradient(135deg, #7f52ff, #ff8f00); }
+.skill-badge.docker::before { background: linear-gradient(135deg, #0db7ed, #1d63ed); }
+.skill-badge.k8s::before { background: linear-gradient(135deg, #326ce5, #7ea6f4); }
+.skill-badge.firebase::before { background: linear-gradient(135deg, #fbc02d, #ffa000); }
+.skill-badge.git::before { background: linear-gradient(135deg, #f05032, #c13b1a); }
+.skill-badge.power-apps::before { background: linear-gradient(135deg, #742774, #9c4bb2); }
+.skill-badge.power-bi::before { background: linear-gradient(135deg, #f2c811, #d8aa00); }
+.skill-badge.power-automate::before { background: linear-gradient(135deg, #0078d4, #3ba4f6); }
 }
 
 /* PROJECTS */
@@ -453,6 +522,147 @@ body {
   color: var(--accent-color);
 }
 
+.game-toggle {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(122, 184, 255, 0.4);
+  background: rgba(77, 144, 254, 0.15);
+  box-shadow: 0 0 12px rgba(77, 144, 254, 0.35);
+  cursor: pointer;
+  opacity: 0.15;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 20;
+}
+
+.game-toggle:hover {
+  opacity: 0.75;
+  transform: scale(1.08);
+}
+
+.game-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  padding: 20px;
+}
+
+.game-modal.open {
+  display: flex;
+}
+
+.game-modal-content {
+  background: #101010;
+  border: 1px solid #2f2f2f;
+  border-radius: 12px;
+  padding: 16px;
+  width: min(520px, 100%);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.game-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.game-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.4em;
+  cursor: pointer;
+}
+
+.game-instructions {
+  color: var(--secondary-color);
+  margin: 10px 0;
+}
+
+.game-score {
+  margin-bottom: 10px;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  background: #1b1b1b;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #2f2f2f;
+}
+
+.game-tile {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #242424;
+  color: #e0e0e0;
+  font-weight: 700;
+  font-size: 1.2em;
+  border-radius: 8px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.game-tile:not(:empty) {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.game-tile.new {
+  animation: gamePop 0.2s ease-out;
+}
+
+.game-tile.merged {
+  animation: gameMerge 0.25s ease-out;
+}
+
+.game-tile:hover {
+  transform: translateY(-1px);
+}
+
+.game-status {
+  margin-top: 12px;
+  color: var(--accent-color);
+}
+
+.game-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@keyframes gamePop {
+  0% { transform: scale(0.6); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes gameMerge {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Tile colors */
+.game-tile.t-2 { background: #2f3b52; }
+.game-tile.t-4 { background: #36445f; }
+.game-tile.t-8 { background: #355071; color: #fefefe; }
+.game-tile.t-16 { background: #2e6288; color: #fefefe; }
+.game-tile.t-32 { background: #2a6f9e; color: #fefefe; }
+.game-tile.t-64 { background: #2487be; color: #fefefe; }
+.game-tile.t-128 { background: #1ea0df; color: #0f172a; }
+.game-tile.t-256 { background: #1cb7f5; color: #0f172a; }
+.game-tile.t-512 { background: #2ac6f8; color: #0f172a; }
+.game-tile.t-1024 { background: #3cd1f9; color: #0f172a; }
+.game-tile.t-2048 { background: #7de2ff; color: #0f172a; }
 /* Responsive tweaks */
 @media (max-width: 1200px) {
   .nav li.hide-on-medium {
@@ -492,6 +702,11 @@ body {
     padding-inline: 40px;
     display: flex;
     justify-content: center;
+  }
+
+  .game-toggle,
+  .game-modal {
+    display: none !important;
   }
 
 }
