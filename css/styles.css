@@ -396,7 +396,6 @@ body {
 .skill-badge.power-apps::before { background: linear-gradient(135deg, #742774, #9c4bb2); }
 .skill-badge.power-bi::before { background: linear-gradient(135deg, #f2c811, #d8aa00); }
 .skill-badge.power-automate::before { background: linear-gradient(135deg, #0078d4, #3ba4f6); }
-}
 
 /* PROJECTS */
 .project {
