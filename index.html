@@ -456,21 +456,21 @@
           <button class="game-choice" data-game="flappy" aria-label="Play Flappy Bird">
             <span class="game-preview preview-flappy" aria-hidden="true">
               <svg viewBox="0 0 240 148" fill="none">
-                <circle cx="46" cy="29" r="13" fill="#d2e6ff" opacity=".85"/>
-                <path d="M26 112h78M144 37h53M15 69h31" stroke="#688eb2" stroke-width="8" stroke-linecap="round" opacity=".2"/>
-                <path d="M173 0h32v48h-32zM173 112h32v36h-32z" fill="#51ad9d"/>
-                <path d="M178 0h6v43h-6zM178 117h6v31h-6z" fill="#82d2b5"/>
-                <path d="M169 43h40v10h-40zM169 108h40v10h-40z" fill="#82d2b5"/>
-                <path d="m75 73-13 5 13 6" fill="#e29b49"/>
-                <ellipse cx="86" cy="76" rx="18" ry="14" fill="#ffd477"/>
-                <ellipse cx="80" cy="81" rx="10" ry="6" fill="#efaf51"/>
-                <circle cx="96" cy="71" r="6" fill="#fff7df"/>
-                <circle cx="98" cy="71" r="2.5" fill="#152941"/>
-                <path d="m99 77 14 4-14 4" fill="#f09364"/>
-                <path d="M0 141h240" stroke="#597c88" stroke-width="14"/>
+                <defs><linearGradient id="flappyPreviewSky" x2="0" y2="148" gradientUnits="userSpaceOnUse"><stop stop-color="#0b1431"/><stop offset="1" stop-color="#55516c"/></linearGradient></defs>
+                <path fill="url(#flappyPreviewSky)" d="M0 0h240v148H0z"/>
+                <g fill="#d1def5"><circle cx="18" cy="21" r=".7"/><circle cx="63" cy="14" r="1"/><circle cx="91" cy="35" r=".6"/><circle cx="141" cy="17" r=".8"/><circle cx="225" cy="43" r=".8"/><circle cx="151" cy="60" r=".7"/><circle cx="27" cy="65" r=".6"/><circle cx="113" cy="9" r=".5"/><circle cx="207" cy="16" r=".6"/></g>
+                <circle cx="189" cy="31" r="13" fill="#dbe0e2"/><circle cx="192" cy="34" r="4" fill="#aabed5" opacity=".3"/>
+                <path d="M0 136V99h17V88h14v48h9V95h16v-9h5V76h5V61h4v15h5v10h5v9h8v41h8v-28h24V93h9V79l7-15 7 15v14h8v43h14V89l5-33h6V42h2v14h6l5 33v47h13V91h18v45h22v12H0z" fill="#14243e"/>
+                <path d="M47 111h5m-5 8h5m18-19h4m-4 9h4m-4 9h4m32 1h7m20-15h4m-4 8h4m-4 8h4m36-40h4m-4 9h4m-4 9h4m-4 9h4m-4 9h4m37-13h4m-4 9h4" stroke="#d4ba8a" stroke-width="2" opacity=".6"/>
+                <path d="m78 70-13-6 5 8-8 3 17 4" fill="#d39336"/>
+                <path d="M75 72c-3-15 24-21 32-8 12 22-25 30-32 8Z" fill="#ffd477" stroke="#b77d36"/>
+                <path d="M88 73C74 65 66 42 73 44c4-1 12 5 20 14l-5 15Z" fill="#f4b340" stroke="#ffe7a9"/>
+                <ellipse cx="101" cy="66" rx="6" ry="7" fill="#fff8e4"/><ellipse cx="104" cy="67" rx="2.5" ry="3" fill="#17253b"/>
+                <path d="m107 72 14 4-13 4" fill="#fb9c55"/>
+                <path d="M0 142h240" stroke="#7391a6" opacity=".5"/>
               </svg>
             </span>
-            <span class="game-choice-body"><span class="game-choice-title">Flappy Bird <span aria-hidden="true">↗</span></span><span class="game-choice-description">Find your rhythm. Keep flying.</span></span>
+            <span class="game-choice-body"><span class="game-choice-title">Flappy Bird <span aria-hidden="true">↗</span></span><span class="game-choice-description">A night flight over New York.</span></span>
           </button>
         </div>
       </div>
@@ -492,8 +492,10 @@
           <canvas id="flappyCanvas" width="420" height="520" tabindex="0" aria-label="Flappy Bird play area" aria-describedby="flappyInstructions">Press Space or the up arrow to flap. Avoid the pipes and ground.</canvas>
           <div id="flappyOverlay" class="flappy-overlay">
             <div class="flappy-message">
-              <h4 id="flappyMessageTitle">Ready to fly?</h4>
-              <p id="flappyMessageText">Stay in the gaps. One flap at a time.</p>
+              <div class="flappy-message-copy">
+                <h4 id="flappyMessageTitle">Ready to fly?</h4>
+                <p id="flappyMessageText">A little flight over the city.</p>
+              </div>
               <button id="flappyPlay" class="flappy-play">Start flying <span aria-hidden="true">→</span></button>
             </div>
           </div>
