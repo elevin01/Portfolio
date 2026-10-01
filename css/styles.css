@@ -591,17 +591,50 @@ body {
 }
 
 .game-grid {
+  --game-gap: 10px;
+  --game-tile-height: 80px;
+  --game-move-duration: 120ms;
+  position: relative;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: var(--game-gap);
   background: #1b1b1b;
-  padding: 10px;
+  padding: var(--game-gap);
   border-radius: 10px;
   border: 1px solid #2f2f2f;
 }
 
+.game-cell {
+  height: var(--game-tile-height);
+  background: #242424;
+  border-radius: 8px;
+}
+
+.game-tile-layer {
+  position: absolute;
+  inset: var(--game-gap);
+  pointer-events: none;
+}
+
 .game-tile {
-  height: 80px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc((100% - 3 * var(--game-gap)) / 4);
+  height: var(--game-tile-height);
+  transform: translate3d(
+    calc(var(--col) * (100% + var(--game-gap))),
+    calc(var(--row) * (100% + var(--game-gap))),
+    0
+  );
+  transition: transform var(--game-move-duration) cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+
+/* Sliding and pop effects use separate elements so their transforms never clash. */
+.game-tile-inner {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -610,23 +643,26 @@ body {
   font-weight: 700;
   font-size: 1.2em;
   border-radius: 8px;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-
-.game-tile:not(:empty) {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
-.game-tile.new {
-  animation: gamePop 0.2s ease-out;
+.game-tile-inner.new {
+  animation: gamePop 140ms ease-out;
 }
 
-.game-tile.merged {
-  animation: gameMerge 0.25s ease-out;
+.game-tile-inner.merged {
+  animation: gameMerge 120ms ease-out;
 }
 
-.game-tile:hover {
-  transform: translateY(-1px);
+@media (prefers-reduced-motion: reduce) {
+  .game-tile {
+    transition: none;
+  }
+
+  .game-tile-inner.new,
+  .game-tile-inner.merged {
+    animation: none;
+  }
 }
 
 .game-status {
@@ -652,17 +688,17 @@ body {
 }
 
 /* Tile colors */
-.game-tile.t-2 { background: #2f3b52; }
-.game-tile.t-4 { background: #36445f; }
-.game-tile.t-8 { background: #355071; color: #fefefe; }
-.game-tile.t-16 { background: #2e6288; color: #fefefe; }
-.game-tile.t-32 { background: #2a6f9e; color: #fefefe; }
-.game-tile.t-64 { background: #2487be; color: #fefefe; }
-.game-tile.t-128 { background: #1ea0df; color: #0f172a; }
-.game-tile.t-256 { background: #1cb7f5; color: #0f172a; }
-.game-tile.t-512 { background: #2ac6f8; color: #0f172a; }
-.game-tile.t-1024 { background: #3cd1f9; color: #0f172a; }
-.game-tile.t-2048 { background: #7de2ff; color: #0f172a; }
+.game-tile-inner.t-2 { background: #2f3b52; }
+.game-tile-inner.t-4 { background: #36445f; }
+.game-tile-inner.t-8 { background: #355071; color: #fefefe; }
+.game-tile-inner.t-16 { background: #2e6288; color: #fefefe; }
+.game-tile-inner.t-32 { background: #2a6f9e; color: #fefefe; }
+.game-tile-inner.t-64 { background: #2487be; color: #fefefe; }
+.game-tile-inner.t-128 { background: #1ea0df; color: #0f172a; }
+.game-tile-inner.t-256 { background: #1cb7f5; color: #0f172a; }
+.game-tile-inner.t-512 { background: #2ac6f8; color: #0f172a; }
+.game-tile-inner.t-1024 { background: #3cd1f9; color: #0f172a; }
+.game-tile-inner.t-2048 { background: #7de2ff; color: #0f172a; }
 /* Responsive tweaks */
 @media (max-width: 1200px) {
   .nav li.hide-on-medium {
