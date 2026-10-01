@@ -769,8 +769,9 @@ body {
   margin-inline: auto;
   border-radius: 12px;
   overflow: hidden;
-  background: #172941;
-  border: 1px solid #3c5669;
+  background: #0b1431;
+  border: 1px solid #47516c;
+  box-shadow: 0 8px 30px #05091440;
 }
 
 #flappyCanvas {
@@ -785,34 +786,39 @@ body {
   inset: 0;
   display: flex;
   align-items: flex-end;
-  padding: 18px 18px 44px;
-  background: linear-gradient(transparent 25%, #09172777);
+  padding: 14px 14px 45px;
+  background: linear-gradient(transparent 65%, #080e2266);
   pointer-events: none;
 }
 
 .flappy-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 18px;
-  background: #101f32ed;
-  border: 1px solid #4b668280;
-  border-radius: 12px;
-  text-align: center;
+  padding: 14px;
+  background: #0d1832ed;
+  border: 1px solid #8194ba54;
+  border-radius: 10px;
+  text-align: left;
 }
 
-.flappy-message h4 { font-size: 1.15rem; }
-.flappy-message p { margin: 5px 0 14px; font-size: 0.8rem; color: #b9c9d8; }
+.flappy-message-copy { flex: 1; min-width: 0; }
+.flappy-message h4 { font-size: 0.95rem; line-height: 1.4; }
+.flappy-message p { margin: 4px 0 0; font-size: 0.73rem; line-height: 1.5; color: #b9c5dc; }
 
 .flappy-play {
+  flex: 0 0 auto;
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  gap: 22px;
-  padding: 9px 17px;
+  gap: 8px;
+  padding: 10px 12px;
   border: 0;
   border-radius: 7px;
   color: #1d2935;
   background: #ffd477;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   pointer-events: auto;
 }
@@ -1008,4 +1014,10 @@ body {
   .game-grid { --game-gap: 8px; --game-tile-height: 64px; }
   .game-instructions { font-size: 0.85rem; }
   .flappy-message { padding: 14px 10px; }
+}
+
+@media (max-height: 500px) {
+  .flappy-message { flex-direction: column; gap: 8px; text-align: center; padding: 10px; }
+  .flappy-message p { display: none; }
+  .flappy-overlay { padding: 10px 10px 23px; }
 }
