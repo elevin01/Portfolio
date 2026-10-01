@@ -2,6 +2,7 @@ import { game2048 } from './game-2048.js';
 import { flappyBird } from './game-flappy.js';
 
 const toggle = document.getElementById('gameToggle');
+const footer = document.querySelector('.sidebar-footer');
 const modal = document.getElementById('gameModal');
 const close = document.getElementById('gameClose');
 const back = document.getElementById('gameBack');
@@ -72,6 +73,7 @@ picker.addEventListener('click', event => {
   game.controller.start();
 });
 toggle.addEventListener('click', openArcade);
+footer.addEventListener('click', openArcade);
 close.addEventListener('click', closeArcade);
 back.addEventListener('click', showPicker);
 modal.addEventListener('click', event => {
