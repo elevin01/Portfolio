@@ -1,7 +1,4 @@
 // 2048 mini game. Tile objects keep their DOM nodes for the lifetime of a tile.
-const gameToggle = document.getElementById('gameToggle');
-const gameModal = document.getElementById('gameModal');
-const gameClose = document.getElementById('gameClose');
 const gameGridEl = document.getElementById('gameGrid');
 const gameScoreEl = document.getElementById('gameScore');
 const gameStatusEl = document.getElementById('gameStatus');
@@ -67,21 +64,20 @@ function cancelPendingMoves() {
 }
 
 function openGame() {
-  gameModal.classList.add('open');
-  gameModal.setAttribute('aria-hidden', 'false');
   gameOpen = true;
   initGame();
+  gameGridEl.focus({ preventScroll: true });
 }
 
 function closeGame() {
+  swipeStart = null;
   cancelPendingMoves();
-  gameModal.classList.remove('open');
-  gameModal.setAttribute('aria-hidden', 'true');
   gameOpen = false;
 }
 
 function initGame() {
   cancelPendingMoves();
+  swipeStart = null;
   tileLayer.replaceChildren();
   grid = Array.from({ length: size }, () => Array(size).fill(null));
   score = 0;
@@ -215,7 +211,7 @@ function renderStatus() {
 }
 
 function handleKeydown(event) {
-  if (!gameOpen) return;
+  if (!gameOpen || event.altKey || event.ctrlKey || event.metaKey) return;
   const direction = directions[event.key];
   if (!direction) return;
   event.preventDefault();
@@ -228,13 +224,30 @@ function handleKeydown(event) {
   move(direction);
 }
 
-gameToggle.addEventListener('click', openGame);
-gameClose.addEventListener('click', closeGame);
 gameReset.addEventListener('click', initGame);
 window.addEventListener('keydown', handleKeydown);
 reducedMotion.addEventListener('change', () => {
   if (reducedMotion.matches && activeMove) activeMove.finish();
 });
-gameModal.addEventListener('click', event => {
-  if (event.target === gameModal) closeGame();
+// Swipes share the same move queue and animation path as the keyboard.
+let swipeStart = null;
+gameGridEl.addEventListener('pointerdown', event => {
+  if (!gameOpen || !event.isPrimary || event.button !== 0) return;
+  swipeStart = { x: event.clientX, y: event.clientY, id: event.pointerId };
+  // Touch already captures its starting cell; only mouse drags need explicit capture.
+  if (event.pointerType === 'mouse') gameGridEl.setPointerCapture(event.pointerId);
 });
+gameGridEl.addEventListener('pointerup', event => {
+  if (!swipeStart || event.pointerId !== swipeStart.id) return;
+  const dx = event.clientX - swipeStart.x;
+  const dy = event.clientY - swipeStart.y;
+  swipeStart = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+  const key = Math.abs(dx) > Math.abs(dy)
+    ? (dx > 0 ? 'ArrowRight' : 'ArrowLeft')
+    : (dy > 0 ? 'ArrowDown' : 'ArrowUp');
+  handleKeydown({ key, preventDefault() {} });
+});
+gameGridEl.addEventListener('pointercancel', () => { swipeStart = null; });
+
+export const game2048 = { start: openGame, stop: closeGame };

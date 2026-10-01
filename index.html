@@ -428,27 +428,83 @@
     </section>
   </main>
 
-  <!-- Hidden 2048 Mini-Game Trigger -->
-  <button id="gameToggle" class="game-toggle" aria-label="Open 2048 mini game"></button>
+  <!-- Hidden Mini-Games Trigger -->
+  <button id="gameToggle" class="game-toggle" aria-label="Open mini games" aria-haspopup="dialog"></button>
 
-  <!-- 2048 Mini-Game Modal -->
-  <div id="gameModal" class="game-modal" aria-hidden="true">
+  <div id="gameModal" class="game-modal" role="dialog" aria-modal="true" aria-labelledby="gameTitle" aria-hidden="true" tabindex="-1">
     <div class="game-modal-content">
       <div class="game-modal-header">
-        <h3>2048 Mini Game</h3>
-        <button class="game-close" id="gameClose" aria-label="Close 2048 mini game">&times;</button>
+        <div class="game-heading">
+          <button id="gameBack" class="game-back" hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg>
+            Games
+          </button>
+          <h3 id="gameTitle">Mini games</h3>
+        </div>
+        <button class="game-close" id="gameClose" aria-label="Close mini games">&times;</button>
       </div>
-      <p class="game-instructions">Use arrow keys or WASD to slide tiles. Combine them to reach 2048.</p>
-      <div class="game-score">
-        <span>Score:</span> <strong id="gameScore">0</strong>
+
+      <div id="gamePicker">
+        <p class="game-picker-intro">Pick a game. Take a break.</p>
+        <div class="game-choices">
+          <button class="game-choice" data-game="2048" aria-label="Play 2048">
+            <span class="game-preview preview-2048" aria-hidden="true">
+              <span class="preview-number-grid"><span>2</span><span>4</span><span>8</span><span>16</span></span>
+            </span>
+            <span class="game-choice-body"><span class="game-choice-title">2048 <span aria-hidden="true">↗</span></span><span class="game-choice-description">Slide, merge, repeat.</span></span>
+          </button>
+          <button class="game-choice" data-game="flappy" aria-label="Play Flappy Bird">
+            <span class="game-preview preview-flappy" aria-hidden="true">
+              <svg viewBox="0 0 240 148" fill="none">
+                <circle cx="46" cy="29" r="13" fill="#d2e6ff" opacity=".85"/>
+                <path d="M26 112h78M144 37h53M15 69h31" stroke="#688eb2" stroke-width="8" stroke-linecap="round" opacity=".2"/>
+                <path d="M173 0h32v48h-32zM173 112h32v36h-32z" fill="#51ad9d"/>
+                <path d="M178 0h6v43h-6zM178 117h6v31h-6z" fill="#82d2b5"/>
+                <path d="M169 43h40v10h-40zM169 108h40v10h-40z" fill="#82d2b5"/>
+                <path d="m75 73-13 5 13 6" fill="#e29b49"/>
+                <ellipse cx="86" cy="76" rx="18" ry="14" fill="#ffd477"/>
+                <ellipse cx="80" cy="81" rx="10" ry="6" fill="#efaf51"/>
+                <circle cx="96" cy="71" r="6" fill="#fff7df"/>
+                <circle cx="98" cy="71" r="2.5" fill="#152941"/>
+                <path d="m99 77 14 4-14 4" fill="#f09364"/>
+                <path d="M0 141h240" stroke="#597c88" stroke-width="14"/>
+              </svg>
+            </span>
+            <span class="game-choice-body"><span class="game-choice-title">Flappy Bird <span aria-hidden="true">↗</span></span><span class="game-choice-description">Find your rhythm. Keep flying.</span></span>
+          </button>
+        </div>
       </div>
-      <div id="gameGrid" class="game-grid" role="grid" aria-label="2048 grid">
-        <!-- Tiles injected by JS -->
+
+      <div id="game2048Panel" class="game-panel" hidden>
+        <p class="game-instructions">Use arrow keys, WASD, or swipe to slide tiles. Combine them to reach 2048.</p>
+        <div class="game-score"><span>Score:</span> <strong id="gameScore">0</strong></div>
+        <div id="gameGrid" class="game-grid" role="grid" aria-label="2048 grid" tabindex="0"></div>
+        <div class="game-actions"><button id="gameReset" class="contact-btn secondary">Reset</button></div>
+        <p id="gameStatus" class="game-status" aria-live="polite"></p>
       </div>
-      <div class="game-actions">
-        <button id="gameReset" class="contact-btn secondary">Reset</button>
+
+      <div id="gameFlappyPanel" class="game-panel" hidden>
+        <div class="flappy-scoreboard">
+          <div><span>Score</span><strong id="flappyScore">0</strong></div>
+          <div><span>Best</span><strong id="flappyBest">0</strong></div>
+        </div>
+        <div class="flappy-stage">
+          <canvas id="flappyCanvas" width="420" height="520" tabindex="0" aria-label="Flappy Bird play area" aria-describedby="flappyInstructions">Press Space or the up arrow to flap. Avoid the pipes and ground.</canvas>
+          <div id="flappyOverlay" class="flappy-overlay">
+            <div class="flappy-message">
+              <h4 id="flappyMessageTitle">Ready to fly?</h4>
+              <p id="flappyMessageText">Stay in the gaps. One flap at a time.</p>
+              <button id="flappyPlay" class="flappy-play">Start flying <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
+        </div>
+        <p id="flappyInstructions" class="game-instructions flappy-instructions">Space, ↑, or tap the game to flap.</p>
+        <div class="game-actions flappy-actions">
+          <button id="flappyPause" class="contact-btn secondary" disabled>Pause</button>
+          <button id="flappyReset" class="contact-btn secondary">Restart</button>
+        </div>
+        <p id="flappyStatus" class="visually-hidden" role="status" aria-live="polite"></p>
       </div>
-      <p id="gameStatus" class="game-status" aria-live="polite"></p>
     </div>
   </div>
 
@@ -473,6 +529,6 @@
       });
     });
   </script>
-  <script src="js/game-2048.js"></script>
+  <script type="module" src="js/game-arcade.js"></script>
 </body>
 </html>
