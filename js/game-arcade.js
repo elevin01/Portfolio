@@ -1,5 +1,6 @@
 import { game2048 } from './game-2048.js';
 import { flappyBird } from './game-flappy.js';
+import { ghostbusters } from './game-ghosts.js';
 
 const toggle = document.getElementById('gameToggle');
 const footer = document.querySelector('.sidebar-footer');
@@ -10,7 +11,8 @@ const title = document.getElementById('gameTitle');
 const picker = document.getElementById('gamePicker');
 const games = {
   '2048': { title: '2048', panel: document.getElementById('game2048Panel'), controller: game2048 },
-  flappy: { title: 'Flappy Bird', panel: document.getElementById('gameFlappyPanel'), controller: flappyBird }
+  flappy: { title: 'Flappy Bird', panel: document.getElementById('gameFlappyPanel'), controller: flappyBird },
+  ghosts: { title: 'Ghostbusters', panel: document.getElementById('gameGhostPanel'), controller: ghostbusters }
 };
 let activeGame = null;
 let isOpen = false;
@@ -24,6 +26,7 @@ function stopGame() {
   games[activeGame].controller.stop();
   games[activeGame].panel.hidden = true;
   activeGame = null;
+  delete modal.dataset.game;
 }
 
 function showPicker() {
@@ -65,6 +68,7 @@ picker.addEventListener('click', event => {
   if (!choice || !games[choice.dataset.game]) return;
   stopGame();
   activeGame = choice.dataset.game;
+  modal.dataset.game = activeGame;
   const game = games[activeGame];
   picker.hidden = true;
   back.hidden = false;
@@ -85,8 +89,8 @@ modal.addEventListener('keydown', event => {
     event.preventDefault();
     closeArcade();
   } else if (event.key === 'Tab') {
-    const focusable = [...modal.querySelectorAll('button:not(:disabled), [tabindex="0"]')]
-      .filter(element => element.getClientRects().length > 0);
+    const focusable = [...modal.querySelectorAll('button:not(:disabled), summary, [tabindex="0"]')]
+      .filter(element => element.tabIndex >= 0 && !element.closest('[inert]') && element.getClientRects().length > 0);
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     if (event.shiftKey && (document.activeElement === first || document.activeElement === modal)) {
