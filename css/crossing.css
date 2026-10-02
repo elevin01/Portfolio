@@ -1,0 +1,207 @@
+.game-modal[data-game="crossing"] .game-modal-content { width: min(810px, 100%); background: #101c2a; border: 1px solid #364758; border-radius: 17px; padding: 18px; }
+.game-modal[data-game="crossing"] .game-modal-header { margin-bottom: 12px; }
+.game-modal[data-game="crossing"] .game-heading h3 { color: #abbfce; font-size: 12px; font-weight: 400; }
+.game-modal[data-game="crossing"] .game-back { color: #b4c9d7; border-color: #42546a; }
+.game-modal[data-game="crossing"] :focus-visible { outline-color: #9ddfea; }
+.crossing-game { color: #e7f1f6; font-size: 13px; line-height: 1.45; }
+.crossing-game h4, .crossing-game h5, .crossing-game p { margin: 0; }
+.crossing-game svg { width: 22px; height: 22px; flex-shrink: 0; }
+.crossing-game button { -webkit-tap-highlight-color: transparent; }
+.crossing-eyebrow { font: 8px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .13em; color: #91aebe; }
+.crossing-masthead { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0 0 15px; }
+.crossing-masthead h4 { margin-top: 4px; font-size: 30px; line-height: 1.1; font-weight: 700; letter-spacing: -.045em; }
+.crossing-masthead h4 > span { color: #9ce1e8; }
+.crossing-top-tools { display: flex; gap: 7px; align-items: center; }
+.crossing-score { display: flex; align-items: baseline; gap: 4px; margin-right: 6px; white-space: nowrap; }
+.crossing-score strong { font: 500 27px/1 ui-monospace, monospace; letter-spacing: -.06em; color: #c4f1f4; }
+.crossing-score > span { color: #91aabb; font-size: 10px; }
+.crossing-icon-button { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid #3c5064; background: #192b3e; color: #b6c9d7; border-radius: 7px; }
+.crossing-icon-button svg { width: 17px; height: 17px; }
+.crossing-icon-button[aria-pressed="true"] { background: #294852; color: #b3eff3; border-color: #7caeb3; }
+#crossingSound[aria-pressed="false"] { position: relative; }
+#crossingSound[aria-pressed="false"]::after { content: ''; position: absolute; width: 20px; height: 1px; background: #b6c9d7; transform: rotate(-45deg); box-shadow: 0 -1px #192b3e; }
+.crossing-layout { display: grid; grid-template-columns: minmax(0, 1fr) 216px; gap: 17px; align-items: start; }
+.crossing-stage { position: relative; width: 100%; height: min(550px, calc(100dvh - 200px)); min-height: 340px; border: 1px solid #456175; border-radius: 11px; background: #192d40; overflow: hidden; isolation: isolate; }
+#crossingCanvas { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.crossing-stage:focus-within { border-color: #9ad4de; }
+.crossing-scene-label { position: absolute; left: 14px; right: 14px; top: 14px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; font: 7px/1 ui-monospace, monospace; letter-spacing: .1em; color: #b6cbd6; text-shadow: 0 1px 5px #102034; }
+.crossing-scene-label > span:first-child { display: flex; align-items: center; gap: 6px; color: #d1eaef; }
+.crossing-scene-label i { width: 4px; height: 4px; border-radius: 50%; background: #99d8df; box-shadow: 0 0 6px #8be0eb55; }
+.crossing-toast { position: absolute; bottom: 15px; left: 12px; right: 12px; margin: auto; width: fit-content; max-width: calc(100% - 24px); padding: 7px 10px; background: #112234ed; border: 1px solid #6d9cb144; border-radius: 5px; color: var(--toast-color, #ceebf2); font-size: 9px; text-align: center; pointer-events: none; opacity: 0; transform: translateY(5px); transition: opacity 150ms, transform 150ms; }
+.crossing-toast.is-visible { opacity: 1; transform: translateY(0); }
+.crossing-console { display: flex; flex-direction: column; gap: 20px; padding-top: 4px; }
+.crossing-route-heading { display: flex; justify-content: space-between; align-items: center; }
+.crossing-route-heading > span:last-child { color: #b2cfda; font: 9px ui-monospace, monospace; }
+.crossing-route-track { height: 3px; position: relative; background: #32475b; margin: 12px 0 9px; }
+.crossing-route-track > i { display: block; width: 100%; height: 100%; background: #a0e2e5; transform: scaleX(0); transform-origin: left; transition: transform 180ms; }
+.crossing-route-track > b { position: absolute; top: -2px; left: 33.333%; width: 1px; height: 7px; background: #92aeba; }
+.crossing-route-track > b:last-child { left: 66.666%; }
+.crossing-stops { display: flex; justify-content: space-between; color: #94adbf; font-size: 8px; }
+.crossing-energy > div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.crossing-energy > div:first-child > span { display: flex; align-items: center; gap: 5px; color: #bddde5; font: 8px ui-monospace, monospace; letter-spacing: .06em; }
+.crossing-energy svg { width: 14px; height: 14px; color: #9ae6f6; }
+.crossing-energy strong { font: 14px ui-monospace, monospace; color: #d1f1f8; }
+.crossing-energy small { font-size: 9px; color: #8cabbc; }
+.crossing-energy-track { height: 5px; margin-top: 9px; overflow: hidden; border-radius: 3px; background: #2b4259; }
+.crossing-energy-track > i { display: block; height: 100%; background: linear-gradient(90deg, #6ba4d5, #a3f0ec); transform-origin: left; transition: transform 150ms; }
+.crossing-energy p { font-size: 9px; color: #8da7ba; margin-top: 7px; }
+.crossing-skill-heading { display: flex; justify-content: space-between; margin-bottom: -11px; }
+.crossing-skill-heading > span { color: #bbd2dc; }
+.crossing-skills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.crossing-skill { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 5px; align-items: flex-start; padding: 11px 10px 13px; text-align: left; background: #1c2c3e; color: var(--skill-color); border: 1px solid #3f526a; border-radius: 8px; min-width: 0; transition: background 130ms, border-color 130ms; }
+.crossing-skill-top { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 2px; }
+.crossing-skill-top svg { width: 23px; height: 23px; }
+.crossing-skill kbd { display: grid; place-items: center; width: 16px; height: 17px; color: #9bb5c5; border: 1px solid #6373896e; border-radius: 3px; font: 8px ui-monospace, monospace; }
+.crossing-skill strong { color: #e0eaf1; font-size: 11px; font-weight: 600; letter-spacing: -.02em; white-space: nowrap; }
+.crossing-skill-action { color: #9db4c6; font-size: 8px; white-space: nowrap; }
+.crossing-skill-state { color: var(--skill-color); font: 8px/1.3 ui-monospace, monospace; white-space: nowrap; margin-top: 4px; }
+.crossing-skill-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--skill-color); transform: scaleX(var(--skill-progress, 1)); transform-origin: left; opacity: .6; transition: transform 75ms linear; }
+.crossing-skill[data-state="active"] { background: #294354; border-color: var(--skill-color); box-shadow: inset 0 0 18px #b5e9ff08; }
+.crossing-skill[data-state="active"] .crossing-skill-progress { opacity: 1; }
+.crossing-skill[data-state="charging"] { background: #192738; border-color: #334559; }
+.crossing-skill[data-state="charging"] .crossing-skill-top { opacity: .55; }
+.crossing-skill[data-state="empty"] { border-style: dashed; }
+.crossing-skill[data-state="empty"] .crossing-skill-state { color: #c1a59c; }
+.game-modal .crossing-skill:disabled { opacity: .68; }
+.crossing-dpad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.crossing-dpad button { display: grid; place-items: center; height: 43px; border: 1px solid #3b526a; border-radius: 7px; background: #1b2f43; color: #b2cadb; box-shadow: 0 2px #0b1726; }
+.crossing-dpad button:active { transform: translateY(1px); background: #315168; box-shadow: none; }
+.crossing-dpad svg { width: 19px; height: 19px; }
+.crossing-dpad [data-move="left"] svg { transform: rotate(-90deg); }
+.crossing-dpad [data-move="right"] svg { transform: rotate(90deg); }
+.crossing-dpad [data-move="down"] svg { transform: rotate(180deg); }
+.crossing-navigation p { font-size: 8px; line-height: 1.5; text-align: center; color: #96afc0; margin-top: 9px; }
+.crossing-touch-hint { display: none; }
+.crossing-tip { border-top: 1px solid #304359; padding-top: 13px; }
+.crossing-tip > span { font: 7px ui-monospace, monospace; letter-spacing: .1em; color: #84a5b9; }
+.crossing-tip p { font-size: 10px; color: #abc0cf; line-height: 1.7; margin-top: 6px; }
+.crossing-overlay { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; padding: 24px; background: linear-gradient(160deg, #102236dc, #10243cc9 60%, #11273aca); backdrop-filter: blur(3px); overflow-y: auto; }
+.crossing-message { width: min(100%, 320px); padding: 16px 0; }
+.crossing-message > .crossing-eyebrow { color: #a5d8e1; font-size: 8px; }
+.crossing-message h5 { font-size: clamp(28px, 3.6vw, 42px); line-height: 1.06; letter-spacing: -.06em; margin: 16px 0 15px; color: #e3f2f6; }
+.crossing-message > p { color: #b3cbd9; font-size: 12px; line-height: 1.8; margin-bottom: 24px; max-width: 280px; }
+.crossing-primary { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 46px; padding: 12px 15px; border: 1px solid #c4f1ef; border-radius: 6px; background: #a3dfe1; color: #163343; font-size: 12px; font-weight: 700; box-shadow: inset 0 -2px #79afb9; }
+.crossing-primary:hover { background: #b5ebea; }
+.crossing-secondary { min-height: 38px; width: 100%; background: transparent; border: 1px solid #708e9f66; color: #c2dbe4; border-radius: 5px; font-size: 11px; padding: 8px; margin-top: 9px; }
+.crossing-message-hint { display: block; color: #99b7c8; font-size: 8px; margin-top: 12px; }
+.crossing-result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: -6px 0 24px; }
+.crossing-result-stats > span { color: #97b8ca; font-size: 8px; }
+.crossing-result-stats strong { display: block; color: #d3f1f5; font: 21px/1.5 ui-monospace, monospace; }
+.crossing-result-stats small { font-size: 10px; color: #8baebb; }
+.crossing-bottom { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.crossing-guide { flex: 1; min-width: 0; }
+.crossing-guide > summary { display: flex; align-items: center; gap: 9px; width: fit-content; min-height: 34px; color: #9cb7c8; font-size: 10px; list-style: none; cursor: pointer; border-radius: 3px; }
+.crossing-guide > summary::-webkit-details-marker { display: none; }
+.crossing-guide > summary > span { color: #90bec9; }
+.crossing-guide > div { color: #a6bdcc; font-size: 11px; line-height: 1.8; padding: 8px 0 14px; }
+.crossing-guide p + p { margin-top: 10px; }
+.crossing-guide strong { color: #cce5ec; }
+.crossing-guide[open] { flex-basis: 100%; }
+.crossing-bottom:has(.crossing-guide[open]) { flex-wrap: wrap; }
+.crossing-restart { display: flex; align-items: center; gap: 5px; min-height: 34px; border: 0; background: transparent; color: #9cb7c8; padding: 5px 0 5px 9px; font-size: 10px; }
+.crossing-restart svg { width: 13px; height: 13px; }
+.game-choice[data-game="crossing"] { grid-column: 1 / -1; display: grid; grid-template-columns: 42% 1fr; border-color: #3d6074; }
+.game-choice[data-game="crossing"] .game-preview { height: 130px; background: #1a3246; }
+.preview-crossing svg { width: 100%; height: 100%; object-fit: cover; }
+.game-choice[data-game="crossing"] .game-choice-body { align-self: center; }
+.game-choice[data-game="crossing"] .game-choice-title { color: #bce4f0; }
+.game-choice[data-game="crossing"] .game-choice-description { color: #a6c3d2; }
+@media (hover: hover) {
+  .crossing-skill[data-state="ready"]:not(:disabled):hover { border-color: var(--skill-color); background: #263c50; }
+  .crossing-dpad button:not(:disabled):hover { background: #2b465d; }
+}
+@media (pointer: coarse) { .crossing-keyboard-hint { display: none; } .crossing-touch-hint { display: inline; } }
+@media (max-width: 650px) {
+  .game-modal[data-game="crossing"] { padding: 10px; }
+  .game-modal[data-game="crossing"] .game-modal-content { padding: 13px; max-height: calc(100dvh - 20px); width: min(480px, 100%); }
+  .game-modal[data-game="crossing"] .game-modal-header { margin-bottom: 7px; }
+  .crossing-masthead { margin-bottom: 11px; }
+  .crossing-masthead h4 { font-size: 25px; margin-top: 3px; }
+  .crossing-masthead .crossing-eyebrow { font-size: 6px; letter-spacing: .08em; }
+  .crossing-top-tools { gap: 5px; }
+  .crossing-score { margin-right: 3px; display: block; text-align: right; line-height: 1.1; }
+  .crossing-score strong { font-size: 24px; }
+  .crossing-score > span { display: block; font-size: 7px; margin-top: 2px; }
+  .crossing-icon-button { width: 32px; height: 36px; }
+  .crossing-layout { display: flex; flex-direction: column; gap: 11px; }
+  .crossing-stage { height: clamp(196px, calc(100dvh - 362px), 468px); min-height: 0; }
+  .crossing-console { display: grid; grid-template-columns: 1fr; width: 100%; padding: 0; gap: 9px; }
+  .crossing-route { display: none; }
+  .crossing-energy > div:first-child > span { font-size: 8px; }
+  .crossing-energy-track { height: 3px; margin-top: 5px; }
+  .crossing-energy p, .crossing-skill-heading, .crossing-tip { display: none; }
+  .crossing-skills { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .crossing-skill { padding: 7px 7px 10px; gap: 4px; min-height: 78px; }
+  .crossing-skill-top { margin-bottom: 0; }
+  .crossing-skill-top svg { width: 19px; height: 19px; }
+  .crossing-skill kbd { border: 0; width: auto; height: auto; font-size: 7px; }
+  .crossing-skill strong { font-size: 9px; letter-spacing: -.025em; }
+  .crossing-skill-action { display: none; }
+  .crossing-skill-state { font-size: 7px; letter-spacing: -.02em; margin-top: 0; }
+  .crossing-dpad { gap: 6px; }
+  .crossing-dpad button { height: 40px; }
+  .crossing-navigation p { font-size: 8px; margin-top: 6px; }
+  .crossing-bottom { margin-top: 5px; }
+  .crossing-guide > summary, .crossing-restart { min-height: 31px; font-size: 9px; }
+  .crossing-overlay { padding: 17px 24px; }
+  .crossing-message { max-width: 290px; padding: 4px 0; }
+  .crossing-message h5 { font-size: 34px; margin: 11px 0 12px; }
+  .crossing-message > p { font-size: 11px; line-height: 1.65; margin-bottom: 17px; }
+  .crossing-scene-label { top: 11px; left: 11px; right: 11px; font-size: 6px; }
+  .crossing-toast { font-size: 8px; bottom: 9px; padding: 6px 8px; }
+  .crossing-result-stats { margin-bottom: 14px; }
+  .game-choice[data-game="crossing"] .game-preview { height: 117px; }
+  .game-choice[data-game="crossing"] .game-choice-description { font-size: .74rem; }
+}
+@media (max-width: 370px) {
+  .crossing-masthead h4 { font-size: 20px; white-space: nowrap; }
+  .crossing-score strong { font-size: 21px; }
+  .crossing-icon-button { width: 30px; }
+  .crossing-skill { padding-inline: 5px; }
+  .crossing-skill strong { font-size: 8px; }
+  .crossing-skill-state { font-size: 7px; }
+}
+@media (max-height: 690px) and (max-width: 650px) {
+  .crossing-message h5 { font-size: 27px; margin: 7px 0 8px; }
+  .crossing-message > p { font-size: 10px; margin-bottom: 11px; line-height: 1.5; }
+  .crossing-message-hint { display: none; }
+  .crossing-message > .crossing-eyebrow { font-size: 6px; }
+  .crossing-primary { min-height: 39px; padding: 9px 12px; font-size: 11px; }
+  .crossing-secondary { min-height: 32px; margin-top: 6px; padding: 6px; }
+  .crossing-result-stats { margin: 0 0 10px; }
+  .crossing-result-stats strong { font-size: 17px; }
+  .crossing-overlay { padding: 14px 20px; align-items: safe center; }
+  .crossing-skill { min-height: 68px; }
+}
+@media (min-width: 651px) and (max-height: 650px) {
+  .game-modal[data-game="crossing"] { padding: 10px; }
+  .game-modal[data-game="crossing"] .game-modal-content { padding: 12px; max-height: calc(100dvh - 20px); width: min(700px, 100%); }
+  .game-modal[data-game="crossing"] .game-modal-header { margin-bottom: 5px; }
+  .crossing-masthead { margin-bottom: 8px; }
+  .crossing-masthead .crossing-eyebrow { display: none; }
+  .crossing-masthead h4 { font-size: 23px; margin-top: 0; }
+  .crossing-layout { grid-template-columns: minmax(0, 1fr) 250px; gap: 12px; }
+  .crossing-stage { height: max(218px, calc(100dvh - 168px)); min-height: 0; }
+  .crossing-console { gap: 9px; padding: 0; }
+  .crossing-route, .crossing-tip, .crossing-energy p, .crossing-skill-heading { display: none; }
+  .crossing-skills { gap: 6px; }
+  .crossing-skill { padding: 7px 9px 9px; display: grid; grid-template-columns: 24px 1fr; align-items: center; column-gap: 6px; row-gap: 3px; min-height: 61px; }
+  .crossing-skill-top { grid-column: 1; grid-row: 1 / 3; margin: 0; }
+  .crossing-skill-top kbd, .crossing-skill-action { display: none; }
+  .crossing-skill strong { font-size: 9px; grid-column: 2; }
+  .crossing-skill-state { margin-top: 0; font-size: 7px; grid-column: 2; }
+  .crossing-dpad button { height: 37px; }
+  .crossing-navigation p { margin-top: 5px; font-size: 7px; }
+  .crossing-bottom { margin-top: 3px; }
+  .crossing-overlay { padding: 13px 26px; align-items: safe center; }
+  .crossing-message { padding: 0; max-width: 310px; }
+  .crossing-message h5 { font-size: 28px; margin: 8px 0; }
+  .crossing-message > p { font-size: 10px; line-height: 1.5; margin-bottom: 12px; }
+  .crossing-message-hint { display: none; }
+  .crossing-primary { min-height: 38px; padding-block: 8px; }
+  .crossing-result-stats { margin: 0 0 10px; }
+  .crossing-result-stats strong { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .crossing-game *, .crossing-game *::before, .crossing-game *::after { animation: none !important; transition: none !important; }
+}
