@@ -409,7 +409,7 @@ export class CrossingRenderer {
     }
     const visible = model.rows.filter(row => { const y = this.point(0, row.index).y; return y > -90 && y < this.height + 100; });
     for (const row of visible) this.road(row, this.point(0, row.index).y);
-    if (model.player.y > 39) {
+    if (model.player.y >= model.finish * 2 / 3) {
       for (const x of [0, 436]) {
         c.fillStyle = '#214258'; c.fillRect(x, 0, 44, this.height);
         for (let n = 0; n < 18; n++) this.line([[x + 3, n * 36 + Math.sin(time + n) * 4], [x + 28, n * 36 + Math.sin(time + n) * 4]], '#78a1af1f');
@@ -420,7 +420,7 @@ export class CrossingRenderer {
     const objects = [];
     for (const row of visible) {
       objects.push({ y: row.index, order: -2, draw: () => this.scenery(row, this.point(0, row.index).y) });
-      if (row.index === 60) objects.push({ y: 60, order: -1, draw: () => { const p = this.point(3, 60); this.portal(p.x, p.y, time); } });
+      if (row.index === model.finish) objects.push({ y: model.finish, order: -1, draw: () => { const p = this.point(3, model.finish); this.portal(p.x, p.y, time); } });
       if (row.pickup && !row.pickup.taken) objects.push({ y: row.index, order: -1, draw: () => { const p = this.point(row.pickup.col, row.index); this.crystal(p.x, p.y, time); } });
       for (const obstacle of row.obstacles) if (!obstacle.removed) objects.push({ y: row.index, order: 0, draw: () => { const p = this.point(obstacle.col, row.index); this.obstacle(p.x, p.y, obstacle.kind); } });
       for (const car of row.cars) {

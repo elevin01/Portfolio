@@ -1,10 +1,32 @@
 # Slime × NYC Crossing
 
-A standalone arcade journey: get Rimuru from Midtown, through Bryant Park, to a Tempest portal at the East River. The miniature city is a stylized route, not a street map. Sixty lanes give a run a clear destination; the three districts change scenery, traffic speed, and the length of road crossings. There is no forced scrolling or waiting penalty. Safe islands let players study traffic and choose an opening.
+A standalone arcade journey: get Rimuru from Midtown, through Bryant Park, to a Tempest portal at the East River. The miniature city is a stylized route, not a street map. Four difficulties offer progressively longer runs; each route has three equally sized districts. There is no forced scrolling or waiting penalty. Safe islands let players study traffic and choose an opening.
+
+## Difficulty variants
+
+Easy preserves the original 60-lane game, including the seeded street layouts, opening traffic, and ability balance. All four modes start with 100 magicules and all four skills. Harder modes increase traffic speed, density, long vehicles, and uninterrupted road stretches. Skill effects and durations stay intact; casting opportunities become scarcer.
+
+| Mode | Lanes | Magicules per new lane | Per crystal | Per district arrival | Casting cost multiplier | Cooldown multiplier | Longest road stretch |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Easy | 60 | 1.5 | 8 | 15 | 1× | 1× | 4 lanes |
+| Normal | 120 | 0.65 | 5 | 8 | 1.2× | 1.65× | 5 lanes |
+| Hard | 180 | 0.3 | 3 | 5 | 1.4× | 2.6× | 6 lanes |
+| Demon Lord | 300 | 0.15 | 2 | 3 | 1.65× | 3.8× | 7 lanes |
+
+Costs and cooldowns round up to whole magicules/seconds. New-lane income alone takes 14 lanes to recover an Easy Beelzebub cast, versus 37 on Normal, 94 on Hard, and 220 on Demon Lord. Crystals matter increasingly on the harder routes. Waiting never produces magicules.
+
+| Skill | Easy cost / recharge | Normal | Hard | Demon Lord |
+| --- | --- | --- | --- | --- |
+| Beelzebub | 20 / 4s | 24 / 7s | 28 / 11s | 33 / 16s |
+| Storm Dragon | 55 / 16s | 66 / 27s | 77 / 42s | 91 / 61s |
+| Raphael | 24 / 10s | 29 / 17s | 34 / 26s | 40 / 38s |
+| Uriel | 28 / 9s | 34 / 15s | 40 / 24s | 47 / 35s |
+
+Choose a mode before starting. The mode button during a run pauses it and opens the selector; selecting a card only previews the rules. Starting the selected crossing replaces the paused run, while “Keep my … run” resumes it intact. Retries and new routes retain the selected difficulty.
 
 ## Four abilities, four decisions
 
-All four ultimate skills are available immediately. Their roles come from Tensura; the ranges, costs, durations, and cooldowns are game balance choices. This is a crossing-game adaptation, not a claim that ordinary traffic could defeat the canonical Rimuru.
+All four ultimate skills are available immediately. Their roles come from Tensura; the ranges, costs, durations, and cooldowns are game balance choices. The table below describes the original Easy balance. This is a crossing-game adaptation, not a claim that ordinary traffic could defeat the canonical Rimuru.
 
 | Key | Skill | Crossing role | Cost | Duration | Cooldown |
 | --- | --- | --- | ---: | ---: | ---: |
@@ -20,9 +42,10 @@ Primary reference: the [official Tensura glossary](https://www.ten-sura.com/keyw
 ## Resource economy and replay
 
 - Start with 100 magicules; the reserve is capped at 100.
-- A newly reached lane adds 1.5; a crystal adds 8 once; first arrival at lanes 20 and 40 adds 15.
+- Rewards follow the selected mode. District bonuses occur one-third and two-thirds of the way through that route, once each. Fractional income is accounted for to two decimal places.
 - Waiting, backtracking, and consuming cars do not replenish the reserve. Cooldowns alone cannot create infinite skill use.
-- A retry uses the same seed and opening traffic. A new route changes the seed. Only this game's best distance, fastest completed crossing, and sound preference are saved locally.
+- A retry uses the same seed and opening traffic. A new route changes the seed. Each difficulty has its own best distance and fastest completed crossing. Sound and the last-started difficulty are also saved locally.
+- Previous v1 distance and time records migrate to Easy in v2 storage. The legacy entry remains untouched; blocked or corrupt storage falls back safely.
 - There is no shared inventory, unlock system, or progression connection to the other arcade games.
 
 ## Input and presentation
@@ -34,10 +57,11 @@ Custom Canvas/SVG artwork includes elastic slime hops, directional vortices with
 ## Implementation and verification
 
 - `crossing-model.js`: deterministic generation, fixed-step rules, swept relative collisions, powers, forecasts, resource accounting.
+- `crossing-records.js`: record validation, migration, and independent per-mode records.
 - `crossing-renderer.js` / `crossing-art.js`: rendering and bounded transient effects; artwork never consumes the simulation's random stream.
 - `game-crossing.js`: DOM, keyboard/pointer controls, optional audio, records, and arcade lifecycle.
 - `crossing.css`: scoped desktop, narrow portrait, short landscape, and reduced-motion layouts.
 
 The 120 Hz simulation is independent of display frame rate. Real skill time and perceived traffic time are separate. Elapsed frame time is capped; pausing freezes both. Closing the modal cancels animation frames, pointers, buffered input, effects, and sound. Returning to a suspended run requires an explicit resume.
 
-Run the pure simulation suite with `node --test tests/*.test.mjs`. No build step or new runtime dependency is needed. Browser checks cover touch and keyboard input, full completion, failure/retry, resources and all four skills, pause/resume, modal navigation, reduced motion, unavailable storage, and portrait/landscape layouts.
+Run the pure simulation suite with `node --test tests/*.test.mjs`. No build step or new runtime dependency is needed. Tests include original-Easy layout fingerprints, generated route safety, increasing traffic pressure, fractional rewards, scaled skill costs/cooldowns, extended finish boundaries, and record migration. Browser checks cover touch and keyboard input, completion, failure/retry, mode selection/cancellation, resources and skills, pause/resume, modal navigation, reduced motion, unavailable storage, and portrait/landscape layouts.
