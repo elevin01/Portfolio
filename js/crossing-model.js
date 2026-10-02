@@ -8,6 +8,31 @@ export const SKILLS = Object.freeze({
   uriel: { name: 'Uriel', title: 'Lord of Vows', cost: 28, duration: 2.8, cooldown: 9, color: '#ffcf83', action: 'Raise a barrier', key: '4' }
 });
 
+// Easy deliberately retains the original route generation and economy.
+export const CROSSING_MODES = Object.freeze(Object.fromEntries([
+  { id: 'easy', name: 'Easy', finish: 60, laneEnergy: 1.5, crystalEnergy: 8, districtEnergy: 15,
+    costScale: 1, cooldownScale: 1, speedScale: 1, cycle: 20, cars: 4, heavyChance: 0.22, obstacles: 2, roadPeriods: [4, 5, 5],
+    description: 'The original crossing. Room to experiment, with a generous reserve.' },
+  { id: 'normal', name: 'Normal', finish: 120, laneEnergy: 0.65, crystalEnergy: 5, districtEnergy: 8,
+    costScale: 1.2, cooldownScale: 1.65, speedScale: 1.12, cycle: 18.5, cars: 4, heavyChance: 0.28, obstacles: 2, roadPeriods: [5, 5, 6],
+    description: 'Rush-hour traffic. Read the gaps and spend your magicules carefully.' },
+  { id: 'hard', name: 'Hard', finish: 180, laneEnergy: 0.3, crystalEnergy: 3, districtEnergy: 5,
+    costScale: 1.4, cooldownScale: 2.6, speedScale: 1.25, cycle: 22, cars: 5, heavyChance: 0.34, obstacles: 3, roadPeriods: [6, 6, 7],
+    description: 'Long avenues, heavy traffic. Most crossings will depend on your timing.' },
+  { id: 'demon', name: 'Demon Lord', finish: 300, laneEnergy: 0.15, crystalEnergy: 2, districtEnergy: 3,
+    costScale: 1.65, cooldownScale: 3.8, speedScale: 1.42, cycle: 25, cars: 6, heavyChance: 0.4, obstacles: 3, roadPeriods: [6, 7, 8],
+    description: 'A city-length endurance run. Bank every crystal; make each cast count.' }
+].map(mode => [mode.id, Object.freeze({ ...mode, roadPeriods: Object.freeze(mode.roadPeriods) })])));
+
+export function crossingMode(id) { return Object.hasOwn(CROSSING_MODES, id) ? CROSSING_MODES[id] : CROSSING_MODES.easy; }
+
+export function skillsForMode(id) {
+  const mode = crossingMode(id);
+  return Object.fromEntries(Object.entries(SKILLS).map(([key, skill]) => [key, {
+    ...skill, cost: Math.ceil(skill.cost * mode.costScale), cooldown: Math.ceil(skill.cooldown * mode.cooldownScale)
+  }]));
+}
+
 export function seededRandom(seed) {
   let value = seed >>> 0;
   return () => {
@@ -18,8 +43,8 @@ export function seededRandom(seed) {
   };
 }
 
-export function district(row) {
-  return row < 20 ? 'Midtown' : row < 40 ? 'Bryant Park' : 'East River';
+export function district(row, finish = CROSSING.finish) {
+  return row < finish / 3 ? 'Midtown' : row < finish * 2 / 3 ? 'Bryant Park' : 'East River';
 }
 
 // Relative swept collision catches a car crossing the slime between physics ticks.
@@ -42,34 +67,36 @@ function sweptHit(ax, ay, bx, by, halfWidth, halfHeight) {
   return true;
 }
 
-function makeRoute(seed) {
+function makeRoute(seed, mode) {
   const random = seededRandom(seed);
-  return Array.from({ length: CROSSING.finish + 1 }, (_, index) => {
-    const chapter = Math.min(2, Math.floor(index / 20));
-    const local = index % 20;
-    const safe = index === 60 || local < 2 || (chapter === 0 ? local % 4 === 0 : local % 5 === 0);
+  const districtLength = mode.finish / 3;
+  return Array.from({ length: mode.finish + 1 }, (_, index) => {
+    const chapter = Math.min(2, Math.floor(index / districtLength));
+    const local = index % districtLength;
+    const safe = index === mode.finish || local < 2 || local % mode.roadPeriods[chapter] === 0;
     const row = { index, type: safe ? (chapter === 1 ? 'park' : 'pavement') : 'road', chapter, obstacles: [], cars: [], pickup: null };
     if (safe) {
-      if (local > 1 && index < 60) {
+      if (local > 1 && index < mode.finish) {
         const columns = [0, 1, 2, 3, 4, 5, 6];
-        for (let n = 0; n < 2; n++) {
+        for (let n = 0; n < mode.obstacles; n++) {
           const slot = Math.floor(random() * columns.length);
           row.obstacles.push({ col: columns.splice(slot, 1)[0], kind: chapter === 1 ? 'tree' : (n ? 'planter' : 'cart'), removed: false });
         }
       }
-      if (index > 0 && index < 60) {
+      if (index > 0 && index < mode.finish) {
         const free = Array.from({ length: 7 }, (_, i) => i).filter(col => !row.obstacles.some(obstacle => obstacle.col === col));
         row.pickup = { col: index === 1 ? 3 : free[Math.floor(random() * free.length)], taken: false };
       }
     } else {
       row.direction = index % 2 ? -1 : 1;
-      row.speed = (1.05 + chapter * 0.36 + random() * 0.6) * row.direction;
-      row.cycle = 20;
-      const offset = random() * 5;
-      for (let n = 0; n < 4; n++) {
-        const kind = random() < 0.22 ? (chapter === 2 ? 'truck' : 'bus') : random() < 0.58 ? 'taxi' : 'car';
+      row.speed = (1.05 + chapter * 0.36 + random() * 0.6) * row.direction * mode.speedScale;
+      row.cycle = mode.cycle;
+      const spacing = mode.cycle / mode.cars;
+      const offset = random() * spacing;
+      for (let n = 0; n < mode.cars; n++) {
+        const kind = random() < mode.heavyChance ? (chapter === 2 ? 'truck' : 'bus') : random() < 0.58 ? 'taxi' : 'car';
         const length = kind === 'bus' ? 2.05 : kind === 'truck' ? 2.3 : 1.22;
-        const x = n * 5 + offset - 7;
+        const x = n * spacing + offset - 7;
         row.cars.push({ id: `${index}-${n}`, x, prevX: x, length, kind, paint: Math.floor(random() * 3), removed: false });
       }
     }
@@ -78,11 +105,14 @@ function makeRoute(seed) {
 }
 
 export class CrossingModel {
-  constructor(seed = Date.now()) { this.reset(seed); }
+  constructor(seed = Date.now(), mode = 'easy') { this.reset(seed, mode); }
 
-  reset(seed = this.seed) {
+  reset(seed = this.seed, mode = this.mode?.id || 'easy') {
+    this.mode = crossingMode(mode);
+    this.finish = this.mode.finish;
+    this.skillSettings = skillsForMode(this.mode.id);
     this.seed = seed >>> 0;
-    this.rows = makeRoute(this.seed);
+    this.rows = makeRoute(this.seed, this.mode);
     this.phase = 'ready';
     this.player = { x: 3, y: 0, prevX: 3, prevY: 0, col: 3, row: 0, facing: { dx: 0, dy: 1 } };
     this.move = null;
@@ -102,6 +132,7 @@ export class CrossingModel {
   begin() { if (this.phase === 'ready') { this.phase = 'playing'; this.emit('begin'); } }
   pause() { if (this.phase === 'playing') { this.phase = 'paused'; this.queued = null; } }
   resume() { if (this.phase === 'paused') this.phase = 'playing'; }
+  gainEnergy(amount) { this.energy = Math.min(100, Math.round((this.energy + amount) * 100) / 100); }
 
   obstacleAt(col, row) { return this.rows[row]?.obstacles.find(item => item.col === col && !item.removed); }
 
@@ -111,7 +142,7 @@ export class CrossingModel {
     this.player.facing = { dx, dy };
     const col = this.player.col + dx;
     const row = this.player.row + dy;
-    if (col < 0 || col >= CROSSING.columns || row < 0 || row > CROSSING.finish || this.obstacleAt(col, row)) {
+    if (col < 0 || col >= CROSSING.columns || row < 0 || row > this.finish || this.obstacleAt(col, row)) {
       this.emit('bump', { col, row });
       return false;
     }
@@ -121,17 +152,17 @@ export class CrossingModel {
   }
 
   availability(key) {
-    if (!SKILLS[key]) return 'Unknown skill';
+    if (!Object.hasOwn(this.skillSettings, key)) return 'Unknown skill';
     if (this.phase !== 'playing') return 'Start or resume your crossing';
     if (this.skills[key].cooldown > 0) return `Recharging · ${Math.ceil(this.skills[key].cooldown)}s`;
-    if (this.energy < SKILLS[key].cost) return `Needs ${SKILLS[key].cost} magicules`;
+    if (this.energy < this.skillSettings[key].cost) return `Needs ${this.skillSettings[key].cost} magicules`;
     return '';
   }
 
   cast(key) {
     const reason = this.availability(key);
     if (reason) { this.emit('unavailable', { key, reason }); return false; }
-    const skill = SKILLS[key];
+    const skill = this.skillSettings[key];
     this.energy -= skill.cost;
     this.skills[key] = { active: skill.duration, cooldown: skill.cooldown };
     if (key === 'beelzebub') this.beelFacing = { ...this.player.facing };
@@ -188,22 +219,22 @@ export class CrossingModel {
     this.player.y = row;
     this.move = null;
     if (row > this.furthest) {
-      this.energy = Math.min(100, this.energy + (row - this.furthest) * 1.5);
+      this.gainEnergy((row - this.furthest) * this.mode.laneEnergy);
       this.furthest = row;
-      if (row === 20 || row === 40) {
-        this.energy = Math.min(100, this.energy + 15);
-        this.emit('district', { name: district(row) });
+      if (row === this.finish / 3 || row === this.finish * 2 / 3) {
+        this.gainEnergy(this.mode.districtEnergy);
+        this.emit('district', { name: district(row, this.finish), energy: this.mode.districtEnergy });
       }
     }
     const pickup = this.rows[row].pickup;
     if (pickup && !pickup.taken && pickup.col === col) {
       pickup.taken = true;
-      this.energy = Math.min(100, this.energy + 8);
+      this.gainEnergy(this.mode.crystalEnergy);
       this.stats.collected++;
-      this.emit('pickup', { x: col, y: row });
+      this.emit('pickup', { x: col, y: row, energy: this.mode.crystalEnergy });
     }
     this.emit('land', { x: col, y: row });
-    if (row === CROSSING.finish && col === 3) {
+    if (row === this.finish && col === 3) {
       this.phase = 'won';
       this.queued = null;
       this.emit('win');
@@ -235,8 +266,8 @@ export class CrossingModel {
       for (const car of row.cars) {
         car.prevX = car.x;
         car.x += row.speed * worldDt;
-        if (car.x > 13 || car.x < -7) {
-          car.x += car.x > 13 ? -row.cycle : row.cycle;
+        if (car.x > row.cycle - 7 || car.x < -7) {
+          car.x += car.x > row.cycle - 7 ? -row.cycle : row.cycle;
           car.prevX = car.x;
           car.removed = false;
         }
@@ -271,7 +302,7 @@ export class CrossingModel {
     if (this.move) return 'busy';
     const col = this.player.col + dx;
     const target = this.player.row + dy;
-    if (col < 0 || col > 6 || target < 0 || target > 60 || this.obstacleAt(col, target)) return 'blocked';
+    if (col < 0 || col >= CROSSING.columns || target < 0 || target > this.finish || this.obstacleAt(col, target)) return 'blocked';
     const speedScale = this.skills.raphael.active > 0 ? 0.3 : 1;
     for (const row of this.rows) {
       if (Math.abs(row.index - this.player.row) > 2) continue;

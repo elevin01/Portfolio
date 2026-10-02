@@ -30,6 +30,25 @@
 .crossing-toast { position: absolute; bottom: 15px; left: 12px; right: 12px; margin: auto; width: fit-content; max-width: calc(100% - 24px); padding: 7px 10px; background: #112234ed; border: 1px solid #6d9cb144; border-radius: 5px; color: var(--toast-color, #ceebf2); font-size: 9px; text-align: center; pointer-events: none; opacity: 0; transform: translateY(5px); transition: opacity 150ms, transform 150ms; }
 .crossing-toast.is-visible { opacity: 1; transform: translateY(0); }
 .crossing-console { display: flex; flex-direction: column; gap: 20px; padding-top: 4px; }
+.crossing-live-console { display: contents; }
+.crossing-brief { display: flex; flex-direction: column; gap: 15px; }
+.crossing-mode-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.crossing-mode-options button { --mode-color: #a3dfe1; display: flex; flex-direction: column; justify-content: center; gap: 5px; min-height: 91px; padding: 11px; border: 1px solid #3e5268; border-radius: 8px; background: #1b2d40; color: #a8bdcc; text-align: left; transition: background 140ms, border-color 140ms; }
+.crossing-mode-options [data-crossing-mode="normal"] { --mode-color: #a1dbb1; }
+.crossing-mode-options [data-crossing-mode="hard"] { --mode-color: #ebc087; }
+.crossing-mode-options [data-crossing-mode="demon"] { --mode-color: #c9acf0; }
+.crossing-mode-options button[aria-pressed="true"] { background: #2a4053; border-color: var(--mode-color); box-shadow: inset 0 -2px var(--mode-color); }
+.crossing-mode-options strong { font-size: 12px; color: #e4eff3; font-weight: 600; white-space: nowrap; }
+.crossing-mode-options button > span:last-child { font: 10px ui-monospace, monospace; color: var(--mode-color); }
+.crossing-mode-rank { font: 8px ui-monospace, monospace; letter-spacing: .1em; color: var(--mode-color); opacity: .8; }
+.crossing-mode-description { min-height: 47px; color: #adc4d1; font-size: 11px; line-height: 1.7; }
+.crossing-mode-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 10px; row-gap: 15px; padding: 13px 0; border-block: 1px solid #344b61; }
+.crossing-mode-facts > span { color: #95aebf; font-size: 9px; }
+.crossing-mode-facts strong { display: block; color: #d1e9f0; font: 16px/1.5 ui-monospace, monospace; }
+.crossing-mode-best { color: #9cb9ca; font: 8px/1.6 ui-monospace, monospace; }
+.crossing-mode-note p { margin-top: 6px; color: #9eb8c9; font-size: 10px; line-height: 1.7; }
+.crossing-mode-switch { display: inline-flex; align-items: center; justify-content: center; gap: 8px; align-self: flex-start; flex-shrink: 0; min-height: 32px; padding: 5px 9px; border: 1px solid #3d536a; border-radius: 5px; background: #192d40; color: #c2dbe6; font-size: 9px; }
+.crossing-mode-switch::after { content: ''; width: 5px; height: 5px; margin-top: -3px; border-right: 1px solid; border-bottom: 1px solid; transform: rotate(45deg); }
 .crossing-route-heading { display: flex; justify-content: space-between; align-items: center; }
 .crossing-route-heading > span:last-child { color: #b2cfda; font: 9px ui-monospace, monospace; }
 .crossing-route-track { height: 3px; position: relative; background: #32475b; margin: 12px 0 9px; }
@@ -126,6 +145,20 @@
   .crossing-layout { display: flex; flex-direction: column; gap: 11px; }
   .crossing-stage { height: clamp(196px, calc(100dvh - 362px), 468px); min-height: 0; }
   .crossing-console { display: grid; grid-template-columns: 1fr; width: 100%; padding: 0; gap: 9px; }
+  .crossing-brief { display: grid; gap: 6px; }
+  .crossing-brief > .crossing-eyebrow { font-size: 7px; }
+  .crossing-mode-options { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .crossing-mode-options button { min-height: 57px; padding: 8px 6px; gap: 5px; }
+  .crossing-mode-rank, .crossing-mode-note { display: none; }
+  .crossing-mode-options strong { font-size: 10px; letter-spacing: -.035em; }
+  .crossing-mode-options button > span:last-child { font-size: 8px; }
+  .crossing-mode-description { min-height: 28px; font-size: 10px; line-height: 1.4; }
+  .crossing-mode-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 6px 0; gap: 4px; }
+  .crossing-mode-facts strong { font-size: 13px; line-height: 1.4; }
+  .crossing-mode-facts > span { font-size: 7px; }
+  .crossing-mode-best { font-size: 7px; }
+  .crossing-mode-switch { min-height: 29px; font-size: 8px; padding-inline: 7px; }
+  .crossing-bottom { gap: 8px; }
   .crossing-route { display: none; }
   .crossing-energy > div:first-child > span { font-size: 8px; }
   .crossing-energy-track { height: 3px; margin-top: 5px; }
@@ -160,6 +193,10 @@
   .crossing-skill { padding-inline: 5px; }
   .crossing-skill strong { font-size: 8px; }
   .crossing-skill-state { font-size: 7px; }
+  .crossing-mode-options strong { font-size: 8px; letter-spacing: 0; }
+  .crossing-mode-options button > span:last-child { font-size: 7px; }
+  .crossing-mode-facts strong { font-size: 12px; }
+  .crossing-mode-switch { padding-inline: 5px; gap: 6px; }
 }
 @media (max-height: 690px) and (max-width: 650px) {
   .crossing-message h5 { font-size: 27px; margin: 7px 0 8px; }
@@ -171,6 +208,7 @@
   .crossing-result-stats { margin: 0 0 10px; }
   .crossing-result-stats strong { font-size: 17px; }
   .crossing-overlay { padding: 14px 20px; align-items: safe center; }
+  .crossing-game[data-choosing="true"]:not([data-phase="ready"]) .crossing-overlay { padding-block: 8px; }
   .crossing-skill { min-height: 68px; }
 }
 @media (min-width: 651px) and (max-height: 650px) {
@@ -183,6 +221,18 @@
   .crossing-layout { grid-template-columns: minmax(0, 1fr) 250px; gap: 12px; }
   .crossing-stage { height: max(218px, calc(100dvh - 168px)); min-height: 0; }
   .crossing-console { gap: 9px; padding: 0; }
+  .crossing-brief { gap: 7px; }
+  .crossing-brief > .crossing-eyebrow { font-size: 7px; }
+  .crossing-mode-options { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+  .crossing-mode-options button { min-height: 60px; padding: 7px 5px; gap: 6px; }
+  .crossing-mode-options strong { font-size: 8px; }
+  .crossing-mode-options button > span:last-child { font-size: 7px; }
+  .crossing-mode-rank, .crossing-mode-note { display: none; }
+  .crossing-mode-description { min-height: 28px; font-size: 10px; line-height: 1.4; }
+  .crossing-mode-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 7px 0; gap: 4px; }
+  .crossing-mode-facts strong { font-size: 12px; }
+  .crossing-mode-facts > span { font-size: 7px; }
+  .crossing-mode-best { font-size: 7px; }
   .crossing-route, .crossing-tip, .crossing-energy p, .crossing-skill-heading { display: none; }
   .crossing-skills { gap: 6px; }
   .crossing-skill { padding: 7px 9px 9px; display: grid; grid-template-columns: 24px 1fr; align-items: center; column-gap: 6px; row-gap: 3px; min-height: 61px; }

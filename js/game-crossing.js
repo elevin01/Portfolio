@@ -1,6 +1,7 @@
-import { CROSSING, SKILLS, CrossingModel, district } from './crossing-model.js';
+import { CROSSING, CROSSING_MODES, SKILLS, CrossingModel, crossingMode, district, skillsForMode } from './crossing-model.js';
 import { CrossingRenderer } from './crossing-renderer.js';
 import { crossingIcon as icon, crossingPreview } from './crossing-art.js';
+import { CROSSING_STORAGE_KEY, loadCrossingRecords, recordCrossing } from './crossing-records.js';
 
 const root = document.getElementById('gameCrossingPanel');
 document.getElementById('crossingPreview').innerHTML = crossingPreview;
@@ -8,14 +9,14 @@ root.innerHTML = `
   <div class="crossing-masthead">
     <div><span class="crossing-eyebrow">RIMURU'S UNEXPECTED DETOUR</span><h4>City crossing<span>.</span></h4></div>
     <div class="crossing-top-tools">
-      <div class="crossing-score"><strong id="crossingDistance">00</strong><span>/ 60 lanes</span></div>
+      <div class="crossing-score"><strong id="crossingDistance">00</strong><span id="crossingGoal">/ 60 lanes</span></div>
       <button id="crossingSound" class="crossing-icon-button" aria-label="Enable sound" aria-pressed="false" title="Sound">${icon('sound')}</button>
       <button id="crossingPause" class="crossing-icon-button" aria-label="Pause crossing" title="Pause · P" disabled>${icon('pause')}</button>
     </div>
   </div>
   <div class="crossing-layout">
     <div class="crossing-stage">
-      <canvas id="crossingCanvas" tabindex="0" aria-label="Slime NYC Crossing play area" aria-describedby="crossingInstructions">Move with arrow keys or WASD. Press 1 through 4 for your ultimate skills. Reach the portal at lane 60.</canvas>
+      <canvas id="crossingCanvas" tabindex="0" aria-label="Slime NYC Crossing play area" aria-describedby="crossingInstructions">Move with arrow keys or WASD. Press 1 through 4 for your ultimate skills. Reach the portal at the end of your selected route.</canvas>
       <div class="crossing-scene-label" aria-hidden="true"><span><i></i><span id="crossingDistrict">MIDTOWN</span></span><span>NYC · 02:14 AM</span></div>
       <div id="crossingToast" class="crossing-toast" aria-hidden="true"></div>
       <div id="crossingOverlay" class="crossing-overlay" data-phase="ready">
@@ -26,11 +27,30 @@ root.innerHTML = `
           <div id="crossingResultStats" class="crossing-result-stats" hidden></div>
           <button id="crossingPlay" class="crossing-primary">Make the crossing <span aria-hidden="true">↗</span></button>
           <button id="crossingNewRoute" class="crossing-secondary" hidden>New route</button>
+          <button id="crossingCancelMode" class="crossing-secondary" hidden>Return to crossing</button>
           <span id="crossingMessageHint" class="crossing-message-hint">Four ultimate skills. One magicule reserve.</span>
         </div>
       </div>
     </div>
     <div class="crossing-console">
+      <div id="crossingBrief" class="crossing-brief">
+        <span class="crossing-eyebrow">CHOOSE YOUR CROSSING</span>
+        <div class="crossing-mode-options" role="group" aria-label="Crossing difficulty">
+          ${Object.values(CROSSING_MODES).map((mode, index) => `<button data-crossing-mode="${mode.id}" aria-pressed="${mode.id === 'easy'}" aria-describedby="crossingModeDescription crossingModeFacts">
+            <span class="crossing-mode-rank" aria-hidden="true">${['I', 'II', 'III', 'IV'][index]}</span><strong>${mode.name}</strong><span>${mode.finish} lanes</span>
+          </button>`).join('')}
+        </div>
+        <p id="crossingModeDescription" class="crossing-mode-description"></p>
+        <div id="crossingModeFacts" class="crossing-mode-facts">
+          <span><strong id="crossingModeIncome">+1.5</strong>per new lane</span>
+          <span><strong id="crossingModeCrystal">+8</strong>per crystal</span>
+          <span><strong id="crossingModeCost">20–55</strong>cast cost</span>
+          <span><strong id="crossingModeWait">4–16s</strong>recharge</span>
+        </div>
+        <p id="crossingModeBest" class="crossing-mode-best"></p>
+        <div class="crossing-mode-note"><span class="crossing-eyebrow">POWER IS PRECIOUS</span><p>Every mode starts with 100 magicules and all four skills. Harder crossings cost more to cast and take longer to recharge.</p></div>
+      </div>
+      <div id="crossingLiveConsole" class="crossing-live-console" hidden>
       <div class="crossing-route">
         <div class="crossing-route-heading"><span class="crossing-eyebrow">THE WAY HOME</span><span id="crossingBest">BEST 00</span></div>
         <div class="crossing-route-track"><i id="crossingRouteProgress"></i><b></b><b></b></div>
@@ -39,7 +59,7 @@ root.innerHTML = `
       <div class="crossing-energy">
         <div><span>${icon('crystal')} MAGICULES</span><strong id="crossingEnergyValue">100 <small>/ 100</small></strong></div>
         <div id="crossingEnergy" class="crossing-energy-track" role="meter" aria-label="Magicules" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><i></i></div>
-        <p>Advance to recharge. Crystals add +8.</p>
+        <p id="crossingEnergyHint">Advance to recharge. Crystals add +8.</p>
       </div>
       <div class="crossing-skill-heading crossing-eyebrow">ULTIMATE SKILLS <span>1 — 4</span></div>
       <div class="crossing-skills">
@@ -57,20 +77,22 @@ root.innerHTML = `
         <p id="crossingInstructions"><span class="crossing-keyboard-hint">Arrows / WASD to hop · 1–4 skills · P pause</span><span class="crossing-touch-hint">Swipe to hop. Tap the street to move up.</span></p>
       </div>
       <div class="crossing-tip"><span>FIELD NOTE 01</span><p>Sidewalks are safe. Take a breath, read the lanes, then commit.</p></div>
+      </div>
     </div>
   </div>
   <div class="crossing-bottom">
     <details id="crossingGuide" class="crossing-guide"><summary>How to cross <span aria-hidden="true">+</span></summary>
       <div>
-        <p><strong>Reach the portal.</strong> Hop through 60 lanes from Midtown to the East River, then enter the glowing portal in the middle. Traffic ends the run on contact. There’s no time limit; sidewalks and park islands are safe places to plan.</p>
-        <p><strong>Beelzebub · 20 magicules.</strong> Devours traffic and street obstacles within two tiles in the direction of your last move for 1.25 seconds. The small arrow by Rimuru shows your aim. Even a blocked move changes your aim.</p>
-        <p><strong>Storm Dragon · 55 magicules.</strong> Summon Veldora. His storm clears traffic and obstacles across the next four lanes for 3 seconds, following you as you advance.</p>
-        <p><strong>Raphael · 24 magicules.</strong> Accelerated thought makes traffic appear slower for 4.5 seconds while your hops stay quick. Trails show vehicle motion; ✓ and ! estimate whether an immediate hop is clear. Keep checking: a clear window can close.</p>
-        <p><strong>Uriel · 28 magicules.</strong> A multilayer barrier repels traffic for 2.8 seconds. It protects Rimuru without clearing obstacles ahead.</p>
-        <p><strong>Manage the reserve.</strong> New lanes restore 1.5 magicules; crystals add 8 and district arrivals add 15. Backtracking and waiting don’t refill it. Each skill also has its own cooldown. All four are available from the start.</p>
+        <p><strong>Reach the portal.</strong> Cross <span id="crossingGuideLength">60</span> lanes from Midtown to the East River, then enter the glowing portal in the middle. Traffic ends the run on contact. There’s no time limit; sidewalks and park islands are safe places to plan.</p>
+        <p><strong data-guide-skill="beelzebub">Beelzebub.</strong> Devours traffic and street obstacles within two tiles in the direction of your last move for 1.25 seconds. The small arrow by Rimuru shows your aim. Even a blocked move changes your aim.</p>
+        <p><strong data-guide-skill="veldora">Storm Dragon.</strong> Summon Veldora. His storm clears traffic and obstacles across the next four lanes for 3 seconds, following you as you advance.</p>
+        <p><strong data-guide-skill="raphael">Raphael.</strong> Accelerated thought makes traffic appear slower for 4.5 seconds while your hops stay quick. Trails show vehicle motion; ✓ and ! estimate whether an immediate hop is clear. Keep checking: a clear window can close.</p>
+        <p><strong data-guide-skill="uriel">Uriel.</strong> A multilayer barrier repels traffic for 2.8 seconds. It protects Rimuru without clearing obstacles ahead.</p>
+        <p><strong>Manage the reserve.</strong> <span id="crossingGuideEnergy"></span> Backtracking and waiting don’t refill it. Each skill also has its own cooldown. All four are available from the start.</p>
         <p><strong>Controls.</strong> Arrow keys, WASD, swipes, or the directional buttons move one tile. Tap the street or press Space to hop forward. Use 1–4 or the skill buttons to cast. P pauses. Switching tabs pauses automatically.</p>
       </div>
     </details>
+    <button id="crossingModeSwitch" class="crossing-mode-switch" hidden>Easy · Change</button>
     <button id="crossingRestart" class="crossing-restart">${icon('reset')} Restart route</button>
   </div>
   <p id="crossingStatus" class="visually-hidden" role="status" aria-live="polite"></p>`;
@@ -78,7 +100,6 @@ root.innerHTML = `
 const byId = id => document.getElementById(id);
 const canvas = byId('crossingCanvas');
 const renderer = new CrossingRenderer(canvas);
-const model = new CrossingModel();
 const overlay = byId('crossingOverlay');
 const play = byId('crossingPlay');
 const pauseButton = byId('crossingPause');
@@ -88,18 +109,12 @@ const status = byId('crossingStatus');
 const toast = byId('crossingToast');
 const skillButtons = [...root.querySelectorAll('[data-skill]')];
 const moveButtons = [...root.querySelectorAll('[data-move]')];
+const modeButtons = [...root.querySelectorAll('[data-crossing-mode]')];
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const storageKey = 'portfolio.slime-crossing.v1';
-let record = { best: 0, fastest: 0, sound: false };
-try {
-  const saved = JSON.parse(localStorage.getItem(storageKey));
-  if (saved && typeof saved === 'object') record = {
-    best: Number.isInteger(saved.best) && saved.best >= 0 && saved.best <= 60 ? saved.best : 0,
-    fastest: Number.isFinite(saved.fastest) && saved.fastest > 0 ? saved.fastest : 0,
-    sound: saved.sound === true
-  };
-} catch { /* Storage is optional. A private or restricted browser can still play. */ }
-const save = () => { try { localStorage.setItem(storageKey, JSON.stringify(record)); } catch { /* Keep records for this visit. */ } };
+const record = loadCrossingRecords(key => localStorage.getItem(key));
+const model = new CrossingModel(Date.now(), record.selectedMode);
+const save = () => { try { localStorage.setItem(CROSSING_STORAGE_KEY, JSON.stringify(record)); } catch { /* Keep records for this visit. */ } };
+const rememberRun = () => { if (recordCrossing(record, model)) save(); };
 const text = (node, value) => { if (node.textContent !== String(value)) node.textContent = value; };
 const pad = value => String(value).padStart(2, '0');
 const formatTime = seconds => `${Math.floor(seconds / 60)}:${pad(Math.floor(seconds % 60))}`;
@@ -150,6 +165,9 @@ let toastUntil = 0;
 let resultAt = 0;
 let pointer = null;
 let shownPhase = '';
+let choosingMode = false;
+let pendingMode = model.mode.id;
+let shownMode = '';
 
 function say(message, color = '') {
   text(toast, message);
@@ -168,39 +186,75 @@ function events() {
       const copy = { beelzebub: 'Beelzebub · Devouring ahead', veldora: 'Veldora summoned · Make your opening', raphael: 'Raphael · Thought acceleration', uriel: 'Uriel · Multilayer barrier raised' };
       say(copy[event.key], SKILLS[event.key].color);
     } else if (event.type === 'unavailable') say(event.reason, '#ecc5a0');
-    else if (event.type === 'pickup') say('+8 magicules · Reserve replenished');
-    else if (event.type === 'district') say(`${event.name} · +15 magicules`, '#b1efc9');
+    else if (event.type === 'pickup') say(`+${event.energy} magicules · Reserve replenished`);
+    else if (event.type === 'district') say(`${event.name} · +${event.energy} magicules`, '#b1efc9');
     else if (event.type === 'begin') say('Sidewalks are safe. Your first crystal is straight ahead.');
     else if (event.type === 'bump') say('Path blocked. Step around it, or devour it.', '#ead1a9');
     else if (event.type === 'win' || event.type === 'crash') {
       resultAt = renderer.time + (motion.matches ? 0 : event.type === 'win' ? 0.75 : 0.35);
-      if (model.furthest > record.best) record.best = model.furthest;
-      if (event.type === 'win' && (!record.fastest || model.elapsed < record.fastest)) record.fastest = model.elapsed;
-      save();
+      rememberRun();
       text(status, event.type === 'win' ? `Portal reached in ${formatTime(model.elapsed)}. Welcome home, Rimuru.` : `Crossing ended at lane ${model.furthest}. Try the same route again, or generate a new route.`);
     }
   }
 }
 
-function refresh() {
+function isChoosing() { return choosingMode || model.phase === 'ready'; }
+
+function refreshModeInfo(profile) {
+  const best = record.modes[profile.id];
+  const stamp = `${profile.id}/${best.best}/${best.fastest}`;
+  if (stamp === shownMode) return;
+  shownMode = stamp;
+  const settings = skillsForMode(profile.id);
+  for (const button of modeButtons) button.setAttribute('aria-pressed', String(button.dataset.crossingMode === profile.id));
+  text(byId('crossingModeDescription'), profile.description);
+  text(byId('crossingModeIncome'), `+${profile.laneEnergy}`);
+  text(byId('crossingModeCrystal'), `+${profile.crystalEnergy}`);
+  const costs = Object.values(settings).map(skill => skill.cost), waits = Object.values(settings).map(skill => skill.cooldown);
+  text(byId('crossingModeCost'), `${Math.min(...costs)}–${Math.max(...costs)}`);
+  text(byId('crossingModeWait'), `${Math.min(...waits)}–${Math.max(...waits)}s`);
+  text(byId('crossingModeBest'), best.fastest ? `BEST ${best.best}/${profile.finish} · FASTEST ${formatTime(best.fastest)}` : `BEST ${best.best}/${profile.finish} · ${best.best ? 'KEEP GOING' : 'A FRESH CHALLENGE'}`);
+  text(byId('crossingGuideLength'), profile.finish);
+  text(byId('crossingGuideEnergy'), `${profile.name}: new lanes restore ${profile.laneEnergy} magicules; crystals add ${profile.crystalEnergy} and first district arrivals add ${profile.districtEnergy}.`);
+  for (const element of root.querySelectorAll('[data-guide-skill]')) {
+    const skill = settings[element.dataset.guideSkill];
+    text(element, `${skill.name} · ${skill.cost} magicules · ${skill.cooldown}s recharge.`);
+  }
+}
+
+function refresh(focusOverlay = true) {
   const playing = model.phase === 'playing';
+  const selecting = isChoosing();
+  const profile = selecting ? crossingMode(pendingMode) : model.mode;
+  const best = record.modes[profile.id];
   root.dataset.phase = model.phase;
-  text(byId('crossingDistance'), pad(model.furthest));
-  text(byId('crossingBest'), `BEST ${pad(Math.max(record.best, model.furthest))}`);
-  text(byId('crossingDistrict'), district(model.player.row).toUpperCase());
-  byId('crossingRouteProgress').style.transform = `scaleX(${model.furthest / 60})`;
+  root.dataset.mode = profile.id;
+  root.dataset.choosing = String(selecting);
+  byId('crossingBrief').hidden = !selecting;
+  byId('crossingLiveConsole').hidden = selecting;
+  byId('crossingModeSwitch').hidden = selecting;
+  byId('crossingRestart').hidden = selecting;
+  text(byId('crossingModeSwitch'), profile.name);
+  byId('crossingModeSwitch').setAttribute('aria-label', `Change difficulty. Current mode: ${profile.name}.`);
+  refreshModeInfo(profile);
+  text(byId('crossingDistance'), pad(selecting ? 0 : model.furthest));
+  text(byId('crossingGoal'), `/ ${profile.finish} lanes`);
+  text(byId('crossingBest'), `BEST ${pad(Math.max(best.best, selecting ? 0 : model.furthest))}`);
+  text(byId('crossingDistrict'), `${profile.name.toUpperCase()} · ${district(model.player.row, model.finish).toUpperCase()}`);
+  byId('crossingRouteProgress').style.transform = `scaleX(${model.furthest / model.finish})`;
+  text(byId('crossingEnergyHint'), `New lane +${model.mode.laneEnergy} · Crystal +${model.mode.crystalEnergy}`);
   byId('crossingEnergyValue').firstChild.textContent = `${Math.floor(model.energy)} `;
   byId('crossingEnergy').setAttribute('aria-valuenow', Math.floor(model.energy));
   byId('crossingEnergy').firstElementChild.style.transform = `scaleX(${model.energy / 100})`;
   if (renderer.time > toastUntil) toast.classList.remove('is-visible');
-  pauseButton.disabled = !['playing', 'paused'].includes(model.phase);
+  pauseButton.disabled = selecting || !['playing', 'paused'].includes(model.phase);
   pauseButton.setAttribute('aria-label', model.phase === 'paused' ? 'Resume crossing' : 'Pause crossing');
   pauseButton.setAttribute('aria-pressed', String(model.phase === 'paused'));
   soundButton.setAttribute('aria-pressed', String(record.sound));
   soundButton.setAttribute('aria-label', record.sound ? 'Mute sound' : 'Enable sound');
   for (const button of moveButtons) button.disabled = !playing;
   for (const button of skillButtons) {
-    const key = button.dataset.skill, skill = SKILLS[key], state = model.skills[key];
+    const key = button.dataset.skill, skill = model.skillSettings[key], state = model.skills[key];
     const available = !model.availability(key);
     button.disabled = !playing;
     button.setAttribute('aria-disabled', String(!available));
@@ -210,23 +264,31 @@ function refresh() {
     button.setAttribute('aria-label', `${skill.name}. ${skill.action}. Costs ${skill.cost} magicules. ${label}. Key ${skill.key}.`);
     button.style.setProperty('--skill-progress', state.active > 0 ? state.active / skill.duration : state.cooldown > 0 ? 1 - state.cooldown / skill.cooldown : 1);
   }
-  const show = !playing && (model.phase === 'ready' || model.phase === 'paused' || renderer.time >= resultAt);
+  const show = selecting || !playing && (model.phase === 'paused' || renderer.time >= resultAt);
   overlay.hidden = !show;
   canvas.tabIndex = show ? -1 : 0;
-  if (show && shownPhase !== model.phase) {
-    shownPhase = model.phase;
-    overlay.dataset.phase = model.phase;
+  const overlayState = selecting ? `choose:${profile.id}` : model.phase;
+  if (show && shownPhase !== overlayState) {
+    shownPhase = overlayState;
+    overlay.dataset.phase = selecting ? 'ready' : model.phase;
     const tag = byId('crossingMessageTag'), title = byId('crossingMessageTitle'), description = byId('crossingMessageText');
     const hint = byId('crossingMessageHint'), stats = byId('crossingResultStats');
     const retry = byId('crossingNewRoute');
-    stats.hidden = !['won', 'over'].includes(model.phase);
-    retry.hidden = !['won', 'over', 'paused'].includes(model.phase);
+    stats.hidden = selecting || !['won', 'over'].includes(model.phase);
+    retry.hidden = selecting || !['won', 'over', 'paused'].includes(model.phase);
+    byId('crossingCancelMode').hidden = !selecting || model.phase === 'ready';
+    text(byId('crossingCancelMode'), model.phase === 'paused' ? `Keep my ${model.mode.name} run` : 'Back to result');
     retry.textContent = model.phase === 'paused' ? 'Restart this route' : 'New route';
-    if (model.phase === 'ready') {
-      text(tag, 'TENSURA × NEW YORK'); title.innerHTML = 'Wrong world.<br>Right skill set.';
-      text(description, 'Get Rimuru across 60 lanes to the Tempest portal. Read the traffic. Make your opening.');
-      text(play, 'Make the crossing ↗');
-      text(hint, 'Four ultimate skills. One magicule reserve.');
+    if (selecting) {
+      text(tag, `TENSURA × NEW YORK · ${profile.name.toUpperCase()}`);
+      title.innerHTML = { easy: 'Wrong world.<br>Right skill set.', normal: 'Longer roads.<br>Higher stakes.', hard: 'Read the gaps.<br>Make it count.', demon: 'Demon Lord.<br>City rules.' }[profile.id];
+      text(description, `Reach the Tempest portal in ${profile.finish} lanes. ${profile.id === 'easy' ? 'Start with the original crossing.' : 'Read the traffic. Ration your power.'}`);
+      if (model.phase !== 'ready') {
+        text(title, 'Choose a mode.');
+        text(description, `${profile.finish} lanes on ${profile.name}. ${model.phase === 'paused' ? 'Start fresh, or keep your paused run.' : 'Start fresh, or return to your result.'}`);
+      }
+      text(play, `Start ${profile.name} crossing ↗`);
+      text(hint, model.phase === 'paused' ? 'Starting a crossing replaces your paused run.' : 'Four ultimate skills. One magicule reserve.');
     } else if (model.phase === 'paused') {
       text(tag, 'THOUGHTS ON HOLD'); text(title, 'Take your time.');
       text(description, 'Your crossing, magicules, and skill timers are paused.');
@@ -235,13 +297,13 @@ function refresh() {
       const won = model.phase === 'won';
       text(tag, won ? 'CONNECTION TO TEMPEST RESTORED' : `RAPHAEL'S REPORT · LANE ${model.furthest}`);
       text(title, won ? 'Welcome home.' : 'Another way through.');
-      text(description, won ? 'Sixty lanes, one very unexpected detour. New York will remember this slime.' : 'Even a Demon Lord needs a crossing strategy. Try a new opening, or let an ultimate skill make one.');
-      stats.innerHTML = `<span><strong>${model.furthest}<small>/60</small></strong>lanes crossed</span><span><strong>${formatTime(model.elapsed)}</strong>crossing time</span><span><strong>${model.stats.casts}</strong>skills used</span>`;
+      text(description, won ? `${model.finish} lanes cleared on ${model.mode.name}. New York will remember this slime.` : `${model.mode.name} crossing. Try a new opening, or save an ultimate skill for the toughest stretch.`);
+      stats.innerHTML = `<span><strong>${model.furthest}<small>/${model.finish}</small></strong>lanes crossed</span><span><strong>${formatTime(model.elapsed)}</strong>crossing time</span><span><strong>${model.stats.casts}</strong>skills used</span>`;
       text(play, won ? 'Cross a new route ↗' : 'Try this route again ↗');
       retry.hidden = won;
-      text(hint, won ? `Fastest crossing · ${formatTime(record.fastest)}` : 'Same streets. Same opening traffic. New plan.');
+      text(hint, won ? `${model.mode.name} record · ${formatTime(best.fastest)}` : 'Same streets. Same opening traffic. New plan.');
     }
-    if (active && !guide.open) play.focus({ preventScroll: true });
+    if (focusOverlay && active && !guide.open) play.focus({ preventScroll: true });
   }
   if (playing) shownPhase = '';
 }
@@ -274,10 +336,21 @@ function begin(newSeed = false) {
   if (!active) return;
   guide.open = false;
   stopFrame();
-  if (newSeed || !['ready', 'paused'].includes(model.phase)) {
+  if (isChoosing()) {
+    if (model.phase !== 'ready' || pendingMode !== model.mode.id || newSeed) {
+      rememberRun();
+      model.reset(model.phase === 'ready' && !newSeed ? model.seed : (Math.random() * 0xffffffff) >>> 0, pendingMode);
+      renderer.reset();
+    }
+    choosingMode = false;
+    record.selectedMode = model.mode.id;
+    save();
+  } else if (newSeed || !['ready', 'paused'].includes(model.phase)) {
+    rememberRun();
     model.reset(newSeed ? (Math.random() * 0xffffffff) >>> 0 : model.seed);
     renderer.reset();
   }
+  pendingMode = model.mode.id;
   if (model.phase === 'paused') model.resume(); else model.begin();
   shownPhase = ''; pointer = null; suspended = false;
   events(); refresh(); draw(); requestFrame(); canvas.focus({ preventScroll: true });
@@ -300,11 +373,37 @@ function cast(key) {
 }
 
 play.addEventListener('click', () => begin(model.phase === 'won'));
+for (const button of modeButtons) button.addEventListener('click', () => {
+  if (!active || !isChoosing()) return;
+  pendingMode = button.dataset.crossingMode;
+  refresh(false);
+  const mode = crossingMode(pendingMode);
+  text(status, `${mode.name}. ${mode.finish} lanes. ${mode.description}`);
+});
+byId('crossingModeSwitch').addEventListener('click', () => {
+  if (!active) return;
+  guide.open = false;
+  pendingMode = model.mode.id;
+  choosingMode = true;
+  pause();
+  stopFrame(); sound.stop(); renderer.effects = [];
+  refresh(); draw();
+  root.closest('.game-modal-content').scrollTop = 0;
+  root.querySelector(`[data-crossing-mode="${pendingMode}"]`).focus({ preventScroll: true });
+});
+byId('crossingCancelMode').addEventListener('click', () => {
+  choosingMode = false; pendingMode = model.mode.id; resultAt = 0;
+  if (model.phase === 'paused') begin();
+  else { refresh(); draw(); }
+});
+function restart() {
+  rememberRun(); model.reset(); renderer.reset(); choosingMode = false; pendingMode = model.mode.id; begin();
+}
 byId('crossingNewRoute').addEventListener('click', () => {
-  if (model.phase === 'paused') { model.reset(); renderer.reset(); begin(); }
+  if (model.phase === 'paused') restart();
   else begin(true);
 });
-byId('crossingRestart').addEventListener('click', () => { model.reset(); renderer.reset(); begin(); });
+byId('crossingRestart').addEventListener('click', restart);
 pauseButton.addEventListener('click', () => model.phase === 'paused' ? begin() : pause());
 soundButton.addEventListener('click', () => {
   record.sound = !record.sound; save();
@@ -346,7 +445,7 @@ canvas.addEventListener('contextmenu', event => event.preventDefault());
 window.addEventListener('keydown', event => {
   if (!active || suspended || event.altKey || event.ctrlKey || event.metaKey || event.target.closest('input, textarea, select, summary')) return;
   const key = event.key.toLowerCase();
-  if (key === 'p' && !event.repeat && ['playing', 'paused'].includes(model.phase)) {
+  if (key === 'p' && !isChoosing() && !event.repeat && ['playing', 'paused'].includes(model.phase)) {
     event.preventDefault(); model.phase === 'playing' ? pause() : begin(); return;
   }
   if (model.phase !== 'playing') return;
@@ -384,6 +483,6 @@ export const slimeCrossing = {
     model.pause(); active = false; suspended = false; pointer = null;
     stopFrame(); sound.stop(); renderer.effects = [];
     if (['won', 'over'].includes(model.phase)) resultAt = 0;
-    if (model.furthest > record.best) { record.best = model.furthest; save(); }
+    rememberRun();
   }
 };
