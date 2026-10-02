@@ -1,6 +1,7 @@
 import { game2048 } from './game-2048.js';
 import { flappyBird } from './game-flappy.js';
 import { ghostbusters } from './game-ghosts.js';
+import { slimeCrossing } from './game-crossing.js';
 
 const toggle = document.getElementById('gameToggle');
 const footer = document.querySelector('.sidebar-footer');
@@ -12,7 +13,8 @@ const picker = document.getElementById('gamePicker');
 const games = {
   '2048': { title: '2048', panel: document.getElementById('game2048Panel'), controller: game2048 },
   flappy: { title: 'Flappy Bird', panel: document.getElementById('gameFlappyPanel'), controller: flappyBird },
-  ghosts: { title: 'Ghostbusters', panel: document.getElementById('gameGhostPanel'), controller: ghostbusters }
+  ghosts: { title: 'Ghostbusters', panel: document.getElementById('gameGhostPanel'), controller: ghostbusters },
+  crossing: { title: 'Slime × NYC', panel: document.getElementById('gameCrossingPanel'), controller: slimeCrossing }
 };
 let activeGame = null;
 let isOpen = false;
@@ -75,6 +77,7 @@ picker.addEventListener('click', event => {
   title.textContent = game.title;
   game.panel.hidden = false;
   game.controller.start();
+  modal.querySelector('.game-modal-content').scrollTop = 0;
 });
 toggle.addEventListener('click', openArcade);
 footer.addEventListener('click', openArcade);
