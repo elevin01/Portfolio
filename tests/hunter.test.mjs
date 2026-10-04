@@ -1,170 +1,53 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { HunterModel, options, loadout, COURSES, DIFFICULTIES, CHARACTERS, HUNTER_STORAGE, loadRecords, remember, recordKey } from '../js/hunter-model.js';
-
-function clear(config = {}) {
-  const g = new HunterModel(42, { mode: 'endless', ...config }); g.begin();
-  g.obstacles = []; g.pickups = []; g.anchors = []; g.nextZ = Infinity;
-  return g;
+import { HunterModel, HUNTER, CHARACTERS, COURSES, DIFFICULTIES, loadout, loadRecords, options, remember, recordKey } from '../js/hunter-model.js';
+function advance(m, seconds) { for(let i=0;i<seconds*120;i++)m.step(); }
+function empty(config) { const m=new HunterModel(17,config);m.begin();m.hazards=[];m.pickups=[];m.next=Infinity;return m; }
+function obstacle(m,kind,x=48) { const h={id:9,kind,x:m.travel+x,w:kind==='gap'?60:kind==='beam'?60:34,done:false,removed:false};m.hazards.push(h);return h; }
+function pilot(m) {
+  if(m.lesson)m.lesson==='slide'?m.duck():m.jump();
+  const h=m.hazards.find(h=>!h.done&&!h.removed&&h.x+h.w>m.travel-10);
+  if(h&&m.y===0&&m.slide===0){const d=h.x-m.travel;if(d<48&&d>12){if(h.kind==='beam')m.duck();else m.jump();}}
+  m.step();m.drainEvents();
 }
-function advance(g, seconds) { for (let i = 0; i < Math.round(seconds * 120); i++) g.step(); }
-function hazard(kind, z = 7, lane = 0) { return { id: `${kind}-${z}`, kind, z, lane, done: false, locked: null }; }
-function navigate(g) {
-  const turn = g.nextTurn();
-  if (turn && turn.z - g.distance < 34) g.move(turn.side);
-  const upcoming = g.obstacles.filter(h => !h.done && h.kind !== 'turn' && h.z >= g.distance - 1.2);
-  const first = upcoming[0];
-  if (first && first.z - g.distance < 18) {
-    const occupied = upcoming.filter(h => h.z === first.z).map(h => h.lane);
-    const safe = [-1, 0, 1].find(lane => !occupied.includes(lane));
-    if (safe !== undefined && safe !== g.lane) g.move(Math.sign(safe - g.lane));
-    else if (safe === undefined && first.z - g.distance < g.speed() * 0.48 && first.z > g.distance) {
-      if (first.kind === 'beam') g.duck(); else g.leap();
-    }
-  }
-  g.step(); g.drainEvents();
-}
-
-test('Trial is the default; unknown selections cannot access prototype properties', () => {
-  assert.equal(options().mode, 'trial');
-  assert.deepEqual(options(null), options());
-  assert.equal(loadRecords(() => '{"selection":null}').selection.mode, 'trial');
-  assert.equal(options({ mode: 'anything', character: 'constructor', course: 'toString', difficulty: '__proto__' }).character, 'killua');
-  assert.equal(new HunterModel(0).finish, 4000);
+test('Trial is always the default; malformed selections and records are isolated',()=>{
+  assert.equal(options().mode,'trial');assert.equal(options({character:'__proto__'}).character,'killua');assert.equal(loadRecords(()=>'{bad').selection.mode,'trial');
+  const r=loadRecords(()=>JSON.stringify({scores:{'killua/exam/rookie/trial':{distance:-1,badges:'bad'},bogus:{distance:20}}}));assert.equal(Object.keys(r.scores).length,1);assert.equal(r.scores['killua/exam/rookie/trial'].distance,0);
 });
-
-test('Trial respects Nen training and Godspeed is reserved for later Killua in Endless', () => {
-  for (const id of ['gon', 'killua', 'kurapika']) assert.equal(loadout({ character: id, course: 'exam' }).nen, false);
-  assert.equal(loadout({ character: 'hisoka', course: 'exam' }).nen, true);
-  assert.equal(loadout({ character: 'killua', course: 'yorknew' }).skill, 'echo');
-  assert.equal(loadout({ character: 'killua', course: 'greed' }).skill, 'palm');
-  assert.equal(loadout({ character: 'killua', mode: 'endless' }).skill, 'godspeed');
-  assert.equal(loadout({ character: 'gon', course: 'yorknew' }).skill, 'rod');
-  assert.equal(loadout({ character: 'gon', course: 'greed' }).skill, 'jajanken');
-  const early = clear({ mode: 'trial', character: 'gon', course: 'exam' });
-  assert.equal(early.cast('gyo'), false); assert.equal(early.cast('zetsu'), false);
-  assert.equal(early.aura, 100);
+test('Trials retain era-specific tools and Endless gets later abilities',()=>{
+  assert.equal(loadout({character:'killua'}).skill,'board');assert.equal(loadout({character:'killua',course:'yorknew'}).skill,'echo');assert.equal(loadout({character:'killua',course:'greed'}).skill,'palm');assert.equal(loadout({character:'killua',mode:'endless'}).skill,'godspeed');
+  assert.equal(loadout({character:'gon',course:'exam'}).skill,'rod');assert.equal(loadout({character:'gon',course:'greed'}).skill,'rock');assert.equal(loadout({character:'kurapika',course:'exam'}).skill,'blades');assert.equal(loadout({character:'kurapika',course:'yorknew'}).skill,'heal');
 });
-
-test('the same seed and inputs reproduce the same generated route and outcome', () => {
-  const a = new HunterModel(817, { mode: 'endless', course: 'yorknew' }), b = new HunterModel(817, a.config);
-  assert.deepEqual(a.obstacles, b.obstacles); a.begin(); b.begin();
-  for (let i = 0; i < 6000; i++) { navigate(a); navigate(b); }
-  assert.deepEqual(a, b);
-});
-
-test('all character/course/difficulty Trials can finish using only route inputs, without Nen', () => {
-  for (const character of Object.keys(CHARACTERS)) for (const course of Object.keys(COURSES)) for (const difficulty of Object.keys(DIFFICULTIES)) {
-    const g = new HunterModel(814, { character, course, difficulty }); g.begin();
-    for (let i = 0; i < 65000 && g.phase === 'playing'; i++) navigate(g);
-    assert.equal(g.phase, 'won', `${character}/${course}/${difficulty} ended at ${g.distance}: ${g.reason}`);
-    assert.equal(g.distance, g.finish); assert.equal(g.casts, 0);
-    const distance = g.distance; advance(g, 1); assert.equal(g.distance, distance);
+test('Tutorial freezes the course and resources until the correct input',()=>{const m=new HunterModel(1);m.begin();while(!m.lesson)m.step();const d=m.distance,e=m.energy;advance(m,10);assert.equal(m.distance,d);assert.equal(m.energy,e);m.duck();assert.equal(m.lesson,'jump');m.jump();assert.equal(m.lesson,null);advance(m,1);assert.equal(m.hearts,3);});
+test('Each obstacle has a useful timing window at every difficulty',()=>{
+  for(const difficulty of Object.keys(DIFFICULTIES))for(const kind of ['gap','hurdle','beam','sentry'])for(const offset of [34,42,50]){
+    const m=empty({difficulty});obstacle(m,kind,offset);kind==='beam'?m.duck():m.jump();advance(m,1.3);assert.equal(m.hearts,3,`${difficulty}/${kind}/${offset}`);
   }
 });
-
-test('Endless keeps extending beyond every Trial finish while retaining bounded route data', () => {
-  for (const course of Object.keys(COURSES)) {
-    const g = new HunterModel(11, { mode: 'endless', course, difficulty: 'veteran' }); g.begin();
-    while (g.distance < 24000 && g.phase === 'playing') {
-      navigate(g);
-      assert.ok(g.obstacles.length < 35 && g.pickups.length < 30 && g.anchors.length < 20);
-    }
-    assert.equal(g.phase, 'playing', `${course} ${g.distance}: ${g.reason}`);
-    assert.ok(g.nextZ > g.distance + 170); assert.equal(g.finish, Infinity); assert.ok(g.speed() <= 19);
+test('All 36 character/course/difficulty Trials can finish without abilities or losing hearts',()=>{
+  for(const character of Object.keys(CHARACTERS))for(const course of Object.keys(COURSES))for(const difficulty of Object.keys(DIFFICULTIES)){
+    const m=new HunterModel(410,{character,course,difficulty});m.begin();let steps=0;while(m.phase==='playing'&&steps++<40000)pilot(m);
+    assert.equal(m.phase,'won',`${character}/${course}/${difficulty}`);assert.equal(m.hearts,3,`${character}/${course}/${difficulty}`);
   }
 });
-
-test('movement interpolates lanes, stays bounded, and cannot accumulate a delayed input queue', () => {
-  const g = clear(); g.move(1); g.step(); assert.ok(g.x > 0 && g.x < 1);
-  g.move(1); advance(g, 0.2); assert.equal(g.lane, 1); assert.equal(g.x, 1);
-  g.move(-1); g.move(-1); advance(g, 0.31); assert.equal(g.x, -1);
-  assert.equal(g.move(8), false); assert.equal(g.move(NaN), false);
+test('Multiple routes and maximum-speed Endless remain fair with bounded generation',()=>{
+  for(let seed=0;seed<5;seed++){const m=new HunterModel(seed,{difficulty:'veteran',mode:'endless'});m.begin();let steps=0;while(m.distance<24000&&m.phase==='playing'&&steps++<180000)pilot(m);assert.equal(m.phase,'playing');assert.ok(m.distance>=24000);assert.equal(m.hearts,3);assert.ok(m.hazards.length<10);assert.ok(m.pickups.length<12);assert.ok(m.speed()<=245);}
 });
-
-test('jumping clears a low obstacle and a gap, sliding clears a beam, and tall walls require a lane change', () => {
-  for (const kind of ['hurdle', 'gap']) {
-    const g = clear(); g.obstacles = [hazard(kind)]; g.leap(); advance(g, 0.8); assert.equal(g.phase, 'playing', kind); assert.equal(g.strikes, 0);
-  }
-  const slide = clear(); slide.obstacles = [hazard('beam')]; slide.duck(); advance(slide, 0.7); assert.equal(slide.strikes, 0);
-  const wall = clear(); wall.obstacles = [hazard('wall')]; wall.leap(); advance(wall, 0.7); assert.equal(wall.phase, 'over');
-  const gap = clear(); gap.obstacles = [hazard('gap')]; advance(gap, 0.7); assert.equal(gap.phase, 'over');
+test('Missed obstacles take one heart and gaps recover; three hits end the run',()=>{const m=empty();obstacle(m,'gap',0);advance(m,.1);assert.equal(m.hearts,2);assert.ok(m.y>0);advance(m,2);obstacle(m,'hurdle',0);advance(m,.1);assert.equal(m.hearts,1);advance(m,2);obstacle(m,'sentry',0);advance(m,.1);assert.equal(m.phase,'over');});
+test('Pause stops position, timers, and resources',()=>{const m=empty();m.jump();advance(m,.1);m.pause();const values=[m.travel,m.y,m.energy,m.elapsed];advance(m,2);assert.deepEqual([m.travel,m.y,m.energy,m.elapsed],values);m.resume();advance(m,.1);assert.ok(m.travel>values[0]);});
+test('Abilities cannot spend energy without their stated target',()=>{
+  for(const character of Object.keys(CHARACTERS))for(const course of Object.keys(COURSES)){const m=empty({character,course});assert.equal(m.cast(),false);assert.equal(m.energy,100);}
 });
-
-test('missed turns end a run and a correctly timed directional input records the turn', () => {
-  for (const correct of [false, true]) {
-    const g = clear(); g.obstacles = [{ ...hazard('turn', 10), side: -1, choice: 0 }];
-    if (correct) g.move(-1); advance(g, 1);
-    assert.equal(g.phase, correct ? 'playing' : 'over'); assert.equal(g.turns, correct ? 1 : 0);
-  }
+test('Board and Bungee Gum visibly move across their target instead of granting immunity',()=>{
+  for(const character of ['killua','hisoka']){const m=empty({character});obstacle(m,'gap',65);assert.equal(m.cast(),true);advance(m,.2);assert.ok(m.y>50);assert.equal(m.invincible,0);advance(m,1.1);assert.equal(m.hearts,3);assert.equal(m.y,0);}
 });
-
-test('pausing freezes position, generation, resource recovery, charge, and all technique timers', () => {
-  const g = clear(); g.cast('power'); advance(g, 0.3); g.pause();
-  const before = structuredClone(g); advance(g, 90); assert.deepEqual(structuredClone(g), before);
-  assert.equal(g.leap(), false); assert.equal(g.move(1), false); g.resume(); g.step(); assert.ok(g.distance > before.distance);
+test('Fishing rod retrieves a badge; Rock charges before destroying only its hurdle',()=>{
+  const g=empty({character:'gon'});g.pickups=[{x:200,y:82,kind:'badge',done:false}];assert.equal(g.cast(),true);assert.equal(g.badges,1);
+  const m=empty({character:'gon',course:'greed'}),h=obstacle(m,'hurdle',160);obstacle(m,'gap',280);assert.equal(m.cast(),true);assert.equal(h.removed,false);advance(m,.6);assert.equal(h.removed,true);assert.equal(m.hazards[1].removed,false);
 });
-
-test('Godspeed spends both resources, keeps collision risk from terrain, and has no passive electricity recovery', () => {
-  const g = clear(); assert.equal(g.cast('power'), true); assert.equal(g.electric, 35); assert.equal(g.aura, 84);
-  const aura = g.aura; assert.equal(g.cast('power'), false); assert.equal(g.aura, aura);
-  advance(g, 20); assert.equal(g.electric, 35); assert.equal(g.cast('power'), false);
-  g.cast('zetsu'); advance(g, 60); assert.equal(g.electric, 35); assert.equal(g.aura, 100);
-  const wall = clear(); wall.cast('power'); wall.obstacles = [hazard('wall')]; advance(wall, 0.8); assert.equal(wall.phase, 'over');
+test('Holy Chain heals only missing health and never uses Chain Jail',()=>{const m=empty({character:'kurapika',course:'yorknew'});assert.equal(m.cast(),false);m.hearts=2;assert.equal(m.cast(),true);assert.equal(m.hearts,3);assert.equal(m.energy,40);});
+test('Killua needs sentries; electricity cannot regenerate by waiting',()=>{
+  for(const course of ['yorknew','greed']){const m=empty({character:'killua',course});const h=obstacle(m,'sentry',180);assert.equal(m.cast(),true);assert.equal(h.removed,true);const energy=m.energy;advance(m,3);if(course==='greed')assert.equal(m.energy,energy);}
+  const m=empty({character:'killua',mode:'endless'});obstacle(m,'sentry',100);assert.equal(m.cast(),true);advance(m,9);assert.equal(m.energy,60);
 });
-
-test('Zetsu avoids aura detection before targeting, but cannot erase an attack already aimed at the runner', () => {
-  for (const before of [true, false]) {
-    const g = clear(); g.obstacles = [hazard('projectile', 12)];
-    if (before) g.cast('zetsu'); else { g.step(); assert.equal(g.obstacles[0].locked, true); g.cast('zetsu'); }
-    advance(g, 1.2); assert.equal(g.phase, before ? 'playing' : 'over');
-  }
-  const g = clear(); g.aura = 50; g.cast('zetsu'); advance(g, 1); assert.ok(g.aura > 52);
-  g.cast('gyo'); assert.equal(g.state, 'ten'); assert.ok(g.gyo > 0);
-});
-
-test('Jajanken commits a charge, locks movement, and gives the three forms distinct target reach', () => {
-  const cases = [['Rock', 'wall', 15], ['Scissors', 'beam', 20], ['Paper', 'projectile', 35]];
-  for (const [form, kind, z] of cases) {
-    const g = clear({ character: 'gon' }); g.form = form; g.obstacles = [hazard(kind, z)];
-    g.cast('power'); assert.ok(g.windup > 0); assert.equal(g.move(1), false); assert.equal(g.leap(), false);
-    assert.equal(g.cast('extra'), false); advance(g, 0.86); assert.equal(g.obstacles[0].cleared, true, form);
-  }
-  const paper = clear({ character: 'gon' }); paper.form = 'Paper'; paper.obstacles = [hazard('wall', 25)]; paper.cast('power'); advance(paper, 0.86); assert.equal(paper.obstacles[0].done, false);
-});
-
-test('Dowsing Chain intercepts one projectile; Holy Chain spends aura only when an injury can be healed', () => {
-  const g = clear({ character: 'kurapika' }); assert.equal(g.cast('extra'), false); assert.equal(g.aura, 100);
-  g.obstacles = [hazard('projectile', 7), hazard('projectile', 17)]; g.cast('power'); advance(g, 1.5);
-  assert.equal(g.phase, 'playing'); assert.equal(g.strikes, 1); assert.equal(g.usedEvade, true);
-  const aura = g.aura; g.cast('extra'); assert.equal(g.strikes, 0); assert.equal(g.aura, aura - 36); assert.ok(g.healWait > 0);
-});
-
-test('Bungee Gum requires a real anchor and reaches it through movement instead of teleporting', () => {
-  const g = clear({ character: 'hisoka' }); assert.equal(g.cast('power'), false); assert.equal(g.aura, 100);
-  g.anchors = [{ id: 'anchor', lane: 1, z: 25, used: false }];
-  assert.equal(g.cast('power'), true); assert.equal(g.distance, 0); assert.equal(g.anchors[0].used, true);
-  g.step(); assert.ok(g.y > 0 && g.y < 0.1, 'the pull begins continuously from the ground');
-  advance(g, 0.5); assert.ok(g.distance > 0 && g.distance < 25); assert.ok(g.y > 1);
-  advance(g, 1.3); assert.equal(g.gumTarget, null); assert.ok(g.distance >= 25);
-});
-
-test('pickups are collected once and pre-Nen tools remain usable without granting Nen', () => {
-  const g = clear({ character: 'gon', course: 'exam', mode: 'trial' });
-  g.pickups = [{ id: 'marker', z: 20, lane: 1, kind: 'seal', taken: false }];
-  assert.equal(g.cast('power'), true); assert.equal(g.seals, 1); advance(g, 2); assert.equal(g.seals, 1);
-  const killua = clear(); killua.electric = 0; killua.pickups = [{ id: 'power', z: 6, lane: 0, kind: 'electric', taken: false }];
-  advance(killua, 1); assert.equal(killua.electric, 23); advance(killua, 1); assert.equal(killua.electric, 23);
-});
-
-test('records remain independent for character, course, mode, and difficulty; invalid storage is safe', () => {
-  const records = loadRecords(() => { throw new Error('denied'); }); assert.deepEqual(records.scores, {});
-  for (const character of Object.keys(CHARACTERS)) for (const mode of ['trial', 'endless']) {
-    const g = clear({ character, mode }); g.distance = mode === 'trial' ? g.finish : 9000; g.score = g.distance; g.elapsed = 320; g.phase = mode === 'trial' ? 'won' : 'over'; remember(records, g);
-  }
-  assert.equal(Object.keys(records.scores).length, 8); assert.equal(records.scores['gon/exam/hunter/endless'].time, 0);
-  assert.deepEqual(loadRecords(key => key === HUNTER_STORAGE ? JSON.stringify(records) : null), records);
-  const invalid = loadRecords(() => JSON.stringify({ selection: { mode: 'weird' }, scores: { 'constructor/exam/hunter/trial': { distance: 100 }, 'gon/exam/hunter/trial': { distance: -100, time: -1 } } }));
-  assert.equal(Object.keys(invalid.scores).length, 1); assert.equal(invalid.scores['gon/exam/hunter/trial'].distance, 0);
-  assert.equal(recordKey(options()), 'killua/exam/hunter/trial');
-});
+test('Records separate mode, character, route and difficulty',()=>{const r=loadRecords(()=>null);const m=empty({character:'hisoka'});m.distance=100;m.badges=3;remember(r,m);assert.equal(r.scores[recordKey(m.config)].distance,100);assert.equal(r.scores[recordKey({...m.config,mode:'endless'})],undefined);});

@@ -1,293 +1,88 @@
-.game-modal[data-game="hunter"] .game-modal-content { width: min(1040px, 100%); padding: 20px; color: #233b32; background: #efede2; border: 1px solid #bdc4ad; border-radius: 18px; }
-.game-modal[data-game="hunter"] .game-modal-header { margin-bottom: 15px; }
-.game-modal[data-game="hunter"] .game-heading h3 { font-size: 11px; font-weight: 400; color: #758071; }
-.game-modal[data-game="hunter"] .game-back { color: #41584b; border-color: #bdc8b5; font-size: 11px; }
-.game-modal[data-game="hunter"] .game-close { color: #244638; }
-.game-modal[data-game="hunter"] .game-close:hover { background: #d7decf; }
-.game-modal[data-game="hunter"] :focus-visible { outline-color: #406448; }
-.hunter-game { font-size: 12px; line-height: 1.5; }
-.hunter-game h4, .hunter-game h5, .hunter-game p { margin: 0; }
-.hunter-game button { -webkit-tap-highlight-color: transparent; }
-.hunter-game svg { width: 22px; height: 22px; flex-shrink: 0; }
-.hunter-eyebrow { color: #64806a; font: 8px/1.4 ui-monospace, monospace; letter-spacing: .13em; }
-.hunter-masthead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
-.hunter-masthead h4 { font-size: clamp(25px, 3vw, 35px); line-height: 1.1; letter-spacing: -.065em; margin-top: 4px; color: #173b2d; }
-.hunter-masthead h4 > span { color: #8b9e61; }
-.hunter-top-tools { display: flex; gap: 7px; }
-.hunter-icon { display: grid; place-items: center; width: 34px; height: 36px; color: #486351; background: #e3e6d7; border: 1px solid #c5cdb8; border-radius: 8px; }
-.hunter-icon svg { width: 17px; height: 17px; }
-.hunter-icon[aria-pressed="true"] { color: #ecf1d9; background: #3e5f49; }
-#hunterSound[aria-pressed="false"] { position: relative; }
-#hunterSound[aria-pressed="false"]::after { content: ''; position: absolute; height: 1px; width: 20px; transform: rotate(-45deg); background: #486351; box-shadow: 0 -1px #e3e6d7; }
-.hunter-layout { display: grid; grid-template-columns: minmax(0, 1fr) 286px; align-items: start; gap: 20px; }
-.hunter-stage { position: relative; isolation: isolate; overflow: hidden; border-radius: 12px; background: #42584c; height: min(595px, calc(100dvh - 185px)); min-height: 475px; border: 1px solid #879b84; }
-#hunterCanvas { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-.hunter-stage:focus-within { border-color: #416749; }
-.hunter-vignette { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, #142d2a65, transparent 35%, transparent 65%, #0e271c77); }
-.hunter-location { position: absolute; left: 20px; right: 20px; top: 18px; display: flex; justify-content: space-between; gap: 10px; color: #d2dac4; font: 7px/1.4 ui-monospace, monospace; letter-spacing: .13em; pointer-events: none; }
-.hunter-location > span:first-child::before { content: ''; display: inline-block; width: 4px; height: 4px; background: #cee1a4; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
-.hunter-poster { position: absolute; inset: 0; padding: 48px 26px 27px; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
-.hunter-poster-top { display: flex; justify-content: space-between; color: #e9eedb; }
-.hunter-poster-top > span { font-size: 22px; font-weight: 700; letter-spacing: -.06em; line-height: 1.03; }
-.hunter-poster-top i { font: 9px ui-monospace, monospace; color: #b4c2a7; }
-.hunter-poster-name > span { color: #c5d8b5; font: 8px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .09em; }
-.hunter-poster-name > strong { display: block; font-size: 60px; font-weight: 700; line-height: 1; letter-spacing: -.07em; color: #f4f3df; margin: 7px 0 10px; }
-.hunter-poster-name > strong > span { display: inline-block; font-size: 17px; font-weight: 400; margin-left: 12px; letter-spacing: -.03em; color: #d4dbc2; }
-.hunter-poster-name > p { font-size: 11px; color: #bfcfb9; }
-.hunter-aside { display: flex; flex-direction: column; gap: 12px; }
-.hunter-section-label { display: flex; align-items: center; gap: 8px; font: 8px ui-monospace, monospace; letter-spacing: .08em; color: #536a57; }
-.hunter-section-label > span { color: #86977e; font-size: 7px; }
-.hunter-characters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-.hunter-characters > button { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; overflow: hidden; padding: 0 0 8px; border: 1px solid #c2cbb6; border-radius: 7px; color: #304934; background: #e5e6d9; transition: background 140ms, border-color 140ms; }
-.hunter-characters > button > svg { width: 100%; height: 66px; }
-.hunter-characters strong { font-size: 9px; font-weight: 600; }
-.hunter-characters > button[aria-pressed="true"] { border-color: #456447; background: #cfdbc2; box-shadow: inset 0 -2px #527451; }
-.hunter-loadout { border-bottom: 1px solid #d0d5c4; padding-bottom: 12px; min-height: 76px; }
-.hunter-loadout > strong { font-size: 12px; color: #2a4938; }
-.hunter-loadout > span { display: block; font: 8px/1.5 ui-monospace, monospace; color: #738267; margin-top: 2px; }
-.hunter-loadout > p { margin-top: 5px; font-size: 10px; line-height: 1.6; color: #5f7362; }
-.hunter-courses { display: flex; flex-direction: column; gap: 6px; }
-.hunter-courses > button { display: flex; align-items: center; gap: 11px; padding: 5px; border-radius: 7px; border: 1px solid #c8cfbd; color: #314c3b; background: #e7e9dd; text-align: left; }
-.hunter-courses > button[aria-pressed="true"] { background: #d6e0c8; border-color: #71876b; }
-.hunter-courses strong { display: block; font-size: 10px; font-weight: 600; }
-.hunter-courses small { display: block; margin-top: 2px; color: #798774; font-size: 8px; }
-.hunter-course-art { position: relative; display: block; flex-shrink: 0; width: 62px; height: 37px; overflow: hidden; border-radius: 4px; background: linear-gradient(#527268, #9dac88); }
-.hunter-course-art::before { content: ''; position: absolute; top: 13px; left: 22px; width: 18px; height: 40px; background: #b8b492; transform: perspective(25px) rotateX(40deg); }
-.hunter-course-art b { position: absolute; bottom: 0; width: 7px; height: 39px; left: 4px; background: #304e40; }
-.hunter-course-art b:nth-child(2) { left: auto; right: 4px; }
-.hunter-course-art b:nth-child(3) { left: 10px; width: 44px; height: 8px; bottom: auto; top: 5px; border-radius: 50% 50% 0 0; }
-.hunter-course-art[data-course="yorknew"] { background: linear-gradient(#555c71, #aaa192); }
-.hunter-course-art[data-course="yorknew"] b { width: 16px; height: 29px; background: repeating-linear-gradient(0deg, #485360 0 4px, #acaa82 4px 5px); }
-.hunter-course-art[data-course="yorknew"] b:nth-child(3) { display: none; }
-.hunter-course-art[data-course="greed"] { background: linear-gradient(#c2d7be 45%, #86a174 45%); }
-.hunter-course-art[data-course="greed"] b { width: 21px; height: 22px; border-radius: 50%; bottom: 7px; background: #527e54; }
-.hunter-course-art[data-course="greed"] b:nth-child(3) { display: none; }
-.hunter-mode-options, .hunter-difficulty { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-.hunter-mode-options > button { min-width: 0; padding: 8px 10px; background: #e4e7d8; border: 1px solid #c4cdb7; border-radius: 6px; text-align: left; color: #38513a; }
-.hunter-mode-options strong { display: flex; justify-content: space-between; font-size: 11px; }
-.hunter-mode-options svg { width: 17px; height: 17px; }
-.hunter-mode-options span { display: block; color: #7c8974; font-size: 8px; margin-top: 2px; }
-.hunter-mode-options > button[aria-pressed="true"] { color: #f1f2df; background: #345b40; border-color: #345b40; }
-.hunter-mode-options > button[aria-pressed="true"] span { color: #bcd0ae; }
-.hunter-difficulty { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
-.hunter-difficulty > button { border: 1px solid #c9d0bf; border-radius: 4px; background: transparent; color: #70816d; padding: 7px 4px; font-size: 9px; }
-.hunter-difficulty > button[aria-pressed="true"] { background: #d3ddc6; border-color: #819578; color: #284c32; }
-.hunter-record { font: 8px/1.5 ui-monospace, monospace; color: #7a8c73; }
-.hunter-primary { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 45px; border: 1px solid #234b35; border-radius: 6px; color: #eff2dd; background: #294f39; padding: 11px 15px; font-size: 12px; font-weight: 600; box-shadow: inset 0 -2px #1c3e2b; }
-.hunter-primary:hover { background: #376245; }
-.hunter-primary svg { width: 18px; height: 18px; }
-.hunter-secondary { min-height: 35px; width: 100%; padding: 7px; border-radius: 5px; border: 1px solid #99ad8f; background: transparent; color: #466342; font-size: 10px; }
-.hunter-run-hud { position: absolute; top: 48px; left: 20px; right: 20px; pointer-events: none; color: #ecf0db; }
-.hunter-run-hud > div:first-child { display: flex; align-items: baseline; gap: 7px; }
-.hunter-run-hud strong { font: 500 32px/1 ui-monospace, monospace; letter-spacing: -.07em; }
-.hunter-run-hud > div > span { font: 9px ui-monospace, monospace; color: #bacbb2; }
-.hunter-run-hud > span { display: block; margin-top: 7px; font-size: 9px; color: #cbd7ba; }
-.hunter-distance-track { height: 2px; background: #c0d0ae33; margin-top: 10px; }
-.hunter-distance-track > i { display: block; height: 100%; background: #d6e4b5; transform-origin: left; }
-.hunter-live-identity { display: flex; align-items: center; gap: 13px; padding-bottom: 15px; border-bottom: 1px solid #cbd4bf; }
-.hunter-live-identity > span { width: 59px; height: 58px; overflow: hidden; background: #dde4d3; border: 1px solid #c1ceb4; border-radius: 7px; }
-.hunter-live-identity svg { width: 100%; height: 100%; }
-.hunter-live-identity strong { display: block; font-size: 19px; color: #294e37; letter-spacing: -.035em; }
-.hunter-live-identity small { display: block; font: 8px/1.5 ui-monospace, monospace; color: #7d8c73; max-width: 180px; margin-top: 4px; }
-.hunter-vitals { display: grid; grid-template-columns: 1fr; gap: 13px; }
-.hunter-reserve { display: grid; grid-template-columns: 1fr auto; align-items: baseline; }
-.hunter-reserve > span, .hunter-composure > span { font: 8px ui-monospace, monospace; color: #6b8066; letter-spacing: .04em; }
-.hunter-reserve > strong { font: 15px ui-monospace, monospace; color: #315439; }
-.hunter-meter { grid-column: 1/-1; height: 4px; background: #cfd8c1; margin-top: 7px; border-radius: 2px; overflow: hidden; }
-.hunter-meter > i { display: block; height: 100%; background: #6c9361; transform-origin: left; transition: transform 90ms linear; }
-.hunter-electric > i { background: #6695b0; }
-.hunter-composure { display: flex; align-items: center; justify-content: space-between; padding: 1px 0 9px; border-bottom: 1px solid #cbd4bf; }
-.hunter-composure strong { font: 12px ui-monospace, monospace; color: #527348; }
-.hunter-techniques { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.hunter-techniques > button { position: relative; overflow: hidden; text-align: left; border: 1px solid #bac9af; border-radius: 7px; background: #e0e7d4; padding: 10px; min-width: 0; color: #52744d; }
-.hunter-tech-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
-.hunter-tech-top svg { width: 22px; height: 22px; }
-.hunter-tech-top kbd { font: 8px ui-monospace, monospace; color: #87997c; }
-.hunter-techniques strong { display: block; font-size: 10px; color: #2f543b; white-space: nowrap; letter-spacing: -.02em; }
-.hunter-techniques small { display: block; font-size: 8px; color: #7a8e70; margin-top: 3px; }
-.hunter-tech-cost { display: block; font: 8px ui-monospace, monospace; color: #5c7b50; margin-top: 9px; }
-.hunter-techniques button[aria-disabled="true"] { background: #e6e9de; border-color: #cbd3c2; }
-.hunter-techniques button[data-active="true"] { background: #bfcea9; border-color: #799563; }
-.hunter-techniques button[data-active="true"]::after { content: ''; position: absolute; left: 0; bottom: 0; right: 0; height: 2px; background: #638744; }
-.hunter-movement { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 5px; }
-.hunter-movement > button { display: flex; align-items: center; justify-content: center; gap: 4px; height: 42px; border-radius: 6px; background: #dfe6d3; border: 1px solid #bdcbb0; color: #3f653f; font-size: 20px; }
-.hunter-movement > button > span { font-size: 8px; }
-.hunter-movement > button:active { background: #bacaa8; }
-#hunterInstructions { text-align: center; color: #71856b; font-size: 8px; margin-top: -7px; }
-.hunter-touch-instructions { display: none; }
-.hunter-field-note { margin-top: 9px; padding-top: 15px; border-top: 1px solid #cbd4bf; }
-.hunter-field-note p { color: #667e60; font-size: 10px; line-height: 1.8; margin: 5px 0 15px; }
-.hunter-turn { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 9px 16px; border-radius: 5px; border: 1px solid #dbdab0; background: #ebedcdec; color: #294733; font: 700 12px ui-monospace, monospace; pointer-events: none; }
-.hunter-toast { position: absolute; left: 10px; right: 10px; bottom: 18px; margin: auto; width: fit-content; max-width: calc(100% - 20px); padding: 7px 11px; border: 1px solid #9fb59b66; color: #e0e9c9; background: #1d3a2de3; border-radius: 5px; font-size: 10px; opacity: 0; transform: translateY(5px); transition: opacity 120ms, transform 120ms; pointer-events: none; text-align: center; }
-.hunter-toast.is-visible { opacity: 1; transform: none; }
-.hunter-loading, .hunter-overlay { position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #e9efdc; background: #1d3729dd; padding: 24px; text-align: left; backdrop-filter: blur(4px); }
-.hunter-loading { gap: 12px; text-align: center; }
-.hunter-loading > i { width: 25px; height: 25px; border: 1px solid #78966c; border-top-color: #e3edc6; border-radius: 50%; animation: hunter-load 1.3s linear infinite; }
-.hunter-loading > strong { font-size: 16px; }
-.hunter-loading > span { font-size: 10px; color: #b7c8a9; }
-.hunter-loading button { background: #d9e2c7; color: #335239; border: 0; border-radius: 5px; padding: 9px 15px; }
-@keyframes hunter-load { to { transform: rotate(360deg); } }
-.hunter-overlay > div { width: min(100%, 310px); }
-.hunter-overlay .hunter-eyebrow { color: #b7cc98; }
-.hunter-overlay h5 { font-size: 43px; letter-spacing: -.06em; line-height: 1.03; margin: 14px 0; color: #f1f3df; }
-.hunter-overlay p { color: #bfccb0; font-size: 11px; line-height: 1.7; margin-bottom: 23px; }
-.hunter-result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 25px; }
-.hunter-result-stats > span { color: #a6bd95; font-size: 9px; }
-.hunter-result-stats strong { display: block; color: #e2ebcb; font: 23px/1.5 ui-monospace, monospace; }
-.hunter-overlay .hunter-primary { background: #d7e1b9; color: #2a4a31; border-color: #e7edce; box-shadow: inset 0 -2px #a5b985; }
-.hunter-overlay .hunter-secondary { margin-top: 8px; color: #c3d6b3; border-color: #6b8860; }
-.hunter-bottom { display: flex; align-items: flex-start; gap: 15px; margin-top: 10px; }
-#hunterGuide { flex: 1; min-width: 0; }
-#hunterGuide > summary { display: flex; gap: 9px; align-items: center; min-height: 30px; width: fit-content; cursor: pointer; list-style: none; font-size: 10px; color: #6b8063; }
-#hunterGuide > summary::-webkit-details-marker { display: none; }
-#hunterGuide > div { padding: 10px 0; color: #63785e; font-size: 11px; line-height: 1.8; }
-#hunterGuide p + p { margin-top: 12px; }
-#hunterGuide strong { color: #3e613f; }
-.hunter-bottom:has(details[open]) { flex-wrap: wrap; }
-#hunterGuide[open] { flex-basis: 100%; }
-.hunter-text-button { min-height: 30px; border: 0; background: transparent; font-size: 10px; color: #4e7247; padding: 5px 0; white-space: nowrap; }
-.hunter-adaptation { padding-top: 8px; color: #87977c; font: 7px ui-monospace, monospace; }
-.game-choice[data-game="hunter"] { grid-column: 1/-1; display: grid; grid-template-columns: 42% 1fr; background: #e6e9d9; border-color: #91a181; }
-.game-choice[data-game="hunter"] .game-preview { height: 128px; background: #58715e; }
-.game-choice[data-game="hunter"] .game-preview svg { width: 100%; height: 100%; object-fit: cover; }
-.game-choice[data-game="hunter"] .game-choice-title { color: #244c35; }
-.game-choice[data-game="hunter"] .game-choice-description { color: #6c8263; }
-.game-choice[data-game="hunter"] .game-choice-body { align-self: center; }
-@media (hover: hover) { .hunter-characters > button:hover, .hunter-courses > button:hover, .hunter-techniques > button:not(:disabled):hover { border-color: #64845a; } }
-@media (pointer: coarse) { .hunter-keyboard-instructions { display: none; } .hunter-touch-instructions { display: inline; } }
-@media (max-width: 700px) {
-  .game-modal[data-game="hunter"] { padding: 8px; }
-  .game-modal[data-game="hunter"] .game-modal-content { padding: 12px; width: min(500px, 100%); max-height: calc(100dvh - 16px); }
-  .game-modal[data-game="hunter"] .game-modal-header { margin-bottom: 8px; }
-  .hunter-masthead { margin-bottom: 10px; }
-  .hunter-masthead h4 { font-size: 26px; }
-  .hunter-eyebrow { font-size: 7px; }
-  .hunter-icon { width: 31px; height: 33px; }
-  .hunter-layout { display: flex; flex-direction: column; gap: 12px; }
-  .hunter-stage { width: 100%; height: clamp(218px, calc(100dvh - 348px), 600px); min-height: 0; border-radius: 9px; }
-  .hunter-game[data-screen="setup"] .hunter-stage { height: 230px; }
-  .hunter-poster { padding: 40px 18px 18px; }
-  .hunter-poster-top > span { font-size: 16px; }
-  .hunter-poster-name > strong { font-size: 37px; margin: 4px 0; }
-  .hunter-poster-name > strong > span { font-size: 13px; margin-left: 8px; }
-  .hunter-poster-name > span { font-size: 6px; }
-  .hunter-poster-name > p { font-size: 8px; }
-  .hunter-location { top: 12px; left: 13px; right: 13px; font-size: 6px; }
-  .hunter-aside { width: 100%; gap: 8px; }
-  .hunter-section-label { font-size: 7px; }
-  .hunter-characters > button { flex-direction: row; padding: 0 4px 0 0; gap: 1px; min-height: 45px; }
-  .hunter-characters > button > svg { width: 34px; height: 42px; }
-  .hunter-characters strong { font-size: 8px; }
-  .hunter-loadout { min-height: 0; padding-bottom: 8px; }
-  .hunter-loadout > strong { font-size: 10px; }
-  .hunter-loadout > span { display: inline; margin-left: 8px; font-size: 7px; }
-  .hunter-loadout > p { font-size: 9px; line-height: 1.4; margin-top: 3px; }
-  .hunter-courses { flex-direction: row; gap: 5px; }
-  .hunter-courses > button { width: 33.333%; min-width: 0; padding: 7px; gap: 4px; }
-  .hunter-course-art { display: none; }
-  .hunter-courses strong { font-size: 9px; }
-  .hunter-courses small { font-size: 7px; margin-top: 3px; }
-  .hunter-mode-options { gap: 5px; }
-  .hunter-mode-options > button { padding: 7px 9px; }
-  .hunter-mode-options strong { font-size: 10px; }
-  .hunter-mode-options span { font-size: 7px; margin-top: 1px; }
-  .hunter-difficulty > button { padding: 6px; font-size: 8px; }
-  .hunter-record { font-size: 7px; }
-  .hunter-primary { min-height: 41px; padding: 9px 12px; font-size: 11px; }
-  .hunter-live-identity, .hunter-tech-label, .hunter-field-note { display: none; }
-  .hunter-vitals { display: flex; align-items: center; gap: 12px; }
-  .hunter-reserve { flex: 1; min-width: 0; }
-  .hunter-reserve > span, .hunter-composure > span { font-size: 6px; letter-spacing: 0; }
-  .hunter-reserve strong { font-size: 12px; }
-  .hunter-meter { margin-top: 4px; height: 3px; }
-  .hunter-composure { display: block; padding: 0; border: 0; text-align: right; }
-  .hunter-composure > span { display: block; }
-  .hunter-composure strong { font-size: 11px; }
-  .hunter-techniques { display: flex; gap: 5px; }
-  .hunter-techniques > button { flex: 1; padding: 7px 6px; min-height: 64px; }
-  .hunter-techniques strong { font-size: 9px; }
-  .hunter-techniques small { display: none; }
-  .hunter-tech-top { margin-bottom: 4px; }
-  .hunter-tech-top svg { width: 17px; height: 17px; }
-  .hunter-tech-top kbd { font-size: 7px; }
-  .hunter-tech-cost { font-size: 7px; margin-top: 5px; }
-  .hunter-movement { margin-top: 0; }
-  .hunter-movement > button { height: 42px; font-size: 18px; }
-  .hunter-movement > button > span { font-size: 7px; }
-  #hunterInstructions { margin-top: -4px; font-size: 7px; }
-  .hunter-run-hud { top: 33px; left: 13px; right: 13px; }
-  .hunter-run-hud strong { font-size: 27px; }
-  .hunter-run-hud > div > span { font-size: 7px; }
-  .hunter-run-hud > span { margin-top: 5px; font-size: 8px; }
-  .hunter-distance-track { margin-top: 7px; }
-  .hunter-turn { top: 113px; padding: 6px 10px; font-size: 10px; }
-  .hunter-toast { bottom: 9px; font-size: 8px; padding: 5px 8px; }
-  .hunter-overlay { padding: 18px 25px; overflow-y: auto; justify-content: safe center; }
-  .hunter-overlay h5 { font-size: 29px; margin: 9px 0; }
-  .hunter-overlay p { font-size: 10px; margin-bottom: 14px; line-height: 1.5; }
-  .hunter-result-stats { margin-bottom: 13px; }
-  .hunter-result-stats strong { font-size: 18px; }
-  .hunter-result-stats > span { font-size: 8px; }
-  .hunter-secondary { min-height: 31px; font-size: 9px; }
-  .hunter-bottom { margin-top: 5px; gap: 10px; }
-  #hunterGuide > summary, .hunter-text-button { min-height: 28px; font-size: 9px; }
-  .hunter-adaptation { font-size: 6px; }
+.game-modal[data-game="hunter"] .game-modal-content{width:min(940px,100%);padding:20px;background:#f0eee2;color:#253e3d;border:1px solid #aebcb0;border-radius:10px}
+.game-modal[data-game="hunter"] .game-modal-header{margin-bottom:12px}
+.game-modal[data-game="hunter"] .game-heading h3{font-size:11px;color:#687970}
+.game-modal[data-game="hunter"] .game-back{color:#415c50;border-color:#b8c3b5}
+.game-modal[data-game="hunter"] .game-close{color:#29493e}
+.game-modal[data-game="hunter"] .game-close:hover{background:#dce1d1}
+.game-modal[data-game="hunter"] :focus-visible{outline:3px solid #b08c3e;outline-offset:3px}
+.hunter-game{font:13px/1.5 system-ui,sans-serif}
+.hunter-game *{box-sizing:border-box}
+.hunter-game h4,.hunter-game h5,.hunter-game p{margin:0}
+.hunter-game button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.hr-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+.hr-kicker{font:10px/1.5 ui-monospace,monospace;letter-spacing:.12em;color:#6b8070}
+.hr-heading h4{font-size:28px;letter-spacing:-.055em;color:#234a3e;line-height:1.25}
+.hr-tools{display:flex;gap:6px}
+.hr-tools button{border:1px solid #bac5b7;background:transparent;color:#45614e;border-radius:5px;padding:7px 10px;min-height:36px;font-size:11px}
+.hr-stage{position:relative;border:3px solid #213c3e;border-radius:5px;overflow:hidden;background:#172d35;isolation:isolate}
+#hunterCanvas{width:100%;height:auto;aspect-ratio:16/9;display:block;image-rendering:pixelated;touch-action:none;user-select:none;-webkit-user-select:none}
+.hr-hud{position:absolute;top:12px;left:15px;right:15px;display:flex;align-items:start;justify-content:space-between;color:#f5e4b6;text-shadow:1px 2px #172937;pointer-events:none}
+#hunterHearts{font-size:21px;letter-spacing:3px;color:#edb49b}
+.hr-hud>div{text-align:right;background:#13272ca8;border:1px solid #78918255;padding:4px 9px;border-radius:3px}
+.hr-hud strong{display:block;font:600 16px ui-monospace,monospace}
+.hr-hud small{display:block;font:10px/1.5 ui-monospace,monospace;color:#c5d1b7}
+.hr-progress{position:absolute;top:0;left:0;right:0;height:3px;background:#294b46}
+.hr-progress i{display:block;height:100%;background:#d8d997;transition:width .1s linear}
+.hr-setup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 20px;padding-top:17px}
+.hr-character-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.hr-character-row button{display:flex;align-items:center;flex-direction:column;padding:0 0 6px;border:1px solid #c0cbbb;background:#e4e8da;border-radius:5px;overflow:hidden;color:#3b5146}
+.hr-character-row svg{display:block;width:100%;height:58px}
+.hr-character-row strong{font-size:11px;font-weight:600}
+.hr-character-row button[aria-pressed="true"]{background:#cfdcbd;border-color:#486943;box-shadow:inset 0 -3px #486943}
+.hr-kit{border-left:1px solid #c5cdbd;padding-left:19px;align-self:center}
+.hr-kit strong{font-size:14px;color:#2d5140}
+.hr-kit p{font-size:12px;color:#60715f;margin-top:3px;line-height:1.5}
+.hr-kit small{font:9px/1.5 ui-monospace,monospace;color:#7b8875;display:block;margin-top:6px}
+.hr-options{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px;grid-column:1/-1;align-items:end}
+.hr-options label{display:flex;flex-direction:column;gap:5px;font:10px ui-monospace,monospace;color:#65775f}
+.hr-options select{width:100%;min-height:40px;border:1px solid #bbc6b3;border-radius:4px;padding:7px 10px;background:#e6eadc;color:#324e3f;font:12px system-ui,sans-serif}
+.hr-mode{display:flex;border:1px solid #bac5b3;border-radius:4px;overflow:hidden;height:40px}
+.hr-mode button{border:0;background:#e6eadc;flex:1;color:#687960;font-size:12px;padding:5px}
+.hr-mode button[aria-pressed="true"]{background:#314f40;color:#f0eed4}
+.hr-start-row{display:flex;align-items:center;justify-content:space-between;gap:12px;grid-column:1/-1}
+.hr-start-row>span{font:10px/1.6 ui-monospace,monospace;color:#76816c}
+.hr-primary{background:#315140;border:1px solid #315140;color:#f5f0d9;font-weight:600!important;border-radius:5px;padding:12px 22px;min-height:44px}
+.hr-primary:hover{background:#41654c}
+.hr-controls{display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px;padding-top:13px}
+.hr-controls button{position:relative;border:1px solid #bdc7b5;background:#e3e8d8;color:#3b5843;border-radius:5px;padding:10px;min-height:69px;text-align:left;display:grid;grid-template-columns:24px 1fr;column-gap:8px;align-items:center;overflow:hidden}
+.hr-controls button>span{font-size:23px;grid-row:1/3;text-align:center}
+.hr-controls strong{font-size:13px;font-weight:600}
+.hr-controls small{font:10px/1.5 ui-monospace,monospace;color:#79866b}
+.hr-controls button:active{background:#c3d6b2}
+#hunterPower{display:flex;flex-direction:column;justify-content:center;align-items:start;padding-left:15px}
+#hunterPower:not(:disabled){background:#315140;border-color:#315140;color:#f2ecd1;box-shadow:inset 0 0 0 1px #abc899}
+#hunterPower:not(:disabled) small{color:#c6d5b0}
+#hunterPower:disabled{opacity:1;color:#74816b;background:#e4e5d9}
+#hunterPowerMeter{position:absolute;bottom:0;left:0;right:0;height:3px;background:#b5bca8}
+#hunterPowerMeter i{display:block;height:100%;background:#93a965}
+.hr-advice{font-size:11px;color:#708068;padding-top:10px;line-height:1.5}
+.hr-guide{border-top:1px solid #d1d6c5;margin-top:13px;padding-top:10px;font-size:11px;color:#68775f}
+.hr-guide summary{cursor:pointer;min-height:28px}
+.hr-guide p{margin:8px 0;line-height:1.7}
+.hr-lesson{position:absolute;left:46%;right:4%;top:20%;background:#f2ecd6f5;border:1px solid #b7bb98;box-shadow:4px 4px 0 #14293680;padding:15px;color:#294b40;border-radius:3px}
+.hr-lesson>span{font:9px ui-monospace,monospace;letter-spacing:.1em;color:#7e8968}
+.hr-lesson strong{display:block;font-size:22px;letter-spacing:-.03em;margin-top:3px}
+.hr-lesson p{font-size:12px;line-height:1.4;margin-top:5px}
+.hr-lesson button{margin-top:10px;min-height:42px;padding:7px 20px;border:0;border-radius:3px;background:#355441;color:#f4edd5;font-weight:600}
+.hr-overlay{position:absolute;inset:0;background:#102b33ed;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:25px;text-align:center;color:#d1ddc2}
+.hr-overlay h5{color:#f2e8c7;font-size:32px;letter-spacing:-.04em}
+.hr-overlay .hr-kicker{color:#a6b898}
+.hr-overlay p{max-width:400px;font-size:12px}
+.hr-overlay .hr-primary{background:#d2dbad;color:#254639;border:0}
+.hr-link{border:0;background:transparent;color:#aebf9d;font-size:11px!important;min-height:35px}
+.hr-toast{position:absolute;bottom:10%;left:50%;transform:translateX(-50%);background:#142c32ec;border:1px solid #748b74;color:#e7e7bd;padding:6px 13px;font:10px/1.5 ui-monospace,monospace;max-width:85%;text-align:center;pointer-events:none}
+.hunter-picker-art{display:flex;width:100%;height:100%;min-height:130px;align-items:center;justify-content:center;flex-direction:column;color:#e9ddae;background:repeating-linear-gradient(90deg,transparent 0 42px,#425b5433 42px 49px),linear-gradient(#172d35 75%,#a2b298 75% 78%,#29403f 78%);font-family:ui-monospace,monospace}
+.hunter-picker-art b{font-size:42px;letter-spacing:-5px}.hunter-picker-art small{font-size:8px;letter-spacing:2px;margin-top:2px}
+@media(max-width:600px){
+.game-modal[data-game="hunter"]{padding:8px}.game-modal[data-game="hunter"] .game-modal-content{padding:11px;max-height:calc(100dvh - 16px)}
+.game-modal[data-game="hunter"] .game-modal-header{margin-bottom:6px}.hr-heading{margin-bottom:10px;gap:7px}.hr-heading h4{font-size:22px}.hr-kicker{font-size:8px}.hr-tools{gap:4px}.hr-tools button{padding:5px 7px;font-size:9px;min-height:34px}
+.hr-stage{border-width:2px}.hr-setup{grid-template-columns:1fr;gap:11px;padding-top:11px}.hr-character-row svg{height:49px}.hr-character-row button{padding-bottom:4px}.hr-kit{padding:0;border:0;min-height:62px}.hr-kit strong{font-size:13px}.hr-kit p{font-size:11px}.hr-kit small{font-size:8px;margin-top:3px}
+.hr-options{gap:6px;grid-template-columns:1.1fr .85fr 1fr}.hr-options select{font-size:10px;padding:6px;min-height:38px}.hr-mode{height:38px}.hr-mode button{font-size:10px}.hr-options label{font-size:9px}
+.hr-start-row{gap:8px}.hr-start-row>span{font-size:8px}.hr-primary{padding:10px 13px;font-size:12px!important}.hr-advice{font-size:10px;padding-top:8px}.hr-guide{margin-top:10px;font-size:10px}
+.hr-controls{gap:6px;padding-top:10px;grid-template-columns:1fr 1fr 1.75fr}.hr-controls button{min-height:68px;padding:8px;grid-template-columns:15px 1fr;gap:3px}.hr-controls button>span{font-size:20px}.hr-controls strong{font-size:11px}.hr-controls small{font-size:8px}#hunterPower{padding-left:9px}
+.hr-hud{left:9px;right:9px;top:8px}#hunterHearts{font-size:15px;letter-spacing:1px}.hr-hud strong{font-size:11px}.hr-hud small{font-size:8px}.hr-hud>div{padding:3px 5px}
+.hr-lesson{left:43%;right:3%;top:15%;padding:7px}.hr-lesson>span{font-size:7px}.hr-lesson strong{font-size:16px}.hr-lesson p{font-size:9px}.hr-lesson button{margin-top:7px;min-height:34px;padding:5px 13px;font-size:11px}
+.hr-overlay{padding:10px;gap:7px}.hr-overlay h5{font-size:22px}.hr-overlay p{font-size:10px;max-width:270px}.hr-overlay .hr-primary{min-height:36px;padding:7px 13px}.hr-link{min-height:27px;font-size:9px!important}.hr-toast{font-size:8px;padding:4px 8px}
 }
-@media (max-width: 370px) {
-  .hunter-masthead h4 { font-size: 23px; }
-  .hunter-top-tools { gap: 4px; }
-  .hunter-characters > button { flex-direction: column; padding: 0 2px 5px; }
-  .hunter-characters > button > svg { height: 34px; width: 38px; }
-  .hunter-courses strong { font-size: 8px; }
-  .hunter-techniques strong { font-size: 8px; }
-  .hunter-techniques > button { padding-inline: 5px; }
-}
-@media (min-width: 701px) and (max-height: 660px) {
-  .game-modal[data-game="hunter"] { padding: 9px; }
-  .game-modal[data-game="hunter"] .game-modal-content { padding: 12px; max-height: calc(100dvh - 18px); }
-  .game-modal[data-game="hunter"] .game-modal-header { margin-bottom: 5px; }
-  .hunter-masthead { margin-bottom: 9px; }
-  .hunter-masthead h4 { font-size: 26px; }
-  .hunter-masthead .hunter-eyebrow { display: none; }
-  .hunter-layout { gap: 13px; grid-template-columns: minmax(0, 1fr) 260px; }
-  .hunter-stage { height: max(245px, calc(100dvh - 162px)); min-height: 0; }
-  .hunter-aside { gap: 7px; }
-  .hunter-setup .hunter-section-label { display: none; }
-  .hunter-characters > button { padding-bottom: 5px; }
-  .hunter-characters > button > svg { height: 40px; }
-  .hunter-loadout { min-height: 0; padding-bottom: 6px; }
-  .hunter-loadout > p { display: none; }
-  .hunter-courses { flex-direction: row; gap: 4px; }
-  .hunter-courses > button { width: 33.333%; padding: 6px; min-height: 36px; }
-  .hunter-course-art, .hunter-courses small { display: none; }
-  .hunter-courses strong { font-size: 8px; }
-  .hunter-mode-options > button { padding: 5px 8px; }
-  .hunter-mode-options span { display: none; }
-  .hunter-difficulty > button { padding: 5px; font-size: 8px; }
-  .hunter-record { font-size: 7px; }
-  .hunter-primary { min-height: 36px; padding: 8px 12px; font-size: 11px; }
-  .hunter-live-identity, .hunter-tech-label, .hunter-field-note { display: none; }
-  .hunter-vitals { display: flex; gap: 10px; align-items: center; }
-  .hunter-reserve { flex: 1; }
-  .hunter-reserve > span { font-size: 6px; }
-  .hunter-reserve strong { font-size: 11px; }
-  .hunter-composure { display: block; border: 0; padding: 0; }
-  .hunter-composure > span { font-size: 6px; display: block; }
-  .hunter-techniques > button { padding: 6px 8px; }
-  .hunter-techniques small { display: none; }
-  .hunter-tech-top { margin-bottom: 4px; }
-  .hunter-tech-top svg { width: 17px; height: 17px; }
-  .hunter-techniques strong { font-size: 9px; }
-  .hunter-tech-cost { font-size: 7px; margin-top: 3px; }
-  .hunter-movement > button { height: 33px; }
-  .hunter-poster { padding: 42px 23px 18px; }
-  .hunter-poster-top > span { font-size: 18px; }
-  .hunter-poster-name > strong { font-size: 41px; margin: 5px 0; }
-  .hunter-poster-name > p { font-size: 9px; }
-  .hunter-overlay { padding: 16px 28px; justify-content: safe center; overflow-y: auto; }
-  .hunter-overlay h5 { font-size: 29px; margin: 8px 0; }
-  .hunter-overlay p { margin-bottom: 12px; font-size: 10px; }
-  .hunter-result-stats { margin-bottom: 13px; }
-  .hunter-result-stats strong { font-size: 18px; }
-}
-@media (prefers-reduced-motion: reduce) { .hunter-game *, .hunter-game *::before, .hunter-game *::after { animation: none !important; transition: none !important; } }
+@media(max-height:500px) and (min-width:650px){.game-modal[data-game="hunter"] .game-modal-content{width:min(940px,100%);padding:10px}.hr-heading{display:none}.hunter-game[data-screen="play"]{display:grid;grid-template-columns:1fr 200px;gap:10px}.hunter-game[data-screen="play"] .hr-stage{grid-row:1/4}.hunter-game[data-screen="play"] .hr-controls{display:flex;flex-direction:column;padding:0;gap:5px}.hunter-game[data-screen="play"] .hr-controls button{min-height:48px;padding:5px 10px}.hunter-game[data-screen="play"] .hr-advice{font-size:10px;padding:0}.hunter-game[data-screen="play"] .hr-guide{margin:0;padding:0}.hr-stage{max-width:640px;margin:auto;width:100%}}
+@media(prefers-reduced-motion:reduce){.hunter-game *{transition:none!important}}

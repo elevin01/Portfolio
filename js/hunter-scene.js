@@ -1,460 +1,168 @@
-import * as T from './vendor/three.module.min.js';
-import { CHARACTERS, chapter, random } from './hunter-model.js';
-
-const geometry = {
-  box: new T.BoxGeometry(1, 1, 1), ball: new T.SphereGeometry(1, 10, 8),
-  rock: new T.IcosahedronGeometry(1, 0), cylinder: new T.CylinderGeometry(1, 1, 1, 9),
-  cone: new T.ConeGeometry(1, 1, 7), ring: new T.TorusGeometry(1, 0.055, 4, 20),
-  arch: new T.TorusGeometry(1, 0.018, 4, 24, Math.PI)
+import { HUNTER, COURSES, chapter } from './hunter-model.js';
+const G = HUNTER.ground;
+const PALETTES = {
+  tunnel: ['#101e29','#243640','#3e555a','#a9bd9f','#e4c88e'],
+  wetlands: ['#193c42','#285457','#48746b','#a6c5a2','#ece2af'],
+  city: ['#191e38','#2c3050','#494260','#978494','#f3c58a'],
+  field: ['#77a7ae','#597f87','#73958a','#b5c696','#f5e8b0']
 };
-const heart = new T.Shape();
-heart.moveTo(0, -0.13); heart.bezierCurveTo(-0.2, 0.01, -0.15, 0.16, -0.055, 0.13);
-heart.quadraticCurveTo(0, 0.12, 0, 0.065); heart.quadraticCurveTo(0, 0.12, 0.055, 0.13);
-heart.bezierCurveTo(0.15, 0.16, 0.2, 0.01, 0, -0.13); geometry.heart = new T.ShapeGeometry(heart);
-const materials = new Map();
-function material(color, flat = true) {
-  const key = `${color}/${flat}`;
-  if (!materials.has(key)) materials.set(key, new T.MeshLambertMaterial({ color, flatShading: flat }));
-  return materials.get(key);
-}
-function mesh(group, kind, color, position = [0, 0, 0], scale = [1, 1, 1], rotation = [0, 0, 0]) {
-  const item = new T.Mesh(geometry[kind], material(color));
-  item.position.set(...position); item.scale.set(...scale); item.rotation.set(...rotation); group.add(item); return item;
-}
-function limb(parent, position, upper, lower, width, length) {
-  const pivot = new T.Group(); pivot.position.set(...position); parent.add(pivot);
-  mesh(pivot, 'cylinder', upper, [0, -length * 0.24, 0], [width, length * 0.48, width]);
-  const joint = new T.Group(); joint.position.y = -length * 0.48; pivot.add(joint);
-  mesh(joint, 'cylinder', lower, [0, -length * 0.25, 0], [width * 0.88, length * 0.5, width * 0.88]);
-  return { pivot, joint, length };
-}
-function buildCharacter(id) {
-  const root = new T.Group(), body = new T.Group(); root.add(body);
-  const eyes = [], blades = []; let rod;
-  const skin = id === 'hisoka' ? '#edddd9' : '#efc8a9';
-  const ink = '#152a2e', colors = {
-    killua: { top: '#e8e3f1', under: '#333e86', shorts: '#777797', shoe: '#6b426c', hair: '#e6e6f4' },
-    gon: { top: '#4d9544', under: '#4d9544', shorts: '#4d9544', shoe: '#447632', hair: '#152b25' },
-    kurapika: { top: '#315eac', under: '#f0ece5', shorts: '#e6e2d7', shoe: '#3b5690', hair: '#edd255' },
-    hisoka: { top: '#b3dcec', under: skin, shorts: '#b3dcec', shoe: '#293964', hair: '#c53665' }
-  }[id];
-  const tall = id === 'hisoka' ? 1.2 : id === 'kurapika' ? 1.07 : 1;
-  root.scale.setScalar(tall);
-  mesh(body, 'box', colors.top, [0, 1.7, 0], [0.67, 0.7, 0.38]);
-  mesh(body, 'cylinder', colors.under, [0, 2.09, 0], [0.16, 0.21, 0.16]);
-  mesh(body, 'box', colors.shorts, [0, 1.2, 0], [0.65, 0.43, 0.38]);
-  const legs = [-1, 1].map(side => {
-    const leg = limb(body, [side * 0.18, 1.26, 0], colors.shorts, id === 'gon' || id === 'killua' ? skin : colors.shorts, 0.135, 1.02);
-    mesh(leg.joint, 'box', colors.shoe, [0, -0.52, 0.06], [0.25, id === 'gon' ? 0.49 : 0.24, 0.4]);
-    mesh(leg.joint, 'box', id === 'gon' ? '#adc48a' : '#b4adce', [0, -0.64, 0.08], [0.26, 0.06, 0.41]);
-    if (id === 'gon') mesh(leg.joint, 'box', '#d1dfb1', [0, -0.44, 0.269], [0.07, 0.32, 0.015]);
-    return leg;
-  });
-  const arms = [-1, 1].map(side => {
-    const arm = limb(body, [side * 0.43, 1.98, 0], colors.top, colors.under, 0.11, 0.77);
-    mesh(arm.joint, 'ball', skin, [0, -0.42, 0], [0.1, 0.13, 0.09]);
-    if (id === 'kurapika') {
-      const blade = new T.Group(); arm.joint.add(blade); blade.position.set(0, -0.42, 0.06);
-      mesh(blade, 'box', '#756d56', [0, 0, 0], [0.07, 0.07, 0.24]);
-      mesh(blade, 'cone', '#d5dcd8', [0, 0, 0.37], [0.09, 0.59, 0.06], [Math.PI / 2, 0, 0]); blades.push(blade);
-    }
-    return arm;
-  });
-  const head = new T.Group(); head.position.set(0, 2.38, 0); body.add(head);
-  mesh(head, 'ball', skin, [0, 0, 0], [0.35, 0.39, 0.32]);
-  [-1, 1].forEach(side => {
-    mesh(head, 'ball', skin, [side * 0.34, -0.03, 0], [0.065, 0.12, 0.065]);
-    mesh(head, 'ball', '#faf4e7', [side * 0.145, 0.025, 0.274], [0.083, 0.091, 0.025]);
-    eyes.push(mesh(head, 'ball', id === 'killua' ? '#4e82bd' : '#554631', [side * 0.145, 0.022, 0.297], [0.043, 0.068, 0.014]));
-    mesh(head, 'ball', ink, [side * 0.145, 0.018, 0.309], [0.021, 0.048, 0.01]);
-    mesh(head, 'box', ink, [side * 0.145, 0.11, 0.28], [0.16, 0.028, 0.018], [0, 0, side * -0.15]);
-  });
-  mesh(head, 'box', '#b48278', [0, -0.19, 0.29], [0.07, 0.014, 0.01]);
-  mesh(head, 'ball', colors.hair, [0, 0.17, -0.065], [0.39, 0.31, 0.34]);
-  const hair = new T.Group(); head.add(hair);
-  if (id === 'kurapika') {
-    for (let i = 0; i < 13; i++) {
-      const a = i / 13 * Math.PI * 2;
-      mesh(hair, 'cone', colors.hair, [Math.sin(a) * 0.3, -0.015, Math.cos(a) * 0.25], [0.15, 0.64, 0.15], [0.12 * Math.cos(a), 0, Math.PI + 0.12 * Math.sin(a)]);
-    }
-    mesh(body, 'box', colors.top, [0, 1.16, -0.045], [0.77, 1.02, 0.5]);
-    const trim = '#c75b67';
-    [-1, 1].forEach(s => { mesh(body, 'box', trim, [s * 0.34, 1.3, 0.21], [0.055, 1.03, 0.015]); mesh(body, 'box', trim, [s * 0.34, 1.3, -0.303], [0.055, 1.03, 0.02]); });
-    mesh(body, 'box', trim, [0, 1.67, -0.302], [0.7, 0.055, 0.02]);
-    mesh(body, 'ring', trim, [0, 1.34, -0.316], [0.13, 0.13, 0.13]);
-    mesh(body, 'box', trim, [0, 0.67, -0.304], [0.73, 0.055, 0.02]);
-  } else {
-    const count = id === 'killua' ? 21 : 15;
-    for (let i = 0; i < count; i++) {
-      const a = i / count * Math.PI * 2, length = id === 'gon' ? 0.65 + (i % 3) * 0.14 : id === 'hisoka' ? 0.63 : 0.39;
-      const p = id === 'killua' ? 0.3 : 0.22;
-      mesh(hair, 'cone', colors.hair, [Math.sin(a) * p, 0.29 + (i % 3) * 0.025, Math.cos(a) * p], [0.13, length, 0.12], [Math.cos(a) * (id === 'killua' ? 0.95 : 0.4), 0, -Math.sin(a) * 0.65]);
-    }
-    if (id === 'gon') {
-      const trim = '#d77945';
-      mesh(body, 'box', trim, [0, 1.72, 0.2], [0.055, 0.69, 0.025]);
-      mesh(body, 'box', trim, [0, 1.38, 0], [0.69, 0.05, 0.41]);
-      [-1, 1].forEach(s => mesh(body, 'box', trim, [s * 0.26, 1.65, 0.202], [0.13, 0.045, 0.025], [0, 0, s * 0.4]));
-      // Fishing rod, carried diagonally across his back.
-      rod = mesh(body, 'cylinder', '#705445', [0.3, 1.74, -0.3], [0.025, 1.6, 0.025], [0, 0, -0.37]);
-    }
-    if (id === 'hisoka') {
-      mesh(body, 'box', '#d885a3', [0, 1.38, 0], [0.67, 0.24, 0.41]);
-      mesh(body, 'box', '#ecd167', [0, 1.2, 0], [0.77, 0.19, 0.45]);
-      for (const z of [-0.212, 0.21]) {
-        mesh(body, 'box', '#473761', [-0.19, 1.78, z], [0.17, 0.17, 0.025], [0, 0, Math.PI / 4]);
-        mesh(body, 'heart', '#b3416c', [0.19, 1.78, z], [0.9, 0.9, 1], [0, z < 0 ? Math.PI : 0, 0]);
-      }
-      mesh(head, 'cone', '#ab457f', [-0.22, -0.105, 0.284], [0.045, 0.1, 0.025]);
-      mesh(head, 'ball', '#3c927d', [0.22, -0.12, 0.282], [0.031, 0.068, 0.02]);
-    }
-  }
-  const board = new T.Group(); root.add(board); board.visible = false;
-  mesh(board, 'box', '#bed792', [0, 0.08, 0], [0.65, 0.08, 1.25]);
-  for (const x of [-0.3, 0.3]) for (const z of [-0.42, 0.42]) mesh(board, 'cylinder', '#a45247', [x, 0, z], [0.08, 0.12, 0.08], [0, 0, Math.PI / 2]);
-  return { root, body, head, legs, arms, board, eyes, blades, rod, id };
-}
-
-// Scenery is instanced per geometry, including per-instance color. A chunk needs
-// only a handful of draw calls, irrespective of its windows, foliage, or bricks.
-const instanceMaterial = new T.MeshLambertMaterial({ color: '#ffffff', flatShading: true });
-function batch(items) {
-  const group = new T.Group(), kinds = new Map();
-  for (const item of items) { if (!kinds.has(item.kind)) kinds.set(item.kind, []); kinds.get(item.kind).push(item); }
-  const dummy = new T.Object3D(), color = new T.Color();
-  for (const [kind, entries] of kinds) {
-    const object = new T.InstancedMesh(geometry[kind], instanceMaterial, entries.length);
-    for (const [index, item] of entries.entries()) {
-      dummy.position.set(...item.p); dummy.scale.set(...item.s); dummy.rotation.set(...(item.r || [0, 0, 0])); dummy.updateMatrix();
-      object.setMatrixAt(index, dummy.matrix); object.setColorAt(index, color.set(item.c));
-    }
-    object.instanceMatrix.needsUpdate = true; group.add(object);
-  }
-  return group;
-}
-function landscape(course, ch, index, seed) {
-  const r = random(seed ^ Math.imul(index + 999, 374761393)), items = [];
-  const add = (kind, c, p, s, rotation) => items.push({ kind, c, p, s, r: rotation });
-  const box = (c, p, s, rotation) => add('box', c, p, s, rotation);
-  const tree = (x, z, lush = false) => {
-    const h = 5 + r() * 6;
-    add('cylinder', lush ? '#755e42' : '#465b4e', [x, h / 2, z], [0.25 + r() * 0.22, h, 0.32]);
-    for (let n = 0; n < 3; n++) add('rock', lush ? ['#83a975', '#769a68', '#9eb77f'][n] : ['#496b5c', '#587460', '#365a4f'][n], [x + (r() - 0.5) * 2, h - n * 0.6, z], [2.4 + r(), 1.9, 2.8]);
-    add('rock', '#384d3f', [x, 0.05, z], [1, 0.13, 0.75]);
-  };
-  if (course === 'exam' && ch < 2) {
-    box('#4b615b', [0, -0.3, 0], [14, 0.5, 24.1]);
-    for (const side of [-1, 1]) {
-      box('#52695f', [side * 7.4, 2.5, 0], [1, 5, 24]);
-      box('#2c4743', [side * 6.85, 0.8, 0], [0.12, 0.5, 24]);
-      for (const z of [-10, 1, 11]) {
-        box('#243f3d', [side * 6.55, 4.4, z], [0.7, 0.42, 1.4]);
-        box('#e6d6a7', [side * 6.35, 4.25, z], [0.25, 0.08, 1.1]);
-        box('#334c48', [side * 6.7, 1.6, z], [0.1, 0.1, 10.5]);
-      }
-    }
-    for (const z of [-12, 0, 12]) add('arch', '#77897b', [0, 0, z], [7, 7, 1]);
-    if (ch === 1) for (let n = -11; n < 12; n += 1.4) box('#879484', [0, -0.02, n], [12.8, 0.09, 0.22]);
-    else for (const x of [-2.35, 2.35]) box('#9ba184', [x, -0.032, 0], [0.035, 0.025, 24]);
-  } else if (course === 'exam') {
-    box('#3f5950', [0, -0.35, 0], [50, 0.4, 24]); box('#7a8270', [0, -0.1, 0], [7.3, 0.22, 24.1]);
-    for (let n = 0; n < 10; n++) {
-      const side = n % 2 ? 1 : -1, x = side * (5.3 + r() * 16), z = (r() - 0.5) * 24;
-      tree(x, z); add('cone', '#7d9572', [side * (4 + r() * 2), 0.4, z], [0.3, 0.8, 0.3]);
-      if (n < 3) add('rock', '#78857a', [side * 4.5, 0.2, z], [0.7, 0.5, 0.5]);
-    }
-    // A distant, watchful wetland creature; kept off the playable path.
-    if (index % 3 === 0) { add('ball', '#596c58', [5.1, 0.9, 3], [0.8, 0.8, 1.15]); for (const x of [4.8, 5.3]) add('ball', '#d6c888', [x, 1.25, 3.9], [0.11, 0.08, 0.04]); }
-  } else if (course === 'yorknew') {
-    const rooftop = ch === 1;
-    box(rooftop ? '#69717a' : '#46505a', [0, -0.15, 0], [8.2, 0.3, 24.1]);
-    for (const side of [-1, 1]) {
-      box('#879191', [side * 4.15, rooftop ? 0.28 : 0, 0], [0.3, rooftop ? 0.65 : 0.16, 24]);
-      const height = 10 + r() * 13, x = side * (9 + r() * 2);
-      box(['#546071', '#716c6c', '#52606b'][index % 3], [x, height / 2 - (rooftop ? 8 : 0), 0], [7, height, 21.5]);
-      for (let y = 1; y < height - 1; y += 2.2) for (let z = -8; z <= 8; z += 2.5) {
-        box(r() < 0.44 ? '#d9bb85' : '#374654', [x - side * 3.51, y - (rooftop ? 8 : 0), z], [0.025, 1.15, 0.85]);
-      }
-      for (let y = 0; y < height; y += 4.4) box('#89918f', [x - side * 3.55, y - (rooftop ? 8 : 0), 0], [0.18, 0.12, 21.7]);
-      if (!rooftop) {
-        box('#344958', [side * 4.3, 2.6, 1], [0.12, 5.2, 0.12]);
-        box('#e7c58c', [side * 4.3, 5.25, 1], [0.5, 0.5, 0.5]);
-        box('#835951', [side * 5.55, 1.4, -5], [1.1, 2.8, 2.8]);
-      } else { add('cylinder', '#605963', [side * 8, 1.5, 5], [1.6, 2.6, 1.6]); add('cone', '#414753', [side * 8, 3.3, 5], [1.8, 1.1, 1.8]); }
-    }
-    if (!rooftop && index % 3 === 0) for (const z of [-9, -8, -7, -6, -5]) box('#b8b6a0', [0, 0.015, z], [7.9, 0.02, 0.46]);
-  } else {
-    box('#8da775', [0, -0.3, 0], [64, 0.4, 24]); box('#c6b88d', [0, -0.065, 0], [7.5, 0.12, 24.1]);
-    for (const side of [-1, 1]) {
-      if (ch === 2) {
-        const x = side * (7.5 + r() * 2), h = 4 + r() * 3;
-        box('#e5d2a7', [x, h / 2, 0], [4.5, h, 6]);
-        add('cone', '#647b82', [x, h + 1.6, 0], [4.2, 3.2, 4.2], [0, Math.PI / 4, 0]);
-        box('#6c826b', [x - side * 2.28, 1.3, 0], [0.03, 2.6, 1.1]);
-        for (const z of [-1.7, 1.7]) box('#657d86', [x - side * 2.27, h - 1.25, z], [0.025, 0.95, 0.8]);
-        box('#b59a6b', [side * 4.5, 0.35, 4], [0.7, 0.7, 1.4]);
-      } else for (let n = 0; n < (ch === 1 ? 5 : 2); n++) tree(side * (5.2 + r() * 14), (r() - 0.5) * 24, true);
-      for (let n = 0; n < 5; n++) {
-        const x = side * (4.2 + r() * 9), z = (r() - 0.5) * 24;
-        add('rock', '#9ab17e', [x, 0.1, z], [0.5, 0.35, 0.4]);
-        if (n < 3) add('ball', '#e7d8a0', [x, 0.37, z], [0.12, 0.12, 0.12]);
-      }
-    }
-  }
-  return batch(items);
-}
-
-function obstacleObject(h, course) {
-  const root = new T.Group(), forest = course !== 'yorknew', stone = forest ? '#71846b' : '#75818b';
-  if (h.kind === 'hurdle') {
-    if (forest) { mesh(root, 'cylinder', '#806548', [0, 0.5, 0], [0.4, 1.8, 0.4], [0, 0, Math.PI / 2]); mesh(root, 'cylinder', '#b39b6f', [0.91, 0.5, 0], [0.31, 0.02, 0.31], [0, 0, Math.PI / 2]); }
-    else { mesh(root, 'box', '#bd915f', [0, 0.48, 0], [1.8, 0.95, 0.7]); for (const x of [-0.7, 0.7]) mesh(root, 'box', '#574b40', [x, 0.48, 0.37], [0.09, 0.95, 0.06]); }
-  } else if (h.kind === 'beam') {
-    mesh(root, 'box', stone, [0, 2.25, 0], [2.12, 2.4, 0.7]);
-    for (const x of [-1, 1]) mesh(root, 'cylinder', '#6e6751', [x, 1.4, 0], [0.11, 2.8, 0.11]);
-    mesh(root, 'box', '#d6c488', [0, 1.1, 0.37], [1.8, 0.09, 0.04]);
-  } else if (h.kind === 'wall') {
-    if (forest) mesh(root, 'rock', stone, [0, 1.85, 0], [1.1, 2.1, 0.9]);
-    else { mesh(root, 'box', '#617079', [0, 1.85, 0], [2.05, 3.7, 1.4]); for (let y = 0.4; y < 3.4; y += 0.7) mesh(root, 'box', '#a4aca0', [0, y, 0.72], [1.7, 0.04, 0.02]); }
-  } else if (h.kind === 'gap') {
-    mesh(root, 'box', '#152b2b', [0, 0.015, 0], [2.32, 0.05, 2.7]);
-    for (const z of [-1.4, 1.4]) mesh(root, 'box', '#9b936f', [0, 0.09, z], [2.35, 0.15, 0.14]);
-    for (const x of [-0.9, 0.8]) mesh(root, 'box', '#b6ac88', [x, 0.06, -1.1], [0.18, 0.12, 0.9], [0, x * 0.2, 0]);
-  } else if (h.kind === 'wire') {
-    for (const x of [-1, 1]) mesh(root, 'cylinder', '#696874', [x, 0.6, 0], [0.045, 1.2, 0.045]);
-    const line = mesh(root, 'box', '#c798df', [0, 0.6, 0], [2.05, 0.045, 0.025]);
-    line.material = new T.MeshBasicMaterial({ color: '#d2a6f6', transparent: true, opacity: 0.14 }); root.userData.wire = line;
-    mesh(root, 'ring', '#ac9fb0', [0, 0.04, 0], [0.28, 0.28, 0.28], [-Math.PI / 2, 0, 0]);
-  } else if (h.kind === 'projectile') {
-    mesh(root, 'cone', '#b78baa', [0, 1.2, 0], [0.26, 1.05, 0.26], [Math.PI / 2, 0, 0]);
-    mesh(root, 'ring', '#e8bed9', [0, 1.2, -0.45], [0.3, 0.3, 0.3]);
-  } else if (h.kind === 'turn' || h.kind === 'finish') {
-    for (const x of [-4, 4]) mesh(root, 'box', stone, [x, 2.5, 0], [0.55, 5, 0.55]);
-    mesh(root, 'box', '#415647', [0, 4.8, 0], [8.6, 0.65, 0.55]);
-    const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 80;
-    const c = canvas.getContext('2d'); c.fillStyle = '#e5dcc1'; c.fillRect(0, 0, 256, 80); c.fillStyle = '#233e34'; c.font = 'bold 48px sans-serif'; c.textAlign = 'center'; c.fillText(h.kind === 'finish' ? 'FINISH' : h.side < 0 ? '← LEFT' : 'RIGHT →', 128, 57);
-    const texture = new T.CanvasTexture(canvas); texture.colorSpace = T.SRGBColorSpace;
-    const sign = new T.Mesh(new T.PlaneGeometry(3.3, 1.03), new T.MeshBasicMaterial({ map: texture })); sign.position.set(0, 3.6, 0.31); root.add(sign); root.userData.unique = sign;
-  }
-  return root;
-}
-
 export class HunterScene {
-  constructor(canvas) {
-    this.canvas = canvas;
-    this.renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.6)); this.renderer.outputColorSpace = T.SRGBColorSpace;
-    this.scene = new T.Scene(); this.scene.fog = new T.Fog('#a8b6a2', 35, 150);
-    this.camera = new T.PerspectiveCamera(52, 1, 0.1, 210);
-    this.hemi = new T.HemisphereLight('#fff0d1', '#647561', 2.4); this.scene.add(this.hemi);
-    this.sun = new T.DirectionalLight('#ffefd8', 2.2); this.sun.position.set(-12, 20, 8); this.scene.add(this.sun);
-    this.chunks = new Map(); this.objects = new Map(); this.character = null; this.stamp = ''; this.time = 0; this.distance = 0; this.bend = 0; this.pulse = 0; this.heal = 0;
-    const shadowMat = new T.MeshBasicMaterial({ color: '#102e28', transparent: true, opacity: 0.3, depthWrite: false });
-    this.shadow = new T.Mesh(new T.CircleGeometry(0.6, 24), shadowMat); this.shadow.rotation.x = -Math.PI / 2; this.shadow.position.y = 0.025; this.scene.add(this.shadow);
-    this.aura = new T.Mesh(new T.SphereGeometry(1, 14, 10), new T.MeshBasicMaterial({ color: '#d1e7f1', transparent: true, opacity: 0.07, depthWrite: false, wireframe: true }));
-    this.aura.scale.set(0.7, 1.5, 0.6); this.scene.add(this.aura);
-    this.lightning = new T.LineSegments(new T.BufferGeometry(), new T.LineBasicMaterial({ color: '#cdf0ff', transparent: true, opacity: 0.8 })); this.scene.add(this.lightning);
-    this.lightning.geometry.setAttribute('position', new T.BufferAttribute(new Float32Array(252), 3).setUsage(T.DynamicDrawUsage)); this.lightning.frustumCulled = false;
-    this.tether = new T.Group(); this.scene.add(this.tether);
-    const gumMaterial = new T.MeshBasicMaterial({ color: '#efa9d7', transparent: true, opacity: 0.8 });
-    for (let i = 0; i < 2; i++) this.tether.add(new T.Mesh(geometry.cylinder, gumMaterial));
-    this.tetherPoints = [new T.Vector3(), new T.Vector3(), new T.Vector3()]; this.tetherVector = new T.Vector3(); this.tetherAxis = new T.Vector3(0, 1, 0);
-    this.flash = new T.Mesh(new T.TorusGeometry(0.8, 0.04, 5, 32), new T.MeshBasicMaterial({ color: '#fff0b9', transparent: true, opacity: 0, depthWrite: false })); this.scene.add(this.flash);
-    this.strike = new T.Mesh(geometry.ball, new T.MeshBasicMaterial({ color: '#f2d47d', transparent: true, opacity: 0.8, depthWrite: false })); this.scene.add(this.strike);
-    this.blade = new T.Mesh(geometry.cone, new T.MeshBasicMaterial({ color: '#d6edb9', transparent: true, opacity: 0.8, depthWrite: false })); this.blade.rotation.x = -Math.PI / 2; this.scene.add(this.blade);
-    this.chainLinks = new T.InstancedMesh(geometry.ring, material('#c6d1ce'), 24); this.chainLinks.instanceMatrix.setUsage(T.DynamicDrawUsage); this.chainLinks.frustumCulled = false; this.scene.add(this.chainLinks);
-    this.effectTransform = new T.Object3D();
-    this.debris = new T.InstancedMesh(geometry.rock, instanceMaterial, 48); this.debris.instanceMatrix.setUsage(T.DynamicDrawUsage); this.debris.frustumCulled = false; this.debris.count = 0; this.scene.add(this.debris); this.fragments = [];
-    this.effectColor = new T.Color();
-    this.afterimages = [];
-    for (let i = 0; i < 3; i++) {
-      const echo = new T.Mesh(new T.CapsuleGeometry(0.3, 1.3, 3, 6), new T.MeshBasicMaterial({ color: '#aeccec', transparent: true, opacity: 0.07, depthWrite: false })); this.scene.add(echo); this.afterimages.push(echo);
+  constructor(canvas) { this.canvas = canvas; canvas.width = 640; canvas.height = 360; this.c = canvas.getContext('2d', { alpha: false }); this.particles = []; this.clock = 0; }
+  rect(x,y,w,h,color) { this.c.fillStyle = color; this.c.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h)); }
+  line(points, color, width = 2) { const c = this.c; c.beginPath(); points.forEach(([x,y],i)=>i?c.lineTo(Math.round(x),Math.round(y)):c.moveTo(Math.round(x),Math.round(y))); c.strokeStyle=color;c.lineWidth=width;c.stroke(); }
+  poly(points,color) { const c=this.c;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fillStyle=color;c.fill(); }
+  label(text,x,y,color='#e8edcd',size=10,align='left') { const c=this.c;c.fillStyle=color;c.font=`bold ${size}px ui-monospace, monospace`;c.textAlign=align;c.fillText(text,Math.round(x),Math.round(y)); }
+  accept(events, m) {
+    for (const e of events) if (['hit','collect','smash','cast','win'].includes(e.type)) {
+      const origin = e.type === 'smash' && m.target ? Math.min(620,128+m.target.x-m.travel) : 128;
+      for(let i=0;i<12;i++) this.particles.push({x:origin,y:G-m.y-30,vx:Math.sin(i*2.4)*70,vy:-30-Math.cos(i)*55,life:.6,color:e.type==='hit'?'#ed927e':e.type==='cast'?'#c2e7f1':'#f4dc8d'});
     }
-    this.resize();
+    this.particles=this.particles.slice(-80);
   }
-  resize() {
-    const { width, height } = this.canvas.getBoundingClientRect(); if (!width || !height) return;
-    this.renderer.setSize(width, height, false); this.camera.aspect = width / height; this.camera.updateProjectionMatrix();
-  }
-  disposeObject(object) {
-    object.traverse(child => {
-      if (child.isInstancedMesh) child.dispose();
-      if (child === object.userData.unique) { child.geometry.dispose(); child.material.map.dispose(); child.material.dispose(); }
-    });
-    if (object.userData.wire) object.userData.wire.material.dispose();
-    this.scene.remove(object);
-  }
-  reset(model) {
-    for (const object of [...this.chunks.values(), ...this.objects.values()]) this.disposeObject(object);
-    this.chunks.clear(); this.objects.clear();
-    if (this.character) this.scene.remove(this.character.root);
-    this.character = buildCharacter(model.config.character); this.scene.add(this.character.root);
-    this.stamp = `${model.seed}/${model.config.course}/${model.config.character}/${model.config.mode}/${model.config.difficulty}`;
-    this.time = 0; this.pulse = 0; this.heal = 0; this.fragments = []; this.turnLean = 0;
-  }
-  accept(events) {
-    if (events.some(e => ['cast', 'release', 'collect', 'deflect'].includes(e.type))) this.pulse = 1;
-    if (events.some(e => ['heal', 'recover'].includes(e.type))) this.heal = 1;
-    for (const e of events) {
-      if (e.type === 'turn') this.turnLean = e.side * 0.05;
-      if (e.type === 'break') {
-        for (let i = 0; i < 6 && this.fragments.length < 48; i++) this.fragments.push({ x: e.hazard.lane * 2.35, z: e.hazard.z, age: 0, vx: Math.cos(i * 2.4) * 2, vz: Math.sin(i * 2.4) * 2, rise: 2.4 + i * 0.15 });
+  background(m, preview, reduced) {
+    const stage = chapter(m.distance,m.config), course = m.config.course;
+    const type = course === 'exam' ? stage < 2 ? 'tunnel' : 'wetlands' : course === 'yorknew' ? 'city' : 'field';
+    const p=PALETTES[type], c=this.c, scroll = reduced && preview ? 0 : m.travel;
+    this.rect(0,0,640,360,p[0]);
+    if(type==='tunnel') {
+      // Repeated stone arches, recessed passageways, rails, and pools of lamplight.
+      for(let i=-1;i<6;i++) {
+        const x=i*158-(scroll*.18%158);
+        this.rect(x,40,146,240,'#1a2b35');
+        c.strokeStyle=p[1];c.lineWidth=17;c.beginPath();c.moveTo(x+5,275);c.lineTo(x+5,114);c.bezierCurveTo(x+5,27,x+135,27,x+135,114);c.lineTo(x+135,275);c.stroke();
+        this.rect(x+24,128,87,135,'#14242e');
+        for(let j=0;j<7;j++)this.rect(x+21,128+j*20,94,2,'#21323b');
+        this.rect(x+57,109,21,6,'#e3c896');
+        const glow=c.createRadialGradient(x+67,117,1,x+67,117,80);glow.addColorStop(0,'#edca8130');glow.addColorStop(1,'#edca8100');c.fillStyle=glow;c.fillRect(x-13,42,160,160);
+        this.poly([[x+59,118],[x+6,260],[x+134,260],[x+77,118]],'#e6d99b07');
       }
+      this.rect(0,248,640,34,'#273c43');this.rect(0,258,640,2,'#738478');
+      for(let i=0;i<19;i++)this.rect(i*40-(scroll*.4%40),265,24,3,'#172a34');
+      if(stage===1)for(let i=0;i<18;i++){let x=i*48-(scroll*.3%48);this.rect(x,235-(i%5)*8,46,4,'#617371');}
+      this.rect(0,35,640,3,'#35494e');this.rect(0,41,640,2,'#0b1722');
+      for(let i=0;i<4;i++){let x=i*240-(scroll*.7%240);this.rect(x,26,9,225,'#152a32');this.rect(x-3,67,15,7,'#566967');}
+    } else if(type==='city') {
+      this.rect(480,49,30,30,'#e3c9a6');this.rect(474,54,42,20,'#e3c9a6');
+      for(let i=-1;i<16;i++) {
+        const x=i*55-(scroll*.1%55), height=60+((i+20)*37%94);
+        this.rect(x,256-height,48,height,p[1]);this.rect(x+18,245-height,9,14,p[1]);
+        for(let a=0;a<3;a++)for(let b=0;b<8;b++)if((a+b+i)%3!==0)this.rect(x+8+a*11,268-height+b*15,4,5,'#9b897752');
+      }
+      for(let i=-1;i<7;i++) {
+        const x=i*130-(scroll*.32%130), h=90+((i+10)*31%60);
+        this.rect(x,280-h,112,h,p[2]);this.rect(x-4,278-h,120,5,'#685c6c');
+        for(let a=0;a<4;a++)for(let b=0;b<4;b++){this.rect(x+12+a*24,294-h+b*25,12,17,'#242b44');this.rect(x+14+a*24,296-h+b*25,8,11,(i+a+b)%3?'#cbaa7f':'#414156');}
+        if(stage===1){this.rect(x+35,245-h,35,30,'#493e4c');this.poly([[x+32,245-h],[x+53,232-h],[x+73,245-h]],'#826c73');this.line([[x+37,275-h],[x+33,282-h]],'#a7918c');}
+        else {this.rect(x+14,256,86,21,'#24283d');this.rect(x+17,255,80,4,'#cfaa83');}
+      }
+      if(stage!==1)for(let i=0;i<4;i++){const x=i*210-(scroll*.65%210);this.rect(x,170,4,112,'#111e31');this.line([[x,172],[x+17,162],[x+31,172]],'#86838c');this.rect(x+20,171,17,7,'#edcb8b');}
+    } else {
+      if(type==='field') { this.rect(472,50,43,36,'#f3dfb0');this.rect(464,59,58,20,'#f3dfb0'); }
+      for(let i=-1;i<6;i++){const x=i*180-(scroll*.08%180);this.poly([[x-60,239],[x+62,102+(i%2)*22],[x+185,239]],p[1]);}
+      for(let i=-1;i<8;i++){const x=i*120-(scroll*.22%120);this.poly([[x-30,268],[x+60,177+(i%3)*12],[x+149,268]],p[2]);}
+      for(let i=-1;i<9;i++){
+        const x=i*95-(scroll*.45%95), tall=type==='wetlands'?145:75;
+        this.rect(x+30,275-tall,7,tall,'#305957');
+        for(let j=0;j<3;j++)this.poly([[x-5+j*5,254-tall+j*22],[x+33,191-tall+j*22],[x+72-j*5,254-tall+j*22]],j===2?'#477266':'#365f5c');
+      }
+      if(course==='greed'&&stage===2)for(let i=0;i<5;i++) {const x=i*164-(scroll*.3%164);this.rect(x,194,62,73,'#d4ceb1');this.poly([[x-7,194],[x+31,150],[x+69,194]],'#76636a');this.rect(x+25,228,16,39,'#6e776b');this.rect(x+10,208,12,15,'#749690');}
+      this.rect(0,269,640,13,p[2]);
+      if(type==='wetlands')for(let i=0;i<3;i++){c.fillStyle='#c7d7b50b';c.fillRect(0,125+i*54,640,21);}
+    }
+    // Continuous ground plane with a strong, consistent collision edge.
+    this.rect(0,G,640,78,type==='city'?'#29283b':'#263b3c');
+    this.rect(0,G,640,5,p[3]);this.rect(0,G+5,640,5,type==='field'?'#658360':'#566961');
+    for(let i=-1;i<24;i++){const x=i*34-(scroll%34);this.rect(x,G+16,24,2,type==='city'?'#514657':'#43524b');this.rect(x+12,G+38,3,3,'#758074');}
+    this.rect(0,334,640,26,'#15262d');this.rect(0,333,640,1,'#52665c');
+  }
+  sprite(m, x, y, scale=1) {
+    const c=this.c, id=m.config.character, slide=m.slide>0&&m.y<1, jumping=m.y>0;
+    const skin='#e6b494', outline='#192632';
+    const clothes={killua:['#e2e9dd','#647999','#e6eff0'],gon:['#4d9b61','#376b4c','#233d32'],kurapika:['#477db2','#284b85','#e5bf60'],hisoka:['#e7d5b9','#975b7b','#c75c69']}[id];
+    c.save();c.translate(Math.round(x),Math.round(y));c.scale(scale,scale);
+    const r=(a,b,w,h,col)=>this.rect(a,b,w,h,col);
+    if(m.invincible>0&&Math.floor(m.invincible*12)%2)c.globalAlpha=.45;
+    if(slide){r(-21,-19,40,15,outline);r(-15,-19,20,10,clothes[0]);r(4,-22,12,12,skin);r(2,-25,13,6,clothes[2]);r(-22,-8,33,6,clothes[1]);r(10,-8,12,7,outline);c.restore();return;}
+    const phase = m.phase==='playing'?m.travel*.075:this.clock*7;
+    const leg=jumping?5:Math.round(Math.sin(phase)*7), arm=jumping?-5:-leg;
+    // Articulated chunky sprite: boots, shorts/tunic, sleeves, face, hair silhouette.
+    r(-9+leg,-15,8,13,outline);r(3-leg,-15,8,13,outline);
+    r(-8+leg,-15,6,10,skin);r(4-leg,-15,6,10,skin);
+    r(-12+leg,-5,12,5,clothes[1]);r(2-leg,-5,13,5,clothes[1]);
+    r(-10,-28,22,15,outline);r(-8,-27,8,13,clothes[1]);r(2,-27,8,13,clothes[1]);
+    r(-12,-44,26,20,outline);r(-10,-42,22,16,clothes[0]);r(-8,-42,3,16,clothes[2]);
+    if(id==='kurapika'){r(-11,-27,25,9,clothes[0]);r(-11,-21,25,3,clothes[2]);}
+    r(-14+arm,-38,7,17,outline);r(-13+arm,-37,5,14,skin);r(11-arm,-39,7,17,outline);r(12-arm,-38,5,14,skin);
+    r(-10,-60,25,20,outline);r(-8,-58,21,16,skin);r(10,-53,6,7,skin);r(9,-53,3,3,outline);r(6,-44,7,2,'#b47472');
+    if(id==='killua'){r(-12,-64,24,10,'#dae8ea');r(-16,-60,31,5,'#edf5ef');r(-16,-67,7,10,'#dae8ea');r(-6,-70,7,12,'#edf5ef');r(4,-67,7,10,'#dae8ea');r(-12,-55,6,10,'#adbfcd');}
+    if(id==='gon'){r(-11,-64,25,10,'#233d32');r(-12,-70,6,16,'#233d32');r(-4,-76,6,19,'#233d32');r(4,-72,6,17,'#233d32');r(10,-66,6,12,'#233d32');r(-5,-69,3,9,'#4d7150');}
+    if(id==='kurapika'){r(-12,-64,27,9,'#e5bf60');r(-14,-59,7,18,'#e5bf60');r(8,-61,7,9,'#e5bf60');r(-7,-64,15,3,'#f7dfa0');}
+    if(id==='hisoka'){r(-12,-63,27,8,'#c75c69');r(-10,-69,20,9,'#c75c69');r(-7,-74,12,10,'#c75c69');r(7,-49,3,3,'#c66075');r(-2,-35,6,6,'#c66075');r(-8,-58,8,3,'#97556d');}
+    if(m.effect>0&&m.kit.skill==='board'){r(-20,1,45,4,'#cec5a3');r(-15,5,6,5,outline);r(13,5,6,5,outline);}
+    if(m.charge>0){r(13,-39,18,15,'#f0cf8d');r(29,-37,5,11,'#fff0b1');}
+    c.restore();
+  }
+  hazard(h, m) {
+    if(h.removed)return;
+    const x=128+h.x-m.travel, w=h.w, c=this.c;
+    if(x<-120||x>680)return;
+    if(h.kind==='gap'){
+      this.rect(x,G,w,51,'#0c1824');this.rect(x+5,G+14,w-10,36,'#122533');
+      this.rect(x-4,G,4,8,'#ebcc89');this.rect(x+w,G,4,8,'#ebcc89');
+      for(let i=0;i<4;i++){this.rect(x+3,G+13+i*9,3,3,'#52665c');this.rect(x+w-6,G+13+i*9,3,3,'#52665c');}
+    } else if(h.kind==='beam') {
+      this.rect(x-5,G-123,5,124,'#506269');this.rect(x+w,G-123,5,124,'#506269');
+      this.rect(x-7,G-126,w+14,7,'#89917e');this.rect(x,G-87,w,53,'#20343a');
+      this.rect(x,G-40,w,8,'#dfbb76');
+      for(let i=0;i<w;i+=16)this.poly([[x+i,G-40],[x+i+7,G-40],[x+i+14,G-32],[x+i+7,G-32]],'#4d5148');
+      this.label('SLIDE',x+w/2,G-58,'#d9d0a3',9,'center');
+    } else if(h.kind==='sentry') {
+      const bob=Math.sin(this.clock*4+h.id)*2;
+      this.rect(x,G-44+bob,w,34,'#242b3b');this.rect(x+4,G-47+bob,w-8,8,'#a06867');
+      this.rect(x+3,G-31+bob,w-6,7,'#dfb884');this.rect(x+7,G-30+bob,4,4,'#332940');
+      this.rect(x-4,G-25,5,15,'#bd8675');this.rect(x+2,G-11,9,11,'#152632');this.rect(x+w-10,G-11,9,11,'#152632');
+    } else {
+      this.rect(x,G-34,w,34,'#523f37');this.rect(x+3,G-31,w-6,27,'#ab8054');this.rect(x+6,G-28,w-12,21,'#805b44');
+      this.line([[x+5,G-28],[x+w-5,G-5]],'#c79c65',4);this.line([[x+5,G-5],[x+w-5,G-28]],'#c79c65',4);
+      this.rect(x,G-35,w,4,'#e1bf83');
+    }
+    if(m.kit.skill==='gum'&&['gap','hurdle'].includes(h.kind)&&!h.done){
+      const ax=x+w/2;this.line([[ax,G-155],[ax,G-124]],'#6b7d77',2);this.poly([[ax,G-127],[ax+7,G-120],[ax,G-113],[ax-7,G-120]],'#efa6c4');
+    }
+    if(m.phase==='playing'&&!h.done&&x>155&&x<610){
+      if(h.kind!=='beam'){this.poly([[x+w/2-5,G-57],[x+w/2,G-64],[x+w/2+5,G-57]],'#e6d3a3');}
     }
   }
-  point(x, z, ch) {
-    const d = z - this.distance, curve = Math.sin(this.distance / 230) * 0.00065;
-    return { x: x + d * d * curve, y: this.course === 'exam' && ch === 1 ? d * 0.07 : 0, z: -d, angle: Math.atan(-2 * d * curve) };
-  }
-  draw(model, { dt = 0, alpha = 1, reducedMotion = false, preview = false } = {}) {
-    const stamp = `${model.seed}/${model.config.course}/${model.config.character}/${model.config.mode}/${model.config.difficulty}`;
-    if (this.stamp !== stamp) this.reset(model);
-    this.time += dt; this.pulse = Math.max(0, this.pulse - dt * 2.5); this.heal = Math.max(0, this.heal - dt);
-    this.turnLean *= Math.exp(-dt * 3);
-    this.distance = model.previousDistance + (model.distance - model.previousDistance) * alpha; this.course = model.config.course;
-    const ch = chapter(this.distance, model.config), time = this.time, early = model.config.course === 'exam' && ch < 2;
-    const bg = early ? '#344d47' : model.config.course === 'exam' ? '#a6b5a3' : model.config.course === 'yorknew' ? '#495564' : '#d1dec6';
-    if (!this.scene.background) this.scene.background = new T.Color(bg); else this.scene.background.set(bg);
-    this.scene.fog.color.set(bg); this.scene.fog.near = early ? 20 : 45; this.scene.fog.far = early ? 125 : 165;
-    this.hemi.intensity = early ? 1.45 : model.config.course === 'yorknew' ? 1.5 : 2.5; this.sun.intensity = early ? 1 : 1.8;
-    const first = Math.floor(this.distance / 24) - 1, needed = new Set();
-    for (let n = first; n <= first + 8; n++) {
-      const z = n * 24, section = chapter(Math.max(0, z), model.config), key = `${n}/${section}`; needed.add(key);
-      if (!this.chunks.has(key)) { const group = landscape(model.config.course, section, n, model.seed); this.chunks.set(key, group); this.scene.add(group); }
-      const group = this.chunks.get(key), p = this.point(0, z, ch); group.position.set(p.x, p.y, p.z); group.rotation.y = p.angle;
-    }
-    for (const [key, group] of this.chunks) if (!needed.has(key)) { this.disposeObject(group); this.chunks.delete(key); }
-    const keys = new Set();
-    for (const h of model.obstacles) {
-      if (h.z - this.distance > 155 || h.z < this.distance - 12 || h.cleared) continue;
-      keys.add(h.id);
-      if (!this.objects.has(h.id)) { const obj = obstacleObject(h, model.config.course); this.objects.set(h.id, obj); this.scene.add(obj); }
-      const obj = this.objects.get(h.id), p = this.point(h.lane * 2.35, h.z, ch); obj.position.set(p.x, p.y, p.z); obj.rotation.y = p.angle;
-      if (obj.userData.wire) obj.userData.wire.material.opacity = model.gyo > 0 ? 1 : 0.13;
-      obj.visible = h.kind !== 'projectile' || h.locked !== false;
-      if (h.kind === 'projectile') obj.rotation.z = time * 3;
-    }
-    for (const p of model.pickups) {
-      if (p.taken || p.z < this.distance - 6 || p.z - this.distance > 150) continue;
-      keys.add(p.id);
-      if (!this.objects.has(p.id)) {
-        const group = new T.Group();
-        if (p.kind === 'electric') { mesh(group, 'box', '#a1c5d6', [0, 0.7, 0], [0.8, 1.4, 0.5]); mesh(group, 'box', '#e6dc92', [0, 1.05, 0.27], [0.3, 0.4, 0.03]); mesh(group, 'ring', '#bce6ed', [0, 0.5, 0.28], [0.18, 0.18, 0.18]); }
-        else { mesh(group, 'box', '#ecdb9b', [0, 0, 0], [0.32, 0.47, 0.08]); mesh(group, 'box', '#5e7755', [0, 0.05, 0.046], [0.2, 0.055, 0.01]); mesh(group, 'box', '#5e7755', [0, -0.06, 0.046], [0.2, 0.055, 0.01]); }
-        this.objects.set(p.id, group); this.scene.add(group);
+  draw(m,{preview=false,reducedMotion=false,dt=0}={}) {
+    const c=this.c;c.imageSmoothingEnabled=false;if(!reducedMotion)this.clock+=dt;
+    this.background(m,preview,reducedMotion);
+    if(!preview){
+      for(const h of m.hazards)this.hazard(h,m);
+      for(const p of m.pickups)if(!p.done){const x=128+p.x-m.travel,y=G-p.y;if(x<0||x>650)continue;
+        if(p.kind==='badge'){this.poly([[x,y-7],[x+6,y],[x,y+7],[x-6,y]],'#edce86');this.rect(x-1,y-3,2,6,'#fff0bd');}
+        else {this.rect(x-10,y-9,20,18,'#a5cfc9');this.rect(x-6,y-13,12,4,'#466c70');this.poly([[x+2,y-7],[x-5,y+1],[x,y+1],[x-2,y+7],[x+6,y-1],[x+1,y-1]],'#264c59');}
       }
-      const obj = this.objects.get(p.id), point = this.point(p.lane * 2.35, p.z, ch);
-      obj.position.set(point.x, point.y + (p.kind === 'electric' ? 0 : 1 + (reducedMotion ? 0 : Math.sin(time * 2 + p.z) * 0.12)), point.z);
-      obj.rotation.y = p.kind === 'seal' && !reducedMotion ? time * 0.6 : point.angle;
+      if(Number.isFinite(m.finish)){const x=128+m.finish*10-m.travel;if(x<680){this.rect(x,G-142,7,142,'#d1d8b4');this.rect(x+95,G-142,7,142,'#d1d8b4');this.rect(x,G-142,102,29,'#3b675b');this.label('FINISH',x+51,G-123,'#f5e6b3',13,'center');}}
     }
-    if (model.finish - this.distance < 155) {
-      keys.add('finish');
-      if (!this.objects.has('finish')) { const gate = obstacleObject({ kind: 'finish' }, model.config.course); this.objects.set('finish', gate); this.scene.add(gate); }
-      const p = this.point(0, model.finish, ch), gate = this.objects.get('finish'); gate.position.set(p.x, p.y, p.z); gate.rotation.y = p.angle;
+    const px=preview?162:128, py=G-m.y;
+    c.fillStyle='#0a202a55';c.beginPath();c.ellipse(px,G+4,19,4,0,0,Math.PI*2);c.fill();
+    if(m.effect>0&&!reducedMotion&&['echo','godspeed'].includes(m.kit.skill))for(let i=3;i>0;i--){c.globalAlpha=.12;this.sprite(m,px-i*25,py);c.globalAlpha=1;}
+    this.sprite(m,px,py,1);
+    if(m.effect>0&&m.target){
+      const tx=m.target===m?px:Math.max(px,Math.min(640,128+m.target.x-m.travel));
+      if(['gum','rod'].includes(m.kit.skill))this.line([[px+15,py-33],[tx,G-(m.kit.skill==='gum'?120:m.target.y)]],m.kit.skill==='gum'?'#eda0c4':'#e5d6a0',m.kit.skill==='gum'?3:1);
+      if(['palm','godspeed'].includes(m.kit.skill))this.line([[px+10,py-35],[px+29,py-53],[px+22,py-25],[tx,G-38]],'#c0ecf4',3);
+      if(m.kit.skill==='heal'){c.strokeStyle='#eddaa2';c.lineWidth=2;c.strokeRect(px-22,py-75,45,76);this.label('+1',px,py-86,'#f9e5a0',14,'center');}
+      if(['rock','blades'].includes(m.kit.skill)&&m.charge<=0)this.line([[px+14,py-36],[tx+12,G-22]],'#f4d98e',5);
     }
-    if (model.config.character === 'hisoka') for (const a of model.anchors) {
-      if (a.z < this.distance - 8 || a.z - this.distance > 140) continue;
-      keys.add(a.id);
-      if (!this.objects.has(a.id)) {
-        const group = new T.Group(); mesh(group, 'cylinder', '#736e61', [0, 2.5, 0], [0.09, 5, 0.09]);
-        mesh(group, 'ring', '#d999bd', [0, 5, 0], [0.35, 0.35, 0.35]); this.objects.set(a.id, group); this.scene.add(group);
-      }
-      const p = this.point(a.lane * 2.35 + (a.lane < 0 ? -0.9 : 0.9), a.z, ch); this.objects.get(a.id).position.set(p.x, p.y, p.z);
+    if(!reducedMotion)for(const p of this.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;this.rect(p.x,p.y,3,3,p.color);}this.particles=this.particles.filter(p=>p.life>0);
+    if(preview){
+      this.label('HUNTER × HUNTER',35,66,'#e4d9ad',11);this.label('THE LONG',34,103,'#f4efd8',28);this.label('WAY THERE.',34,135,'#f4efd8',28);
+      this.label('A SIDE-SCROLLING EXPEDITION',36,158,'#a8bfb5',9);
+      this.hazard({kind:'hurdle',x:265,w:34,id:90},m);this.hazard({kind:'beam',x:420,w:60,id:91},m);
+      this.label('JUMP',410,227,'#f1dfad',10,'center');
     }
-    for (const [key, obj] of this.objects) if (!keys.has(key)) { this.disposeObject(obj); this.objects.delete(key); }
-    const rig = this.character, running = model.phase === 'playing', x = (model.previousX + (model.x - model.previousX) * alpha) * 2.35;
-    const y = model.previousY + (model.y - model.previousY) * alpha;
-    const god = model.power > 0 && model.kit.skill === 'godspeed', skating = model.power > 0 && model.kit.skill === 'board';
-    const cycle = this.distance * 0.92, bob = running && !reducedMotion && !model.jump && !model.slide && !skating ? Math.abs(Math.sin(cycle)) * 0.065 : 0;
-    rig.root.position.set(preview ? 0 : x, preview ? 0 : y + bob, preview ? -0.4 : 0);
-    rig.root.rotation.y = preview ? 0.3 + (reducedMotion ? 0 : Math.sin(time * 0.3) * 0.15) : Math.PI;
-    rig.body.rotation.z = preview || reducedMotion ? 0 : Math.max(-0.17, Math.min(0.17, (model.x - model.lane) * 0.3));
-    rig.body.rotation.x = model.slide > 0 ? -0.9 : god ? -0.3 : model.windup > 0 ? -0.2 : running ? -0.1 : 0;
-    rig.body.position.y = model.slide > 0 ? -0.72 : model.phase === 'over' ? -0.3 : 0;
-    rig.head.rotation.y = preview ? -0.3 : 0;
-    rig.board.visible = skating;
-    for (const blade of rig.blades) blade.visible = model.kit.skill === 'blades';
-    if (rig.rod) { const casting = model.power > 0 && model.kit.skill === 'rod'; rig.rod.position.set(casting ? 0.45 : 0.3, casting ? 1.95 : 1.74, casting ? 0.5 : -0.3); rig.rod.rotation.set(casting ? 1 : 0, 0, casting ? 0 : -0.37); }
-    for (const eye of rig.eyes) eye.material = material(this.heal > 0 && rig.id === 'kurapika' ? '#bc3447' : rig.id === 'killua' ? '#4e82bd' : '#554631');
-    for (let i = 0; i < 2; i++) {
-      const leg = rig.legs[i], arm = rig.arms[i], sign = i ? 1 : -1;
-      leg.pivot.rotation.x = running ? Math.sin(cycle + i * Math.PI) * 0.65 : 0;
-      leg.joint.rotation.x = running ? Math.max(0, Math.cos(cycle + i * Math.PI)) * 0.75 : 0.05;
-      arm.pivot.rotation.x = running ? -Math.sin(cycle + i * Math.PI) * 0.6 : 0;
-      arm.pivot.rotation.z = sign * -0.1; arm.joint.rotation.x = -0.4;
-      if (model.jump > 0 || model.gumTarget) { leg.pivot.rotation.x = -0.5 + i * 0.9; leg.joint.rotation.x = 0.8; arm.pivot.rotation.x = -1.1; }
-      if (model.slide > 0) { leg.pivot.rotation.x = -0.6; leg.joint.rotation.x = 1.2; arm.pivot.rotation.x = -0.8; }
-      if (skating) { leg.pivot.rotation.x = i ? 0.1 : -0.15; leg.joint.rotation.x = 0.2; arm.pivot.rotation.z = sign * -0.35; }
-      if (model.windup > 0) { arm.pivot.rotation.x = i ? -0.6 : -1.3; arm.joint.rotation.x = -0.9; leg.pivot.rotation.x *= 0.25; }
-      if (model.power > 0 && model.kit.skill === 'jajanken') { arm.pivot.rotation.x = i ? -1.5 : -0.25; arm.joint.rotation.x = -0.05; }
-      if (model.power > 0 && ['gum', 'chain', 'rod', 'palm', 'blades'].includes(model.kit.skill)) arm.pivot.rotation.x = i ? -1.2 : -0.2;
-      if (god) { arm.pivot.rotation.x = 0.6; arm.joint.rotation.x = -0.2; }
-      if (model.phase === 'over') { leg.pivot.rotation.x = -0.25; leg.joint.rotation.x = 0.65; arm.pivot.rotation.x = 0.1; }
-      if (model.phase === 'won') { arm.pivot.rotation.z = sign * -2.1; arm.joint.rotation.x = -0.6; }
-    }
-    if (model.stumble > 0 && !reducedMotion) { rig.body.rotation.x += Math.sin(model.stumble * 20) * 0.09; rig.head.rotation.z = Math.sin(model.stumble * 13) * 0.1; } else rig.head.rotation.z = 0;
-    this.shadow.position.x = preview ? 0 : x; this.shadow.scale.setScalar(1 - Math.min(0.45, y * 0.15));
-    this.aura.position.set(x, y + 1.45, 0); this.aura.visible = !preview && model.kit.nen && model.state !== 'zetsu';
-    this.aura.material.color.set(this.heal > 0 ? '#bcf2a6' : model.gyo > 0 ? '#e4cb83' : CHARACTERS[model.config.character].color);
-    this.aura.material.opacity = reducedMotion ? 0.025 : 0.045 + (model.gyo > 0 || model.power > 0 ? 0.035 : 0);
-    const points = this.lightning.geometry.attributes.position.array; let pointCount = 0;
-    const electrical = god || model.power > 0 && model.kit.skill === 'palm';
-    if (electrical && !reducedMotion) for (let n = 0; n < 6; n++) for (let k = 0; k < 7; k++) {
-      const a = n / 6 * Math.PI * 2, wobble = Math.sin(k * 9 + Math.floor(time * 18) + n) * 0.13;
-      points.set([x + Math.sin(a) * (0.5 + wobble), y + k * 0.45, Math.cos(a) * 0.4], pointCount); pointCount += 3;
-      points.set([x + Math.sin(a) * (0.5 - wobble), y + (k + 1) * 0.45, Math.cos(a) * 0.4], pointCount); pointCount += 3;
-    }
-    this.lightning.geometry.attributes.position.needsUpdate = true; this.lightning.geometry.setDrawRange(0, pointCount / 3); this.lightning.visible = electrical && !reducedMotion;
-    this.tether.visible = Boolean(model.gumTarget);
-    if (this.tether.visible) {
-      const anchor = model.gumTarget, p = this.point(anchor.lane * 2.35 + (anchor.lane < 0 ? -0.9 : 0.9), anchor.z, ch);
-      this.tetherPoints[0].set(x - 0.4, y + 1.7, 0);
-      this.tetherPoints[1].set((x + p.x) / 2, (y + 1.7 + p.y + 5) / 2 - 0.25, p.z / 2);
-      this.tetherPoints[2].set(p.x, p.y + 5, p.z);
-      this.tether.children.forEach((segment, i) => {
-        const a = this.tetherPoints[i], b = this.tetherPoints[i + 1]; this.tetherVector.subVectors(b, a);
-        segment.position.copy(a).add(b).multiplyScalar(0.5); segment.scale.set(0.045, this.tetherVector.length(), 0.045);
-        segment.quaternion.setFromUnitVectors(this.tetherAxis, this.tetherVector.normalize());
-      });
-    }
-    this.afterimages.forEach((echo, i) => { echo.visible = !reducedMotion && model.power > 0 && ['godspeed', 'echo'].includes(model.kit.skill); echo.position.set(x + Math.sin(time * 4 + i) * 0.15, y + 1.4, (i + 1) * 0.65); });
-    this.flash.visible = this.pulse > 0 && !preview && !reducedMotion;
-    this.flash.position.set(x, y + 1.5, -0.5); this.flash.scale.setScalar(1 + (1 - this.pulse) * 2); this.flash.material.opacity = this.pulse * 0.5;
-    // Shared geometries make these transient techniques inexpensive to animate.
-    const releasing = model.kit.skill === 'jajanken' && model.power > 0;
-    this.strike.visible = !preview && (model.windup > 0 || releasing && model.lockedForm !== 'Scissors');
-    this.blade.visible = !preview && releasing && model.lockedForm === 'Scissors';
-    if (this.strike.visible) {
-      const charge = model.windup > 0, progress = 1 - model.power / 0.65, paper = model.lockedForm === 'Paper';
-      this.strike.position.set(x - 0.38, y + 1.8, charge ? -0.35 : -(paper ? progress * 32 : 1 + progress * 9));
-      this.strike.scale.setScalar(charge ? 0.14 + (1 - model.windup / 0.85) * 0.4 : paper ? 0.6 : 0.85 + progress * 0.6);
-      this.strike.material.opacity = reducedMotion ? 0.5 : charge ? 0.65 : Math.min(0.8, model.power * 2);
-    }
-    if (this.blade.visible) { const length = 17 * Math.sin(Math.min(1, (0.65 - model.power) / 0.2) * Math.PI / 2); this.blade.position.set(x - 0.3, y + 1.8, -length / 2); this.blade.scale.set(0.08, length, 0.4); this.blade.material.opacity = Math.min(0.85, model.power * 2); }
-    this.chainLinks.visible = !preview && model.power > 0 && model.kit.skill === 'chain';
-    if (this.chainLinks.visible) {
-      for (let i = 0; i < 24; i++) {
-        const t = i / 23, sway = reducedMotion ? 0 : Math.sin(time * 9 - t * 3);
-        this.effectTransform.position.set(x - 0.4 + t * sway, y + 1.7 - Math.sin(t * Math.PI) * 0.5, -t * 4.2);
-        this.effectTransform.scale.set(0.095, 0.15, 0.095); this.effectTransform.rotation.set(Math.PI / 2, i % 2 * Math.PI / 2, 0); this.effectTransform.updateMatrix();
-        this.chainLinks.setMatrixAt(i, this.effectTransform.matrix);
-      }
-      this.chainLinks.instanceMatrix.needsUpdate = true;
-    }
-    if (reducedMotion) this.fragments = [];
-    this.fragments = this.fragments.filter(f => { f.age += dt; return f.age < 0.65; });
-    this.debris.count = this.fragments.length;
-    this.fragments.forEach((f, i) => {
-      const p = this.point(f.x + f.vx * f.age, f.z + f.vz * f.age, ch);
-      this.effectTransform.position.set(p.x, p.y + 0.6 + f.rise * f.age - 4 * f.age * f.age, p.z);
-      this.effectTransform.rotation.set(f.age * 5 + i, f.age * 7, 0); this.effectTransform.scale.setScalar(0.2 * (1 - f.age / 0.65)); this.effectTransform.updateMatrix();
-      this.debris.setMatrixAt(i, this.effectTransform.matrix); this.debris.setColorAt(i, this.effectColor.set('#b6aa85'));
-    });
-    if (this.debris.count) { this.debris.instanceMatrix.needsUpdate = true; this.debris.instanceColor.needsUpdate = true; }
-    const narrow = this.camera.aspect < 0.8;
-    this.camera.position.set(preview ? 0.6 : x * 0.2, preview ? 2.9 : 5.5, preview ? (narrow ? 8.8 : 7) : (narrow ? 10.5 : 9));
-    this.camera.lookAt(preview ? 0 : x * 0.12, preview ? 1.55 : 1.3, preview ? 0 : -14);
-    if (!preview && !reducedMotion) this.camera.rotation.z += this.turnLean;
-    this.renderer.render(this.scene, this.camera);
+    this.label(preview?'01 / CHOOSE YOUR HUNTER':COURSES[m.config.course].places[chapter(m.distance,m.config)].toUpperCase(),16,350,'#b8c9b7',9);
+    this.label(preview?'2D ARCADE':`${m.config.mode.toUpperCase()} / ${m.rules.name.toUpperCase()}`,623,350,'#9bacaa',9,'right');
   }
 }
