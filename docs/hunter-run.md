@@ -1,6 +1,6 @@
 # Hunter × Hunter: Nen run
 
-A behind-view, three-lane runner through the 287th Hunter Exam, drawn in pseudo-3D on a 2D canvas. It replaces the earlier 3D runner and the Santa Run-style platformer. The Temple Run shape stays; the depth comes from Nen and from the exam itself, the way Slime Crossing takes its skills from Tensura and Ghostbusters takes its tools from the films.
+A behind-view, three-lane runner through the 287th Hunter Exam, drawn in pseudo-3D on a 2D canvas. It replaces the earlier 3D runner and the Santa Run-style platformer. The Temple Run shape stays; the depth comes from Nen and from the exam itself, the way Slime Crossing takes its skills from Tensura and Ghostbusters takes its tools from the films. On phones in portrait the canvas is 4:5 with a longer lens and a higher camera, so it is played the way Temple Run is played.
 
 ## What you play
 
@@ -42,6 +42,12 @@ Aura is the one resource (100 max). The four controls on top of running are the 
 - Noggin Luggers: a Gyo reveal in the fog turns an "applicant" into an ape.
 - Satotz's pace: run the whole tunnel without a stumble.
 - Hunter's notes: fourteen discoveries, unlocked by doing the thing, plus the plate collection. Stored under `portfolio.hunter-nen-run.v4`.
+- The head count: the HUD counts applicants left using the canon numbers (404 start, 371 finish the tunnel, 148 leave the swamp, 25 leave the tower, 9 reach the final), interpolated over each phase.
+- The tunnel ends on the long staircase, Satotz runs ahead for all of Phase 1, and a gate at every boundary names the next phase.
+
+## Teaching and readability
+
+The first collapsed applicant, pipe, and pillar of a first tunnel run carry JUMP, SLIDE, and SWITCH LANES labels. In-concealed hazards shimmer only inside 9 m without Gyo, a little over half a second at wetlands speed, so Gyo is a real decision rather than a nicety. The runner leans into lane changes, squashes on landing with a puff of dust, and the camera bobs with the stride; speed lines appear under Godspeed.
 
 ## Controls
 
@@ -52,9 +58,9 @@ Aura is the one resource (100 max). The four controls on top of running are the 
 
 ## Implementation
 
-- `hunter-track.js`: stage data, hazard classes, hand-authored lane patterns per stage, seeded generation, famous plates.
+- `hunter-track.js`: stage data with canon head counts, hazard classes, hand-authored lane patterns per stage, seeded generation, coaching labels, famous plates.
 - `hunter-model.js`: 120 Hz simulation. Lanes, jump and slide arcs, collision classes (low/high/gap/wall/soft/pickup), aura states, Hatsu, pursuer, stage progression, the Zevil quota, discoveries, and records. `autopilot()` is both Godspeed and the test pilot.
-- `hunter-scene.js`: pseudo-3D projection (camera 8.5 m behind, 2.6 m up, 430 px focal length), stage backdrops and side scenery anchored to world distance, hazard art, back-view characters, Satotz, Hisoka, fog, In shimmer and Gyo halos, effects.
+- `hunter-scene.js`: pseudo-3D projection (camera 8.5 m behind; the lens and camera height adapt to the canvas aspect so the runner sits in the lower third on both 16:9 and 4:5), stage backdrops and side scenery anchored to world distance, hazard art, two-segment-limb back-view runners, Satotz, Hisoka, phase gates, the staircase, fog wisps, In shimmer and Gyo halos, effects.
 - `game-hunter.js`: setup, HUD, overlays (rest cards between phases, verdicts), keyboard and touch input, synthesized sound, records, arcade lifecycle, Hunter's notes.
 - `hunter.css`: scoped desktop, phone portrait, phone landscape, and reduced-motion layouts.
 

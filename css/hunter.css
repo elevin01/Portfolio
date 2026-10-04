@@ -27,6 +27,7 @@
 .hn-hud-stage { position: absolute; top: 10px; left: 12px; display: grid; gap: 2px; }
 .hn-hud-stage span { font-size: 9px; letter-spacing: .12em; color: #d9cfbb; }
 .hn-hud-stage strong { font-size: 13px; font-weight: 600; }
+.hn-hud-stage #hunterApplicants { margin-top: 3px; color: #f0c777; }
 .hn-progress { display: block; width: 110px; height: 3px; background: #ffffff33; border-radius: 2px; overflow: hidden; margin-top: 3px; }
 .hn-progress b { display: block; height: 100%; background: #f0c777; transform-origin: left; transform: scaleX(0); }
 .hn-hud-plates { position: absolute; top: 10px; right: 12px; text-align: right; }
@@ -124,6 +125,10 @@
 @media (max-width: 760px) {
   .hn-layout { grid-template-columns: 1fr; }
   .hn-characters svg { height: 48px; }
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  /* Phones hold the runner the way Temple Run is played: taller than wide, more road ahead. */
+  #hunterCanvas { aspect-ratio: 4 / 5; }
 }
 @media (max-width: 600px) {
   .game-modal[data-game="hunter"] { padding: 8px; }

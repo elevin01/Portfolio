@@ -3,13 +3,13 @@
 // hazards marked hidden are concealed with In and only readable through Gyo.
 
 export const STAGES = Object.freeze([
-  { id: 'tunnel', name: 'Zaban Tunnel', phase: 'PHASE 1', examiner: 'Satotz', length: 450, speed: 13.5, fog: 0, hidden: 0, pursuer: false,
+  { id: 'tunnel', name: 'Zaban Tunnel', phase: 'PHASE 1', examiner: 'Satotz', length: 450, speed: 13.5, fog: 0, hidden: 0, pursuer: false, applicants: [404, 371],
     intro: 'Follow the examiner. The finish line is not announced.', clear: 'The tunnel ends at a staircase. Satotz has not broken his stride once.' },
-  { id: 'wetlands', name: 'Numere Wetlands', phase: 'PHASE 1 · SWINDLERS SWAMP', examiner: 'Satotz', length: 500, speed: 14.5, fog: 1, hidden: 0.4, pursuer: true,
+  { id: 'wetlands', name: 'Numere Wetlands', phase: 'PHASE 1 · SWINDLERS SWAMP', examiner: 'Satotz', length: 500, speed: 14.5, fog: 1, hidden: 0.4, pursuer: true, applicants: [371, 148],
     intro: 'Fog. Creatures that imitate applicants. Use Gyo to see what the mist conceals.', clear: 'Out of the fog. The applicants are fewer, and Hisoka is smiling.' },
-  { id: 'tower', name: 'Trick Tower', phase: 'PHASE 3', examiner: 'Lippo', length: 500, speed: 15.5, fog: 0, hidden: 0.22, pursuer: true,
+  { id: 'tower', name: 'Trick Tower', phase: 'PHASE 3', examiner: 'Lippo', length: 500, speed: 15.5, fog: 0, hidden: 0.22, pursuer: true, applicants: [42, 25],
     intro: 'Seventy-two hours to reach the bottom. Hidden floors. Majority rules.', clear: 'The tower doors open with hours to spare.' },
-  { id: 'island', name: 'Zevil Island', phase: 'PHASE 4', examiner: 'Khara', length: 550, speed: 16.5, fog: 0, hidden: 0.28, pursuer: true, quota: 6,
+  { id: 'island', name: 'Zevil Island', phase: 'PHASE 4', examiner: 'Khara', length: 550, speed: 16.5, fog: 0, hidden: 0.28, pursuer: true, quota: 6, applicants: [25, 9],
     intro: 'Six points of plates. Your target’s plate is worth three. Someone is hunting yours.', clear: 'Six points. The boat is waiting.' }
 ]);
 
@@ -107,7 +107,15 @@ export function buildStage(stage, start, random, { lap = 0, target = 44, difficu
   const plateNumbers = Object.keys(FAMOUS_PLATES).map(Number);
   let targetPlaced = 0;
   let lastPattern = -1;
-  const add = (zAt, lane, kind, extra = {}) => { if (zAt > end - 8) return; objects.push({ id: `${stage.id}-${start}-${id++}`, z: zAt, lane, kind, cls: KINDS[kind].cls, len: GAP_LENGTH[kind] || 0.8, hidden: false, done: false, ...extra }); };
+  const TIPS = { low: 'JUMP', high: 'SLIDE', wall: 'SWITCH LANES', soft: 'SWITCH LANES' };
+  const coached = new Set();
+  const add = (zAt, lane, kind, extra = {}) => {
+    if (zAt > end - 8) return;
+    // The first hazard of each kind in a first tunnel run carries a coaching label.
+    const cls = KINDS[kind].cls;
+    if (stage.id === 'tunnel' && lap === 0 && TIPS[cls] && !coached.has(TIPS[cls])) { coached.add(TIPS[cls]); extra = { ...extra, tip: TIPS[cls] }; }
+    objects.push({ id: `${stage.id}-${start}-${id++}`, z: zAt, lane, kind, cls: KINDS[kind].cls, len: GAP_LENGTH[kind] || 0.8, hidden: false, done: false, ...extra });
+  };
   while (z < end - 30) {
     const progress = (z - start) / stage.length;
     const tier = Math.min(2, Math.floor(progress * 3) + Math.min(lap, 2));

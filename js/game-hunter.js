@@ -23,7 +23,7 @@ root.innerHTML = `
     <div class="hn-stage">
       <canvas id="hunterCanvas" tabindex="0" aria-label="Hunter Exam runner play area" aria-describedby="hunterInstructions">Arrow keys change lanes, jump, and slide. Hold Z for Zetsu, X for Gyo, press C for your Hatsu.</canvas>
       <div class="hn-hud" aria-hidden="true">
-        <div class="hn-hud-stage"><span id="hunterPhase">PHASE 1</span><strong id="hunterStageName">Zaban Tunnel</strong><i class="hn-progress"><b id="hunterProgress"></b></i></div>
+        <div class="hn-hud-stage"><span id="hunterPhase">PHASE 1</span><strong id="hunterStageName">Zaban Tunnel</strong><i class="hn-progress"><b id="hunterProgress"></b></i><span id="hunterApplicants">404 APPLICANTS LEFT</span></div>
         <div class="hn-hud-plates"><strong id="hunterPlates">0</strong><span id="hunterPlatesLabel">plates</span></div>
         <div id="hunterWarning" class="hn-warning" hidden>♠ Hisoka is right behind you</div>
         <div class="hn-hud-aura"><span id="hunterNenState">TEN</span><i><b id="hunterAuraBar"></b></i><span id="hunterAuraValue">100</span></div>
@@ -229,6 +229,9 @@ function refresh(focusOverlay = true) {
   text(byId('hunterPhase'), model.config.mode === 'endless' ? `LAP ${model.lap + 1} · ${model.stage.phase}` : model.stage.phase);
   text(byId('hunterStageName'), model.stage.name);
   byId('hunterProgress').style.transform = `scaleX(${model.stageProgress})`;
+  const left = model.applicantsLeft;
+  byId('hunterApplicants').hidden = left === null;
+  if (left !== null) text(byId('hunterApplicants'), `${left} APPLICANTS LEFT`);
   const quota = model.stage.quota && model.config.mode === 'exam' && model.lap === 0;
   text(byId('hunterPlates'), quota ? `${model.stagePoints}/${model.stage.quota}` : model.points);
   text(byId('hunterPlatesLabel'), quota ? 'points' : 'plates');
@@ -294,7 +297,7 @@ function refresh(focusOverlay = true) {
       text(tag, licensed ? 'EXAM COMPLETE' : `${previous.phase} CLEARED`);
       const [headline, ...rest] = previous.clear.split('. ');
       text(title, licensed ? 'You’re a Hunter.' : `${headline}.`);
-      text(description, licensed ? 'The license is yours. The course continues as Endless from here, faster each lap.' : `${rest.join('. ')} Next: ${model.stage.name}. ${model.stage.intro}`);
+      text(description, licensed ? 'The license is yours. The course continues as Endless from here, faster each lap.' : `${rest.join('. ')} ${previous.applicants[1]} applicants remain. Next: ${model.stage.name}. ${model.stage.intro}`);
       stats.hidden = false;
       stats.innerHTML = `<span><strong>${Math.floor(model.distance)}<small>m</small></strong>so far</span><span><strong>${model.points}</strong>plates</span><span><strong>${Math.floor(model.aura)}</strong>aura</span>`;
       text(play, licensed ? 'Keep running ↗' : `Enter ${model.stage.name} ↗`);

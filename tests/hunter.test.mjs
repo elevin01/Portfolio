@@ -247,6 +247,14 @@ test('generated stages are deterministic, keep hazards readable, and only hide w
     assert.ok(objects.every(o => o.lane >= 0 && o.lane < RUN.lanes));
     assert.ok(objects.filter(o => o.hidden).every(o => ['soft', 'low', 'high', 'gap', 'wall'].includes(o.cls) && o.kind !== 'door' && o.kind !== 'pillar'));
   }
+  const tunnel = buildStage(STAGES[0], 0, seededRandom(3), { lap: 0 });
+  assert.deepEqual([...new Set(tunnel.filter(o => o.tip).map(o => o.tip))].sort(), ['JUMP', 'SLIDE', 'SWITCH LANES'], 'a first tunnel run coaches each move once');
+  assert.equal(buildStage(STAGES[0], 0, seededRandom(3), { lap: 1 }).some(o => o.tip), false);
+  const counting = open();
+  assert.equal(counting.applicantsLeft, 404);
+  counting.p.z = STAGES[0].length;
+  assert.equal(counting.applicantsLeft, 371);
+  assert.equal(open({ mode: 'endless' }).applicantsLeft, null);
   const island = buildStage(STAGES[3], 0, seededRandom(2), { target: 44 });
   assert.equal(island.filter(o => o.kind === 'target').length, 2);
   assert.ok(island.filter(o => o.kind === 'plate').length >= 6);

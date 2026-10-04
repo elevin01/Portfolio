@@ -5,7 +5,7 @@ export { STAGES, KINDS, FAMOUS_PLATES };
 
 export const RUN = Object.freeze({
   step: 1 / 120, lanes: 3, jumpTime: 0.64, jumpHeight: 1.3, slideTime: 0.58, laneTime: 0.17, bodyFront: 0.45, bodyBack: 0.35,
-  auraMax: 100, tenRegen: 4, zetsuRegen: 14, gyoDrain: 9, stumbleCost: 25, pursuerTime: 9, revealRange: 13
+  auraMax: 100, tenRegen: 4, zetsuRegen: 14, gyoDrain: 9, stumbleCost: 25, pursuerTime: 9, revealRange: 9
 });
 
 export const DIFFICULTIES = Object.freeze({
@@ -127,6 +127,12 @@ export class HunterModel {
 
   get stage() { return STAGES[this.stageIndex]; }
   get stageProgress() { return Math.max(0, Math.min(1, (this.p.z - this.stageStart) / this.stage.length)); }
+  // Canon head counts: 404 applicants start, 371 finish the tunnel, 148 leave the swamp, 25 leave the tower, 9 reach the final.
+  get applicantsLeft() {
+    if (this.lap > 0 || this.config.mode !== 'exam') return null;
+    const [from, to] = this.stage.applicants;
+    return Math.round(from + (to - from) * this.stageProgress);
+  }
   get speed() {
     const base = this.stage.speed * this.rules.speed * (1 + this.lap * 0.06);
     return base * (1 - 0.45 * this.stumble) * (this.cramp > 0 ? 0.78 : 1) * (this.godspeed > 0 ? 1.12 : 1);

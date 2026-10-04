@@ -1,12 +1,9 @@
 // Pseudo-3D behind-view rendering on a 2D canvas. World units are meters; the camera sits a few
 // meters behind the runner. Artwork is original and reads at small sizes; nothing here mutates the model.
-import { RUN } from './hunter-model.js';
+import { RUN, STAGES } from './hunter-model.js';
 
 const W = 1.9;           // lane width in meters
-const F = 430;           // focal length in pixels
-const HORIZON = 112;
-const CAM_H = 2.6;
-const CAM_BACK = 8.5;
+const CAM_BACK = 8.5;    // camera distance behind the runner in meters
 const FAR = 120;
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -29,15 +26,23 @@ export class HunterScene {
     this.shake = 0;
     this.camX = 0;
     this.reduced = false;
+    this.land = 0;
+    this.H = 360; this.horizon = 112; this.F = 430; this.camH = 2.4;
   }
 
+  // The logical width is always 640; a taller canvas (phones in portrait) gets a longer focal
+  // length and a higher camera so the runner stays near the lower third with more road ahead.
   resize() {
     const bounds = this.canvas.getBoundingClientRect();
-    if (!bounds.width) return;
+    if (!bounds.width || !bounds.height) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = Math.round(bounds.width * dpr);
-    this.canvas.height = Math.round(bounds.width * dpr * 9 / 16);
+    this.canvas.height = Math.round(bounds.height * dpr);
     this.scale = this.canvas.width / 640;
+    this.H = 640 * bounds.height / bounds.width;
+    this.horizon = Math.round(this.H * 0.31);
+    this.F = this.H > 500 ? 560 : 430;
+    this.camH = clamp((this.H * 0.64 - this.horizon) * CAM_BACK / this.F, 2.2, 6);
   }
 
   reset() { this.effects = []; this.shake = 0; this.time = 0; }
@@ -57,14 +62,15 @@ export class HunterScene {
       else if (e.type === 'reveal') this.effects.push({ type: 'reveal', lane: e.lane, z: e.z, age: 0, life: 0.5 });
       else if (e.type === 'pursuer') this.effects.push({ type: 'cards', lane: model.p.lane, z: model.p.z - 2, age: 0, life: 1 });
       else if (e.type === 'escape') this.burst(model.p.lane, model.p.z - 3, '#e8d7ff', 12, 0.7);
+      else if (e.type === 'land') { this.land = 1; this.burst(model.p.lane, model.p.z, '#d9d2c4', 6, 0.35, 0.05); }
     }
     if (this.effects.length > 80) this.effects.splice(0, this.effects.length - 80);
   }
 
-  burst(lane, z, color, count, life) {
+  burst(lane, z, color, count, life, height = 0.6) {
     for (let i = 0; i < count; i++) {
       const angle = i / count * Math.PI * 2 + noise(i) * 0.5;
-      this.effects.push({ type: 'spark', lane, z, x: (lane - 1) * W, y: 0.6, vx: Math.cos(angle) * 1.6, vy: 1 + Math.sin(angle) * 1.4, color, age: 0, life: life * (0.6 + noise(i + 3) * 0.6) });
+      this.effects.push({ type: 'spark', lane, z, x: (lane - 1) * W, y: height, vx: Math.cos(angle) * 1.6, vy: 1 + Math.sin(angle) * 1.4, color, age: 0, life: life * (0.6 + noise(i + 3) * 0.6) });
     }
   }
 
@@ -73,8 +79,8 @@ export class HunterScene {
   // Projection helpers
   project(x, y, z) {
     const d = Math.max(0.6, z - this.camZ);
-    const s = F / d;
-    return { x: 320 + (x - this.camX) * s, y: HORIZON + (CAM_H - y) * s, s, d };
+    const s = this.F / d;
+    return { x: 320 + (x - this.camX) * s, y: this.horizon + (this.camH - y) * s, s, d };
   }
 
   fill(points, color) { const c = this.c; c.beginPath(); points.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); c.fillStyle = color; c.fill(); }
@@ -91,19 +97,22 @@ export class HunterScene {
   }
 
   backdrop(model, pal) {
-    const c = this.c, stage = model.stage.id;
-    const sky = c.createLinearGradient(0, 0, 0, HORIZON + 40);
+    const c = this.c, stage = model.stage.id, H = this.H, horizon = this.horizon;
+    const sky = c.createLinearGradient(0, 0, 0, horizon + 40);
     sky.addColorStop(0, pal.sky[0]); sky.addColorStop(1, pal.sky[1]);
-    c.fillStyle = sky; c.fillRect(0, 0, 640, 360);
+    c.fillStyle = sky; c.fillRect(0, 0, 640, H);
     if (stage === 'island') {
-      this.ellipse(500, 52, 24, 24, '#fff6cf');
-      for (let i = 0; i < 7; i++) { const x = ((i * 97 + 20) - this.camX * 6) % 700 - 30; this.fill([[x - 70, HORIZON + 6], [x, 70 + noise(i) * 20], [x + 80, HORIZON + 6]], i % 2 ? '#4d8c6a' : '#5f9f74'); }
+      this.ellipse(500, horizon - 60, 24, 24, '#fff6cf');
+      // The sea sits behind the hills: Zevil Island is reached and left by boat.
+      c.fillStyle = '#3f87bd'; c.fillRect(0, horizon - 14, 640, 18);
+      for (let i = 0; i < 6; i++) this.stroke([[i * 120 - this.camX * 4, horizon - 9 + (i % 3) * 3], [i * 120 + 50 - this.camX * 4, horizon - 9 + (i % 3) * 3]], '#9fd2f0aa', 1);
+      for (let i = 0; i < 7; i++) { const x = ((i * 97 + 20) - this.camX * 6) % 700 - 30; this.fill([[x - 70, horizon + 6], [x, horizon - 42 + noise(i) * 20], [x + 80, horizon + 6]], i % 2 ? '#4d8c6a' : '#5f9f74'); }
     } else if (stage === 'wetlands') {
-      for (let i = 0; i < 10; i++) { const x = (i * 71 - this.camX * 5) % 680 - 20; this.fill([[x - 30, HORIZON + 10], [x - 6, 60 + noise(i) * 30], [x + 4, 54 + noise(i + 1) * 26], [x + 34, HORIZON + 10]], '#7f948a'); }
+      for (let i = 0; i < 10; i++) { const x = (i * 71 - this.camX * 5) % 680 - 20; this.fill([[x - 30, horizon + 10], [x - 6, horizon - 52 + noise(i) * 30], [x + 4, horizon - 58 + noise(i + 1) * 26], [x + 34, horizon + 10]], '#7f948a'); }
     }
-    const ground = c.createLinearGradient(0, HORIZON, 0, 360);
+    const ground = c.createLinearGradient(0, horizon, 0, H);
     ground.addColorStop(0, pal.groundFar); ground.addColorStop(1, pal.ground);
-    c.fillStyle = ground; c.fillRect(0, HORIZON, 640, 242);
+    c.fillStyle = ground; c.fillRect(0, horizon, 640, H - horizon);
   }
 
   road(model, pal) {
@@ -116,10 +125,20 @@ export class HunterScene {
     const first = Math.floor(near / 4) * 4;
     for (let z = first; z < far; z += 4) {
       const a = this.project(-edge, 0, z), b = this.project(edge, 0, z);
-      if (a.y < HORIZON + 1) continue;
-      const alpha = clamp((FAR - (z - this.camZ)) / FAR, 0, 1) * 0.35;
-      c.globalAlpha = alpha;
+      if (a.y < this.horizon + 1) continue;
+      c.globalAlpha = clamp((FAR - (z - this.camZ)) / FAR, 0, 1) * 0.35;
       this.stroke([[a.x, a.y], [b.x, b.y]], pal.groundFar, 2);
+    }
+    // Phase 1 ends on the long staircase out of the tunnel.
+    if (model.stage.id === 'tunnel') {
+      const stairs = model.stageStart + model.stage.length * 0.78, end = model.stageStart + model.stage.length;
+      for (let z = Math.max(stairs, Math.floor(near / 0.8) * 0.8); z < Math.min(end, far); z += 0.8) {
+        const a = this.project(-edge, 0, z), b = this.project(edge, 0, z);
+        if (a.y < this.horizon + 1) continue;
+        c.globalAlpha = clamp((60 - (z - this.camZ)) / 60, 0, 1) * 0.6;
+        this.stroke([[a.x, a.y], [b.x, b.y]], pal.accent, 1.2);
+        this.stroke([[a.x, a.y + 1.5], [b.x, b.y + 1.5]], pal.groundFar, 1.2);
+      }
     }
     c.globalAlpha = 1;
     c.save(); c.setLineDash([14, 10]); c.lineDashOffset = -(p.z * 10) % 24;
@@ -127,6 +146,21 @@ export class HunterScene {
     c.restore();
     this.stroke([[nl.x, nl.y], [fl.x, fl.y]], pal.wallDark, 3);
     this.stroke([[nr.x, nr.y], [fr.x, fr.y]], pal.wallDark, 3);
+  }
+
+  // A gate marks every phase boundary with the next stage's name.
+  gate(model, pal) {
+    const z = model.stageStart + model.stage.length;
+    if (z - this.camZ > FAR || z < this.camZ + 1) return;
+    const final = model.config.mode === 'exam' && model.lap === 0 && model.stage.id === 'island';
+    const next = final ? { phase: 'FINAL PHASE', name: 'Hunter license' } : STAGES[(model.stageIndex + 1) % STAGES.length];
+    const h = Math.max(3.2, this.camH + 1);
+    const l = this.project(-1.75 * W, 0, z), r = this.project(1.75 * W, 0, z), lt = this.project(-1.75 * W, h, z), rt = this.project(1.75 * W, h, z);
+    const s = l.s;
+    this.rect(lt.x - 0.18 * s, lt.y, 0.36 * s, l.y - lt.y, pal.wallDark);
+    this.rect(rt.x - 0.18 * s, rt.y, 0.36 * s, r.y - rt.y, pal.wallDark);
+    this.rect(lt.x - 0.2 * s, lt.y - 0.75 * s, rt.x - lt.x + 0.4 * s, 0.75 * s, '#15131a', 0.05 * s);
+    if (s > 5) this.text(`${next.phase.split(' ·')[0]} · ${next.name.toUpperCase()}`, (lt.x + rt.x) / 2, lt.y - 0.37 * s, Math.max(3, 0.3 * s), pal.accent);
   }
 
   // Side scenery at repeating world positions, drawn far to near together with the walls.
@@ -145,8 +179,9 @@ export class HunterScene {
         c.globalAlpha = fade;
         if (stage === 'tunnel' || stage === 'tower') {
           // Wall segment between this post and the next, then the post itself and a lamp.
-          const next = this.project(x, 0, z + spacing), top = this.project(x, 3.4, z), nextTop = this.project(x, 3.4, z + spacing);
-          const far = this.project(x + side * 2.4, 3.4, z + spacing), farNear = this.project(x + side * 2.4, 3.4, z);
+          const wall = Math.max(3.4, this.camH + 1.6);
+          const next = this.project(x, 0, z + spacing), top = this.project(x, wall, z), nextTop = this.project(x, wall, z + spacing);
+          const far = this.project(x + side * 2.4, wall, z + spacing), farNear = this.project(x + side * 2.4, wall, z);
           this.fill([[base.x, base.y], [next.x, next.y], [nextTop.x, nextTop.y], [top.x, top.y]], n % 2 ? pal.wall : pal.wallDark);
           this.fill([[top.x, top.y], [nextTop.x, nextTop.y], [far.x, far.y], [farNear.x, farNear.y]], pal.wallDark);
           this.rect(top.x - 0.2 * s, top.y, 0.4 * s, base.y - top.y, pal.wallDark);
@@ -211,7 +246,7 @@ export class HunterScene {
     }
     const k = o.kind;
     const half = 0.46 * W * s;
-    if (k === 'applicant' || k === 'hunter') this.runner(g.x, g.y, s, { hair: k === 'hunter' ? '#2a2a2a' : ['#4a3a2c', '#7a5b3c', '#1f2528'][o.number % 3], top: k === 'hunter' ? '#5a3e3e' : ['#6c7a8a', '#8a6c5b', '#56705f'][o.number % 3], number: o.number, phase: o.z * 2 + o.number });
+    if (k === 'applicant' || k === 'hunter') this.runner(g.x, g.y, s, { hair: k === 'hunter' ? '#2a2a2a' : ['#4a3a2c', '#7a5b3c', '#1f2528'][o.number % 3], top: k === 'hunter' ? '#5a3e3e' : ['#6c7a8a', '#8a6c5b', '#56705f'][o.number % 3], number: o.number, phase: (this.reduced ? 0 : this.time * 9) + o.number });
     else if (k === 'lugger') {
       // Revealed: the ape behind the applicant's silhouette.
       this.ellipse(g.x, g.y - 0.15 * s, 0.45 * s, 0.2 * s, '#00000033');
@@ -311,68 +346,109 @@ export class HunterScene {
       if (s > 20) this.text('50h', g.x, g.y - 0.9 * s, Math.max(3, 0.18 * s), '#6e4e12');
     }
     if (ghost && !this.reduced) { c.globalAlpha = Math.min(1, alpha * 3); this.stroke([[g.x - half, g.y - 0.1 * s], [g.x + half, g.y - 0.1 * s]], '#c9b3ff', 0.05 * s); }
+    if (o.tip && g.d < 45 && s > 9) {
+      // First-run coaching: the first hazard of each kind in the tunnel says what to do.
+      const bob = this.reduced ? 0 : Math.sin(this.time * 4) * 0.08 * s;
+      const y = g.y - (o.cls === 'high' ? 2.3 : 1.9) * s + bob, w = (o.tip.length * 0.19 + 0.5) * s;
+      c.globalAlpha = Math.min(1, alpha * 2);
+      this.rect(g.x - w / 2, y - 0.26 * s, w, 0.52 * s, '#15131aee', 0.1 * s);
+      this.fill([[g.x - 0.12 * s, y + 0.26 * s], [g.x + 0.12 * s, y + 0.26 * s], [g.x, y + 0.45 * s]], '#15131aee');
+      this.text(o.tip, g.x, y, Math.max(4, 0.3 * s), pal.accent);
+    }
     c.restore();
   }
 
-  // A generic applicant seen from behind; `look` sets hair/top colours and a plate number.
+  seg(ax, ay, bx, by, width, color) { const c = this.c; c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.strokeStyle = color; c.lineWidth = width; c.lineCap = 'round'; c.stroke(); c.lineCap = 'butt'; }
+
+  // A runner seen from behind. `look` sets hair, top, sleeve and pants colours, a plate number and the
+  // stride phase; `pose` carries the hero's lift, lean, landing squash and slide. Limbs are two-segment
+  // round strokes so the stride reads at every size; decorations are anchored to the head and torso.
   runner(x, y, s, look, pose = {}) {
     const c = this.c;
-    const run = Math.sin(look.phase || 0);
-    const legA = run * 0.22 * s, legB = -run * 0.22 * s;
-    const slide = pose.slide, lift = pose.y || 0;
-    const baseY = y - lift * s;
-    this.ellipse(x, y - 0.03 * s, 0.32 * s * (1 - lift * 0.3), 0.1 * s, '#00000045');
-    if (slide) {
-      this.rect(x - 0.42 * s, baseY - 0.62 * s, 0.84 * s, 0.46 * s, look.top, 0.14 * s);
-      this.ellipse(x + 0.05 * s, baseY - 0.78 * s, 0.24 * s, 0.22 * s, look.hair);
-      this.rect(x - 0.5 * s, baseY - 0.3 * s, 0.3 * s, 0.14 * s, look.pants || '#2b2f3a', 0.05 * s);
+    const phase = look.phase || 0;
+    const lift = pose.y || 0, lean = pose.lean || 0, land = pose.land || 0;
+    const skin = look.skin || '#e5bb9a', pants = look.pants || '#2b2f3a', sleeve = look.sleeve || look.top;
+    this.ellipse(x, y - 0.03 * s, 0.34 * s * (1 - lift * 0.3), 0.11 * s, '#00000045');
+    c.save();
+    c.translate(x, y - lift * s);
+    c.scale(1 + land * 0.12, 1 - land * 0.18);
+    if (pose.slide) {
+      c.rotate(lean * 0.3);
+      this.seg(-0.2 * s, -0.25 * s, -0.55 * s, -0.08 * s, 0.17 * s, pants);
+      this.seg(0.2 * s, -0.25 * s, 0.55 * s, -0.1 * s, 0.17 * s, pants);
+      this.rect(-0.34 * s, -0.66 * s, 0.68 * s, 0.46 * s, look.top, 0.16 * s);
+      this.seg(-0.3 * s, -0.5 * s, -0.5 * s, -0.75 * s, 0.13 * s, sleeve);
+      this.seg(0.3 * s, -0.5 * s, 0.5 * s, -0.75 * s, 0.13 * s, sleeve);
+      this.ellipse(0, -0.78 * s, 0.24 * s, 0.22 * s, skin);
+      this.ellipse(0, -0.86 * s, 0.26 * s, 0.2 * s, look.hair);
+      c.restore();
       return;
     }
-    const skin = look.skin || '#e5bb9a';
-    this.rect(x - 0.25 * s + legA * 0.3, baseY - 0.5 * s - Math.max(0, legA), 0.17 * s, 0.5 * s, look.pants || '#2b2f3a', 0.05 * s);
-    this.rect(x + 0.08 * s + legB * 0.3, baseY - 0.5 * s - Math.max(0, legB), 0.17 * s, 0.5 * s, look.pants || '#2b2f3a', 0.05 * s);
-    this.rect(x - 0.3 * s, baseY - 1.05 * s, 0.6 * s, 0.6 * s, look.top, 0.12 * s);
-    this.rect(x - 0.42 * s, baseY - 1 * s + legB * 0.6, 0.13 * s, 0.42 * s, look.sleeve || look.top, 0.05 * s);
-    this.rect(x + 0.29 * s, baseY - 1 * s + legA * 0.6, 0.13 * s, 0.42 * s, look.sleeve || look.top, 0.05 * s);
-    this.rect(x - 0.4 * s, baseY - 0.62 * s + legB * 0.6, 0.1 * s, 0.1 * s, skin, 0.03 * s);
-    this.rect(x + 0.3 * s, baseY - 0.62 * s + legA * 0.6, 0.1 * s, 0.1 * s, skin, 0.03 * s);
-    this.rect(x - 0.08 * s, baseY - 1.12 * s, 0.16 * s, 0.1 * s, skin);
-    this.ellipse(x, baseY - 1.3 * s, 0.24 * s, 0.24 * s, skin);
+    c.rotate(lean * 0.22);
+    const bob = Math.abs(Math.sin(phase)) * 0.05 * s;
+    const hipY = -0.52 * s - bob;
+    // Legs: the back leg folds up at the knee, the front leg reaches down.
+    for (const side of [-1, 1]) {
+      const swing = Math.sin(phase + (side < 0 ? 0 : Math.PI));
+      const raise = Math.max(0, swing) * 0.42;
+      const hipX = side * 0.12 * s;
+      const kneeX = hipX + side * (0.04 + raise * 0.12) * s, kneeY = hipY + (0.26 - raise * 0.18) * s;
+      const footY = -(raise * 0.9) * s;
+      this.seg(hipX, hipY, kneeX, kneeY, 0.17 * s, pants);
+      this.seg(kneeX, kneeY, hipX + side * 0.02 * s, footY - 0.04 * s, 0.15 * s, pants);
+      this.ellipse(hipX + side * 0.02 * s, footY - 0.03 * s, 0.1 * s, 0.06 * s, look.shoes || '#1c1b22');
+    }
+    // Torso and arms.
+    this.rect(-0.31 * s, hipY - 0.56 * s, 0.62 * s, 0.6 * s, look.top, 0.13 * s);
+    for (const side of [-1, 1]) {
+      const swing = Math.sin(phase + (side < 0 ? Math.PI : 0));
+      const shoulderX = side * 0.33 * s, shoulderY = hipY - 0.48 * s;
+      const elbowX = shoulderX + side * 0.08 * s, elbowY = shoulderY + (0.3 - swing * 0.08) * s;
+      const handY = elbowY + (0.1 + swing * 0.18) * s;
+      this.seg(shoulderX, shoulderY, elbowX, elbowY, 0.13 * s, sleeve);
+      this.seg(elbowX, elbowY, shoulderX + side * 0.02 * s, handY, 0.11 * s, sleeve);
+      this.ellipse(shoulderX + side * 0.02 * s, handY + 0.02 * s, 0.06 * s, 0.06 * s, skin);
+    }
+    const headY = hipY - 0.83 * s;
+    this.rect(-0.07 * s, headY + 0.12 * s, 0.14 * s, 0.14 * s, skin);
+    this.ellipse(0, headY, 0.24 * s, 0.25 * s, skin);
     if (look.number !== undefined && s > 14) {
-      this.rect(x - 0.17 * s, baseY - 0.95 * s, 0.34 * s, 0.26 * s, '#f1ecdf', 0.04 * s);
-      this.text(String(look.number), x, baseY - 0.82 * s, Math.max(3, 0.17 * s), '#2a2d36');
+      this.rect(-0.17 * s, hipY - 0.46 * s, 0.34 * s, 0.26 * s, '#f1ecdf', 0.04 * s);
+      this.text(String(look.number), 0, hipY - 0.33 * s, Math.max(3, 0.17 * s), '#2a2d36');
     }
-    if (look.hero === 'gon') {
-      for (let i = 0; i < 5; i++) this.fill([[x - 0.26 * s + i * 0.13 * s, baseY - 1.3 * s], [x - 0.2 * s + i * 0.13 * s, baseY - (1.85 + (i === 2 ? 0.25 : i % 2 * 0.12)) * s], [x - 0.12 * s + i * 0.13 * s, baseY - 1.3 * s]], '#1c2a26');
-      this.ellipse(x, baseY - 1.35 * s, 0.26 * s, 0.2 * s, '#1c2a26');
-      this.stroke([[x + 0.2 * s, baseY - 0.6 * s], [x - 0.3 * s, baseY - 1.9 * s]], '#c9a45a', 0.05 * s);
-    } else if (look.hero === 'killua') {
-      this.ellipse(x, baseY - 1.38 * s, 0.3 * s, 0.3 * s, '#f1f3f7');
-      for (let i = 0; i < 6; i++) this.ellipse(x - 0.28 * s + i * 0.11 * s, baseY - (1.55 + (i % 2) * 0.1) * s, 0.12 * s, 0.13 * s, '#f7f8fb');
-      this.rect(x - 0.22 * s, baseY - 1.1 * s, 0.44 * s, 0.6 * s, '#f0c2a5', 0.1 * s);
-      this.rect(x - 0.28 * s, baseY - 1.08 * s, 0.56 * s, 0.1 * s, '#5b5f9a', 0.03 * s);
-    } else if (look.hero === 'kurapika') {
-      this.ellipse(x, baseY - 1.36 * s, 0.28 * s, 0.26 * s, '#f0cd6a');
-      this.rect(x - 0.28 * s, baseY - 1.4 * s, 0.56 * s, 0.3 * s, '#f0cd6a', 0.12 * s);
-      this.rect(x - 0.22 * s, baseY - 1.05 * s, 0.44 * s, 0.62 * s, '#2f63b8', 0.05 * s);
-      this.rect(x - 0.22 * s, baseY - 0.5 * s, 0.44 * s, 0.07 * s, '#e3c25a');
-      this.stroke([[x - 0.25 * s, baseY - 0.55 * s], [x + 0.2 * s, baseY - 1.35 * s]], '#8a6a3c', 0.06 * s);
-    } else if (look.hero === 'leorio') {
-      this.ellipse(x, baseY - 1.36 * s, 0.25 * s, 0.22 * s, '#1b1b22');
-      this.rect(x - 0.3 * s, baseY - 1.05 * s, 0.6 * s, 0.6 * s, '#2c3a72', 0.1 * s);
-      this.rect(x - 0.03 * s, baseY - 1.05 * s, 0.06 * s, 0.55 * s, '#1f2a56');
-      this.rect(x + 0.3 * s, baseY - 0.75 * s + legA * 0.6, 0.3 * s, 0.26 * s, '#5c3b22', 0.03 * s);
-      this.rect(x + 0.36 * s, baseY - 0.8 * s + legA * 0.6, 0.18 * s, 0.05 * s, '#3a2515');
-    } else if (look.hero === 'hisoka') {
-      this.ellipse(x, baseY - 1.4 * s, 0.28 * s, 0.3 * s, '#d8333c');
-      this.fill([[x - 0.25 * s, baseY - 1.35 * s], [x - 0.05 * s, baseY - 1.95 * s], [x + 0.22 * s, baseY - 1.4 * s]], '#e2444d');
-      this.text('♠', x - 0.12 * s, baseY - 0.86 * s, Math.max(4, 0.22 * s), '#2b3a6b');
-      this.text('♥', x + 0.14 * s, baseY - 0.68 * s, Math.max(4, 0.22 * s), '#b8323c');
-      this.rect(x + 0.32 * s, baseY - 1.45 * s, 0.22 * s, 0.32 * s, '#f6f1ea', 0.02 * s);
-      this.text('J', x + 0.43 * s, baseY - 1.29 * s, Math.max(3, 0.18 * s), '#c23');
+    const h = look.hero;
+    if (h === 'gon') {
+      for (let i = 0; i < 5; i++) this.fill([[-0.26 * s + i * 0.13 * s, headY], [-0.2 * s + i * 0.13 * s, headY - (0.55 + (i === 2 ? 0.25 : i % 2 * 0.12)) * s], [-0.12 * s + i * 0.13 * s, headY]], '#1c2a26');
+      this.ellipse(0, headY - 0.05 * s, 0.26 * s, 0.21 * s, '#1c2a26');
+      this.seg(0.2 * s, hipY - 0.1 * s, -0.3 * s, headY - 0.6 * s, 0.05 * s, '#c9a45a');
+    } else if (h === 'killua') {
+      this.ellipse(0, headY - 0.06 * s, 0.3 * s, 0.3 * s, '#f1f3f7');
+      for (let i = 0; i < 6; i++) this.ellipse(-0.28 * s + i * 0.11 * s, headY - (0.25 + (i % 2) * 0.1) * s, 0.12 * s, 0.13 * s, '#f7f8fb');
+      this.rect(-0.22 * s, hipY - 0.52 * s, 0.44 * s, 0.5 * s, '#f0c2a5', 0.1 * s);
+      this.rect(-0.28 * s, hipY - 0.54 * s, 0.56 * s, 0.1 * s, '#5b5f9a', 0.03 * s);
+    } else if (h === 'kurapika') {
+      this.ellipse(0, headY - 0.04 * s, 0.28 * s, 0.27 * s, '#f0cd6a');
+      this.rect(-0.28 * s, headY - 0.1 * s, 0.56 * s, 0.3 * s, '#f0cd6a', 0.12 * s);
+      this.rect(-0.22 * s, hipY - 0.52 * s, 0.44 * s, 0.6 * s, '#2f63b8', 0.05 * s);
+      this.rect(-0.22 * s, hipY - 0.02 * s, 0.44 * s, 0.07 * s, '#e3c25a');
+      this.seg(-0.25 * s, hipY - 0.05 * s, 0.2 * s, headY - 0.05 * s, 0.06 * s, '#8a6a3c');
+    } else if (h === 'leorio') {
+      this.ellipse(0, headY - 0.05 * s, 0.25 * s, 0.23 * s, '#1b1b22');
+      this.rect(-0.03 * s, hipY - 0.56 * s, 0.06 * s, 0.56 * s, '#1f2a56');
+      const swing = Math.sin(phase);
+      this.rect(0.34 * s, hipY - 0.22 * s + swing * 0.12 * s, 0.3 * s, 0.26 * s, '#5c3b22', 0.03 * s);
+      this.rect(0.4 * s, hipY - 0.27 * s + swing * 0.12 * s, 0.18 * s, 0.05 * s, '#3a2515');
+    } else if (h === 'hisoka') {
+      this.ellipse(0, headY - 0.08 * s, 0.28 * s, 0.3 * s, '#d8333c');
+      this.fill([[-0.25 * s, headY - 0.03 * s], [-0.05 * s, headY - 0.63 * s], [0.22 * s, headY - 0.08 * s]], '#e2444d');
+      this.text('♠', -0.12 * s, hipY - 0.36 * s, Math.max(4, 0.22 * s), '#2b3a6b');
+      this.text('♥', 0.14 * s, hipY - 0.18 * s, Math.max(4, 0.22 * s), '#b8323c');
+      this.rect(0.32 * s, headY - 0.14 * s, 0.22 * s, 0.32 * s, '#f6f1ea', 0.02 * s);
+      this.text('J', 0.43 * s, headY + 0.02 * s, Math.max(3, 0.18 * s), '#c23');
     } else {
-      this.ellipse(x, baseY - 1.38 * s, 0.26 * s, 0.22 * s, look.hair);
+      this.ellipse(0, headY - 0.07 * s, 0.26 * s, 0.22 * s, look.hair);
     }
+    c.restore();
   }
 
   hero(model) {
@@ -386,6 +462,7 @@ export class HunterScene {
       leorio: { hair: '#1b1b22', top: '#2c3a72', sleeve: '#2c3a72', pants: '#1f2a56' }
     };
     const look = { ...looks[model.config.character], hero: model.config.character, phase: p.z * 2.6, number: hero.number };
+    const lean = clamp(p.targetLane - p.x, -1, 1);
     const zetsu = model.nen === 'zetsu';
     if (model.godspeed > 0 && !this.reduced) {
       for (let i = 0; i < 5; i++) {
@@ -401,9 +478,9 @@ export class HunterScene {
     }
     c.save();
     if (zetsu) c.globalAlpha = 0.55;
-    this.runner(g.x, g.y, s, look, { slide: p.slide > 0 && p.y <= 0.05, y: p.y });
+    this.runner(g.x, g.y, s, look, { slide: p.slide > 0 && p.y <= 0.05, y: p.y, lean: this.reduced ? 0 : lean, land: this.reduced ? 0 : this.land });
     c.restore();
-    if (model.gyo && !zetsu) { this.ellipse(g.x - 0.1 * s, g.y - 1.3 * s - p.y * s, 0.05 * s, 0.05 * s, '#e9d7ff'); this.ellipse(g.x + 0.1 * s, g.y - 1.3 * s - p.y * s, 0.05 * s, 0.05 * s, '#e9d7ff'); }
+    if (model.gyo && !zetsu) { const eye = g.y - 1.36 * s - p.y * s; this.ellipse(g.x - 0.26 * s, eye, 0.06 * s, 0.05 * s, '#e9d7ff'); this.ellipse(g.x + 0.26 * s, eye, 0.06 * s, 0.05 * s, '#e9d7ff'); }
     if (model.charge > 0 && !this.reduced) {
       const fist = this.project((p.x - 1) * W + 0.5, 1 + p.y, p.z + 0.5);
       const grow = (0.5 - model.charge) / 0.5;
@@ -474,21 +551,50 @@ export class HunterScene {
     c.globalAlpha = 1;
   }
 
+  wisps(model) {
+    if (!model.stage.fog) return;
+    const c = this.c;
+    const spacing = 11, first = Math.floor((this.camZ + 70) / spacing) * spacing;
+    for (let z = first; z > this.camZ + 1; z -= spacing) {
+      const n = Math.round(z / spacing);
+      const drift = this.reduced ? 0 : Math.sin(this.time * 0.6 + n) * 0.8;
+      const g = this.project((noise(n) - 0.5) * 4 + drift, 0.35, z);
+      c.globalAlpha = this.fog(g.d, model) * 0.35;
+      this.ellipse(g.x, g.y, (1.4 + noise(n + 9)) * g.s, 0.3 * g.s, '#d9e2d5');
+    }
+    c.globalAlpha = 1;
+  }
+
+  speedLines(model) {
+    if (this.reduced || !(model.godspeed > 0 || model.speed > model.stage.speed * 1.25)) return;
+    const c = this.c, H = this.H;
+    c.globalAlpha = 0.28;
+    for (let i = 0; i < 14; i++) {
+      const side = i % 2 ? 1 : -1, t = noise(i + Math.floor(this.time * 25));
+      const y = this.horizon - 40 + noise(i * 3) * (H - this.horizon + 60);
+      const x0 = 320 + side * (260 + t * 80), x1 = x0 + side * (40 + t * 60);
+      this.stroke([[x0, y], [x1, y + (y - this.horizon) * 0.08]], '#ffffff', 1.5);
+    }
+    c.globalAlpha = 1;
+  }
+
   draw(model, { dt = 0, reducedMotion = false, preview = false } = {}) {
     if (!this.scale) this.resize();
     if (!this.scale) return;
-    const c = this.c;
+    const c = this.c, H = this.H;
     this.reduced = reducedMotion;
     if (!reducedMotion) this.time += dt;
     this.shake = Math.max(0, this.shake - dt);
+    this.land = Math.max(0, this.land - dt * 4);
     const p = model.p;
     const pal = PALETTES[model.stage.id];
     this.camZ = p.z - CAM_BACK;
     const targetX = (p.x - 1) * W * 0.45;
     this.camX = reducedMotion || !dt ? targetX : lerp(this.camX, targetX, 1 - Math.exp(-dt * 10));
     const jitter = this.shake > 0 && !reducedMotion ? (noise(this.time * 60) - 0.5) * 8 * this.shake : 0;
+    const bob = reducedMotion || model.phase !== 'playing' ? 0 : Math.sin(p.z * 2.6 * 2) * 1.2;
     c.setTransform(this.scale, 0, 0, this.scale, 0, 0);
-    c.translate(jitter, jitter * 0.6);
+    c.translate(jitter, jitter * 0.6 + bob);
     this.backdrop(model, pal);
     this.road(model, pal);
     // Everything with depth is painted far to near.
@@ -496,6 +602,7 @@ export class HunterScene {
     const gaps = visible.filter(o => o.cls === 'gap');
     for (const o of gaps) this.object(o, model, pal);
     this.scenery(model, pal);
+    this.gate(model, pal);
     const behind = visible.filter(o => o.cls !== 'gap' && o.z >= p.z - 0.2), front = visible.filter(o => o.cls !== 'gap' && o.z < p.z - 0.2);
     if (model.stage.id === 'tunnel' || model.stage.id === 'wetlands') this.examiner(model);
     for (const o of behind) this.object(o, model, pal);
@@ -503,24 +610,25 @@ export class HunterScene {
     for (const o of front) this.object(o, model, pal);
     this.pursuer(model);
     this.drawEffects(model, dt);
+    this.wisps(model);
     if (pal.fog) {
-      const fog = c.createLinearGradient(0, HORIZON - 30, 0, HORIZON + 90);
+      const fog = c.createLinearGradient(0, this.horizon - 30, 0, this.horizon + 90);
       fog.addColorStop(0, pal.fog + 'ee'); fog.addColorStop(1, pal.fog + '00');
-      c.fillStyle = fog; c.fillRect(0, 0, 640, HORIZON + 90);
-      c.fillStyle = pal.fog + '22'; c.fillRect(0, 0, 640, 360);
+      c.fillStyle = fog; c.fillRect(0, -20, 640, this.horizon + 110);
+      c.fillStyle = pal.fog + '22'; c.fillRect(0, -20, 640, H + 40);
     }
+    this.speedLines(model);
     if (model.gyo || model.chain > 0) {
-      const tint = c.createRadialGradient(320, 200, 120, 320, 200, 420);
+      const tint = c.createRadialGradient(320, H / 2, H * 0.33, 320, H / 2, H * 1.15);
       tint.addColorStop(0, '#6b3fb800'); tint.addColorStop(1, '#6b3fb855');
-      c.fillStyle = tint; c.fillRect(0, 0, 640, 360);
+      c.fillStyle = tint; c.fillRect(0, -20, 640, H + 40);
     } else if (model.nen === 'zetsu') {
-      c.fillStyle = '#1a243a44'; c.fillRect(0, 0, 640, 360);
+      c.fillStyle = '#1a243a44'; c.fillRect(0, -20, 640, H + 40);
     }
-    const vignette = c.createRadialGradient(320, 190, 160, 320, 190, 420);
+    const vignette = c.createRadialGradient(320, H / 2, H * 0.45, 320, H / 2, H * 1.15);
     vignette.addColorStop(0, '#00000000'); vignette.addColorStop(1, '#00000066');
-    c.fillStyle = vignette; c.fillRect(0, 0, 640, 360);
-    if (preview) { c.fillStyle = '#0b0e1466'; c.fillRect(0, 0, 640, 360); }
+    c.fillStyle = vignette; c.fillRect(0, -20, 640, H + 40);
+    if (preview) { c.fillStyle = '#0b0e1466'; c.fillRect(0, -20, 640, H + 40); }
     c.setTransform(1, 0, 0, 1, 0, 0);
   }
 }
-
