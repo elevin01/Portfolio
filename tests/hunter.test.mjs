@@ -200,23 +200,57 @@ test('the exam rests between phases, demands six points on Zevil Island, and gra
   assert.ok(model.discoveries.includes('satotz'));
   model.continue();
   assert.equal(model.phase, 'playing');
-  model.stageIndex = 3; model.stageStart = model.p.z; model.objects = []; model.stagePoints = 5;
-  model.p.z = model.stageStart + STAGES[3].length - 1;
+  model.stageIndex = 4; model.stageStart = model.p.z; model.objects = []; model.stagePoints = 5;
+  model.p.z = model.stageStart + STAGES[4].length - 1;
   advance(model, 0.2);
   assert.equal(model.phase, 'over');
   assert.match(model.reason, /6 points/);
   const pass = open();
-  pass.stageIndex = 3; pass.stageStart = pass.p.z; pass.objects = []; pass.stagePoints = 6;
-  pass.p.z = pass.stageStart + STAGES[3].length - 1;
+  pass.stageIndex = 4; pass.stageStart = pass.p.z; pass.objects = []; pass.stagePoints = 6;
+  pass.p.z = pass.stageStart + STAGES[4].length - 1;
   advance(pass, 0.2);
   assert.equal(pass.licensed, true);
   assert.equal(pass.lap, 1);
   assert.equal(pass.phase, 'rest');
   const endless = open({ mode: 'endless' });
-  endless.stageIndex = 3; endless.stageStart = endless.p.z; endless.objects = [];
-  endless.p.z = endless.stageStart + STAGES[3].length - 1;
+  endless.stageIndex = 4; endless.stageStart = endless.p.z; endless.objects = [];
+  endless.p.z = endless.stageStart + STAGES[4].length - 1;
   advance(endless, 0.2);
   assert.equal(endless.phase, 'playing', 'Endless never stops for rest cards or quotas');
+});
+
+test('Great Stamps lunge once you are close; the ravine needs an egg lane and the updraft', () => {
+  const forest = empty();
+  forest.stageIndex = 2; forest.stageStart = forest.p.z;
+  const pig = place(forest, 'pig', 1, 40, { vz: -7, zMin: forest.p.z + 32 });
+  advance(forest, 0.5);
+  assert.equal(pig.z, forest.p.z + 40 - forest.speed * 0.5, 'a distant pig holds its ground');
+  forest.p.z = pig.z - 20;
+  advance(forest, 0.5);
+  assert.ok(pig.z < forest.p.z + 20 - forest.speed * 0.5 + 0.1, 'a close pig charges');
+  assert.ok(pig.z >= pig.zMin);
+  forest.moveLane(1); advance(forest, 2);
+  assert.equal(forest.phase, 'playing');
+  assert.ok(forest.discoveries.includes('stamp'));
+  const leap = empty();
+  leap.stageIndex = 2; leap.stageStart = leap.p.z;
+  place(leap, 'cliff', 1, 3, { len: 9.5 });
+  place(leap, 'egg', 1, 6);
+  leap.jump();
+  advance(leap, 1.6);
+  assert.equal(leap.phase, 'playing', 'the egg restarts the jump across the ravine');
+  assert.ok(leap.discoveries.includes('egg'));
+  const fall = empty();
+  fall.stageIndex = 2; fall.stageStart = fall.p.z;
+  place(fall, 'cliff', 1, 3, { len: 9.5 });
+  fall.jump();
+  advance(fall, 1.6);
+  assert.equal(fall.phase, 'over');
+  assert.match(fall.reason, /Split Mountain/);
+  const built = buildStage(STAGES[2], 0, seededRandom(5), {});
+  assert.equal(built.filter(o => o.kind === 'cliff').length, 3);
+  assert.equal(built.filter(o => o.kind === 'egg').length, 2);
+  assert.ok(built.some(o => o.kind === 'pig' && o.vz < 0));
 });
 
 test('every character and difficulty can be piloted through the whole exam, collecting the plates it needs', () => {
@@ -243,9 +277,9 @@ test('generated stages are deterministic, keep hazards readable, and only hide w
   assert.deepEqual(a.map(o => [o.z, o.lane, o.kind]), b.map(o => [o.z, o.lane, o.kind]));
   for (const stage of STAGES) {
     const objects = buildStage(stage, 100, seededRandom(4), {});
-    assert.ok(objects.every(o => o.z >= 140 && o.z < 100 + stage.length));
+    assert.ok(objects.every(o => o.z >= 140 && o.z < 100 + stage.length), stage.id);
     assert.ok(objects.every(o => o.lane >= 0 && o.lane < RUN.lanes));
-    assert.ok(objects.filter(o => o.hidden).every(o => ['soft', 'low', 'high', 'gap', 'wall'].includes(o.cls) && o.kind !== 'door' && o.kind !== 'pillar'));
+    assert.ok(objects.filter(o => o.hidden).every(o => ['soft', 'low', 'high', 'gap', 'wall'].includes(o.cls) && o.kind !== 'door' && o.kind !== 'pillar' && o.kind !== 'cliff'));
   }
   const tunnel = buildStage(STAGES[0], 0, seededRandom(3), { lap: 0 });
   assert.deepEqual([...new Set(tunnel.filter(o => o.tip).map(o => o.tip))].sort(), ['JUMP', 'SLIDE', 'SWITCH LANES'], 'a first tunnel run coaches each move once');
@@ -255,7 +289,7 @@ test('generated stages are deterministic, keep hazards readable, and only hide w
   counting.p.z = STAGES[0].length;
   assert.equal(counting.applicantsLeft, 371);
   assert.equal(open({ mode: 'endless' }).applicantsLeft, null);
-  const island = buildStage(STAGES[3], 0, seededRandom(2), { target: 44 });
+  const island = buildStage(STAGES[4], 0, seededRandom(2), { target: 44 });
   assert.equal(island.filter(o => o.kind === 'target').length, 2);
   assert.ok(island.filter(o => o.kind === 'plate').length >= 6);
   assert.equal(buildStage(STAGES[0], 0, seededRandom(1), {}).some(o => o.kind === 'juice'), true);
@@ -280,5 +314,5 @@ test('pause freezes the run and clears held Nen; corrupt storage is safe; record
   assert.equal(records.scores[recordKey({ ...model.config, mode: 'endless' })], undefined);
   assert.deepEqual(records.discoveries, ['juice']);
   assert.deepEqual(records.plates, [44]);
-  assert.equal(Object.keys(DISCOVERIES).length, 14);
+  assert.equal(Object.keys(DISCOVERIES).length, 16);
 });

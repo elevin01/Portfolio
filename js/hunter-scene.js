@@ -11,9 +11,10 @@ const noise = n => { const v = Math.sin(n * 127.1 + 31.7) * 43758.5453; return v
 
 const PALETTES = {
   tunnel: { sky: ['#1b1a22', '#2a2730'], ground: '#3b3741', groundFar: '#221f27', lane: '#5e5866', wall: '#2d2932', wallDark: '#1d1a22', accent: '#f0c777', fog: null },
-  wetlands: { sky: ['#8ea39a', '#b9c7b6'], ground: '#4b5e4a', groundFar: '#9fb09d', lane: '#64785f', wall: '#2e3f33', wallDark: '#223128', accent: '#c9d8bd', fog: '#aebbac' },
+  wetlands: { sky: ['#8ea39a', '#b9c7b6'], ground: '#3d4f44', groundFar: '#9fb09d', lane: '#6b5b45', wall: '#2e3f33', wallDark: '#2a2219', accent: '#c9d8bd', fog: '#aebbac' },
+  forest: { sky: ['#9ed3a8', '#e6f2c9'], ground: '#3f6b36', groundFar: '#2f5a2e', lane: '#8a7452', wall: '#2f5a33', wallDark: '#4a3a26', accent: '#fff1b0', fog: null },
   tower: { sky: ['#1a1c24', '#2b2e3b'], ground: '#454857', groundFar: '#23252f', lane: '#70748a', wall: '#363948', wallDark: '#24262f', accent: '#ffb55f', fog: null },
-  island: { sky: ['#6fb7e6', '#d6ecf6'], ground: '#6c8f45', groundFar: '#4d7a46', lane: '#8aa85d', wall: '#2f5a33', wallDark: '#234327', accent: '#fff1b0', fog: null }
+  island: { sky: ['#6fb7e6', '#d6ecf6'], ground: '#6c8f45', groundFar: '#4d7a46', lane: '#a08e62', wall: '#2f5a33', wallDark: '#5a4a30', accent: '#fff1b0', fog: null }
 };
 
 export class HunterScene {
@@ -27,6 +28,7 @@ export class HunterScene {
     this.camX = 0;
     this.reduced = false;
     this.land = 0;
+    this.ink = null; this.inkW = 1;
     this.H = 360; this.horizon = 112; this.F = 430; this.camH = 2.4;
   }
 
@@ -83,10 +85,12 @@ export class HunterScene {
     return { x: 320 + (x - this.camX) * s, y: this.horizon + (this.camH - y) * s, s, d };
   }
 
-  fill(points, color) { const c = this.c; c.beginPath(); points.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); c.fillStyle = color; c.fill(); }
+  // While `ink` is set, filled shapes get an outline: the cel-shaded look of the characters and hazards.
+  inked() { const c = this.c; if (!this.ink) return; c.strokeStyle = this.ink; c.lineWidth = this.inkW; c.lineJoin = 'round'; c.stroke(); }
+  fill(points, color, plain = false) { const c = this.c; c.beginPath(); points.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); c.fillStyle = color; c.fill(); if (!plain) this.inked(); }
   stroke(points, color, width = 1, close = false) { const c = this.c; c.beginPath(); points.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); if (close) c.closePath(); c.strokeStyle = color; c.lineWidth = width; c.stroke(); }
-  rect(x, y, w, h, color, radius = 0) { const c = this.c; c.beginPath(); c.roundRect(x, y, w, h, radius); c.fillStyle = color; c.fill(); }
-  ellipse(x, y, rx, ry, color) { const c = this.c; c.beginPath(); c.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), 0, 0, Math.PI * 2); c.fillStyle = color; c.fill(); }
+  rect(x, y, w, h, color, radius = 0, plain = false) { const c = this.c; c.beginPath(); c.roundRect(x, y, w, h, radius); c.fillStyle = color; c.fill(); if (!plain) this.inked(); }
+  ellipse(x, y, rx, ry, color, plain = false) { const c = this.c; c.beginPath(); c.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), 0, 0, Math.PI * 2); c.fillStyle = color; c.fill(); if (!plain) this.inked(); }
   text(t, x, y, size, color, align = 'center', weight = 700) { const c = this.c; c.font = `${weight} ${size}px ui-monospace, SFMono-Regular, Menlo, monospace`; c.textAlign = align; c.textBaseline = 'middle'; c.fillStyle = color; c.fillText(t, x, y); }
 
   // A lane-wide quad on the ground between two depths.
@@ -107,6 +111,9 @@ export class HunterScene {
       c.fillStyle = '#3f87bd'; c.fillRect(0, horizon - 14, 640, 18);
       for (let i = 0; i < 6; i++) this.stroke([[i * 120 - this.camX * 4, horizon - 9 + (i % 3) * 3], [i * 120 + 50 - this.camX * 4, horizon - 9 + (i % 3) * 3]], '#9fd2f0aa', 1);
       for (let i = 0; i < 7; i++) { const x = ((i * 97 + 20) - this.camX * 6) % 700 - 30; this.fill([[x - 70, horizon + 6], [x, horizon - 42 + noise(i) * 20], [x + 80, horizon + 6]], i % 2 ? '#4d8c6a' : '#5f9f74'); }
+    } else if (stage === 'forest') {
+      this.ellipse(140, horizon - 70, 30, 30, '#fff8d6');
+      for (let i = 0; i < 12; i++) { const x = (i * 60 - this.camX * 5) % 700 - 30; this.ellipse(x, horizon - 4 + noise(i) * 8, 42, 26 + noise(i + 2) * 16, i % 2 ? '#4f8f5a' : '#3f7a4c'); }
     } else if (stage === 'wetlands') {
       for (let i = 0; i < 10; i++) { const x = (i * 71 - this.camX * 5) % 680 - 20; this.fill([[x - 30, horizon + 10], [x - 6, horizon - 52 + noise(i) * 30], [x + 4, horizon - 58 + noise(i + 1) * 26], [x + 34, horizon + 10]], '#7f948a'); }
     }
@@ -128,6 +135,49 @@ export class HunterScene {
       if (a.y < this.horizon + 1) continue;
       c.globalAlpha = clamp((FAR - (z - this.camZ)) / FAR, 0, 1) * 0.35;
       this.stroke([[a.x, a.y], [b.x, b.y]], pal.groundFar, 2);
+    }
+    const stage = model.stage.id;
+    // Floor character per stage: lamp pools and tile joints in the tunnel, planks over the swamp,
+    // flagstones in the tower, trodden earth with grass in the forest and on the island.
+    if (stage === 'tunnel' || stage === 'tower') {
+      const pool = stage === 'tunnel' ? 18 : 20;
+      for (let z = Math.floor(near / pool) * pool; z < far; z += pool) {
+        for (const side of [-1, 1]) {
+          const g = this.project(side * 1.5 * W, 0, z);
+          if (g.y < this.horizon + 2) continue;
+          const light = c.createRadialGradient(g.x, g.y, 0, g.x, g.y, 2.4 * g.s);
+          light.addColorStop(0, pal.accent + '33'); light.addColorStop(1, pal.accent + '00');
+          c.fillStyle = light; c.beginPath(); c.ellipse(g.x, g.y, 2.4 * g.s, 0.8 * g.s, 0, 0, Math.PI * 2); c.fill();
+        }
+      }
+      for (let z = Math.floor(near / 2) * 2; z < far; z += 2) {
+        const lane = Math.round(z / 2) % 2 ? -0.5 : 0.5;
+        const a = this.project(lane * W, 0, z), b = this.project(lane * W, 0, z + 2);
+        if (a.y < this.horizon + 2) continue;
+        c.globalAlpha = clamp((70 - (z - this.camZ)) / 70, 0, 1) * 0.3; this.stroke([[a.x, a.y], [b.x, b.y]], pal.groundFar, 1.2);
+      }
+      c.globalAlpha = 1;
+    } else if (stage === 'wetlands') {
+      for (let z = Math.floor(near / 0.9) * 0.9; z < Math.min(far, this.camZ + 60); z += 0.9) {
+        const a = this.project(-edge, 0, z), b = this.project(edge, 0, z);
+        if (a.y < this.horizon + 2) continue;
+        c.globalAlpha = clamp((60 - (z - this.camZ)) / 60, 0, 1) * 0.5; this.stroke([[a.x, a.y], [b.x, b.y]], '#4a3d2e', 1.2);
+      }
+      c.globalAlpha = 1;
+      for (let z = Math.floor(near / 6) * 6; z < far; z += 6) for (const side of [-1, 1]) {
+        const g = this.project(side * (1.5 * W + 1.6 + noise(z + side) * 1.5), 0, z);
+        if (g.y > this.horizon + 2) this.ellipse(g.x, g.y, 0.8 * g.s, 0.12 * g.s, '#c4d4c655', true);
+      }
+    } else {
+      for (let z = Math.floor(near / 3) * 3; z < Math.min(far, this.camZ + 70); z += 3) for (let i = 0; i < 3; i++) {
+        const g = this.project(-edge + noise(z * 3 + i) * 2 * edge, 0, z + noise(z + i) * 3);
+        if (g.y > this.horizon + 2) this.ellipse(g.x, g.y, 0.12 * g.s, 0.07 * g.s, stage === 'island' ? '#7d6c45' : '#5f4f36', true);
+      }
+      for (let z = Math.floor(near / 2.5) * 2.5; z < Math.min(far, this.camZ + 80); z += 2.5) for (const side of [-1, 1]) {
+        const g = this.project(side * (1.5 * W + 0.35), 0, z + noise(z * 7 + side) * 2);
+        if (g.y < this.horizon + 2) continue;
+        for (let k = -1; k <= 1; k++) this.stroke([[g.x + k * 0.08 * g.s, g.y], [g.x + k * 0.16 * g.s, g.y - 0.3 * g.s]], stage === 'island' ? '#6fa150' : '#5c9a4a', 0.05 * g.s);
+      }
     }
     // Phase 1 ends on the long staircase out of the tunnel.
     if (model.stage.id === 'tunnel') {
@@ -166,7 +216,7 @@ export class HunterScene {
   // Side scenery at repeating world positions, drawn far to near together with the walls.
   scenery(model, pal) {
     const c = this.c, stage = model.stage.id;
-    const spacing = stage === 'tunnel' ? 9 : stage === 'tower' ? 10 : 7;
+    const spacing = stage === 'tunnel' ? 9 : stage === 'tower' ? 10 : stage === 'forest' ? 8 : 7;
     const first = Math.floor((this.camZ + FAR) / spacing) * spacing;
     for (let z = first; z > this.camZ - spacing; z -= spacing) {
       const n = Math.round(z / spacing);
@@ -184,6 +234,11 @@ export class HunterScene {
           const far = this.project(x + side * 2.4, wall, z + spacing), farNear = this.project(x + side * 2.4, wall, z);
           this.fill([[base.x, base.y], [next.x, next.y], [nextTop.x, nextTop.y], [top.x, top.y]], n % 2 ? pal.wall : pal.wallDark);
           this.fill([[top.x, top.y], [nextTop.x, nextTop.y], [far.x, far.y], [farNear.x, farNear.y]], pal.wallDark);
+          if (s > 7) {
+            // Mortar lines keep the walls reading as stone at every depth.
+            for (let h = 0.7; h < wall; h += 0.7) { const a = this.project(x, h, z), b = this.project(x, h, z + spacing); this.stroke([[a.x, a.y], [b.x, b.y]], '#00000033', 1); }
+            for (let k = 0.5; k < spacing; k += spacing / 3) { const a = this.project(x, 0, z + k), b = this.project(x, wall, z + k); this.stroke([[a.x, a.y], [b.x, b.y]], '#00000022', 1); }
+          }
           this.rect(top.x - 0.2 * s, top.y, 0.4 * s, base.y - top.y, pal.wallDark);
           if (n % 2 === 0) {
             const lamp = this.project(x - side * 0.35, 2.4, z);
@@ -204,6 +259,13 @@ export class HunterScene {
           this.stroke([[mid.x, mid.y], [mid.x + side * 0.9 * s, mid.y - 0.6 * s]], '#2c3a2f', 0.1 * s);
           for (let k = 0; k < 4; k++) this.ellipse(trunkTop.x + (noise(n * 3 + k) - 0.5) * 0.8 * s, trunkTop.y + (noise(n + k * 5) - 0.6) * 0.4 * s, 0.3 * s, 0.2 * s, k % 2 ? '#33483a' : '#2b3e31');
           if (n % 3 === 0) this.ellipse(this.project(x - side * 0.6, 0, z).x, base.y, 0.5 * s, 0.12 * s, '#8aa49c66');
+        } else if (stage === 'forest') {
+          // Visca Forest Preserve: broad trunks, layered canopies, ferns at the roots.
+          const top = this.project(x + side * 0.3, 4.2 + noise(n) * 1.5, z);
+          this.stroke([[base.x, base.y], [top.x, top.y]], '#4a3a26', 0.42 * s);
+          this.stroke([[base.x + side * 0.1 * s, base.y], [top.x + side * 0.08 * s, top.y]], '#6b5236', 0.14 * s);
+          for (let k = 0; k < 4; k++) this.ellipse(top.x + (noise(n * 5 + k) - 0.5) * 2.2 * s, top.y + (noise(n + k * 3) - 0.7) * 0.9 * s, (0.9 + noise(k + n) * 0.4) * s, 0.55 * s, k % 2 ? '#3f8a46' : '#2f6e3a', true);
+          for (let k = -2; k <= 2; k++) this.stroke([[base.x, base.y], [base.x + k * 0.3 * s + side * 0.4 * s, base.y - (0.5 + Math.abs(k) * 0.08) * s]], '#5fae5a', 0.08 * s);
         } else {
           const top = this.project(x + side * 0.4, 3.6 + noise(n) * 1.2, z);
           this.stroke([[base.x, base.y], [top.x, top.y]], '#6b5339', 0.2 * s);
@@ -246,10 +308,50 @@ export class HunterScene {
     }
     const k = o.kind;
     const half = 0.46 * W * s;
-    if (k === 'applicant' || k === 'hunter') this.runner(g.x, g.y, s, { hair: k === 'hunter' ? '#2a2a2a' : ['#4a3a2c', '#7a5b3c', '#1f2528'][o.number % 3], top: k === 'hunter' ? '#5a3e3e' : ['#6c7a8a', '#8a6c5b', '#56705f'][o.number % 3], number: o.number, phase: (this.reduced ? 0 : this.time * 9) + o.number });
+    this.ink = o.cls === 'gap' ? null : '#1a1518'; this.inkW = Math.max(0.7, 0.045 * s);
+    if (k === 'pig') {
+      // A Great Stamp, head on: Buhara's dinner, charging.
+      const charging = o.z > o.zMin;
+      const bounce = charging && !this.reduced ? Math.abs(Math.sin(this.time * 14)) * 0.08 * s : 0;
+      this.ellipse(g.x, g.y - 0.05 * s, half * 1.2, 0.3 * s, '#00000040', true);
+      this.ellipse(g.x, g.y - 0.95 * s - bounce, half * 1.15, 0.85 * s, '#b47c6c');
+      for (const side of [-1, 1]) { this.ellipse(g.x + side * 0.55 * s, g.y - 0.15 * s - bounce * 0.5, 0.16 * s, 0.14 * s, '#7a5248'); this.fill([[g.x + side * 0.75 * s, g.y - 1.65 * s - bounce], [g.x + side * 0.95 * s, g.y - 2.15 * s - bounce], [g.x + side * 0.45 * s, g.y - 1.75 * s - bounce]], '#9d6a5e'); }
+      this.ellipse(g.x, g.y - 1.15 * s - bounce, half * 0.95, 0.7 * s, '#c38c7b');
+      this.ellipse(g.x, g.y - 0.85 * s - bounce, 0.42 * s, 0.3 * s, '#e3a39a');
+      this.ellipse(g.x - 0.14 * s, g.y - 0.85 * s - bounce, 0.06 * s, 0.09 * s, '#5b3a36', true); this.ellipse(g.x + 0.14 * s, g.y - 0.85 * s - bounce, 0.06 * s, 0.09 * s, '#5b3a36', true);
+      for (const side of [-1, 1]) this.fill([[g.x + side * 0.42 * s, g.y - 0.75 * s - bounce], [g.x + side * 0.62 * s, g.y - 0.45 * s - bounce], [g.x + side * 0.3 * s, g.y - 0.65 * s - bounce]], '#f3ead9');
+      for (const side of [-1, 1]) { this.ellipse(g.x + side * 0.32 * s, g.y - 1.4 * s - bounce, 0.11 * s, 0.1 * s, '#f6f0e4'); this.ellipse(g.x + side * 0.3 * s, g.y - 1.4 * s - bounce, 0.05 * s, 0.06 * s, '#1a1518', true); this.stroke([[g.x + side * 0.15 * s, g.y - 1.62 * s - bounce], [g.x + side * 0.48 * s, g.y - 1.5 * s - bounce]], '#1a1518', 0.06 * s); }
+    } else if (k === 'stump') {
+      this.ellipse(g.x, g.y - 0.05 * s, half * 0.9, 0.22 * s, '#00000040', true);
+      this.rect(g.x - half * 0.7, g.y - 0.62 * s, half * 1.4, 0.62 * s, '#6e5236', 0.06 * s);
+      this.ellipse(g.x, g.y - 0.62 * s, half * 0.7, 0.22 * s, '#c9a876');
+      this.ellipse(g.x, g.y - 0.62 * s, half * 0.4, 0.12 * s, '#b0905f', true);
+    } else if (k === 'web') {
+      const top = g.y - 3.4 * s;
+      for (let i = 0; i < 4; i++) { const x = g.x - half * 0.9 + i * half * 0.6; this.stroke([[x, top], [x + (i % 2 ? 0.1 : -0.1) * s, g.y - 1.1 * s]], '#f1f0e6', 0.05 * s); }
+      for (let r = 1; r <= 3; r++) this.stroke([[g.x - half * 0.9 + r * 0.12 * s, top + r * 0.3 * s], [g.x, top + r * 0.42 * s], [g.x + half * 0.9 - r * 0.12 * s, top + r * 0.3 * s]], '#f1f0e6', 0.04 * s);
+      this.stroke([[g.x - half, g.y - 1.1 * s], [g.x + half, g.y - 1.1 * s]], '#f1f0e6', 0.07 * s);
+      this.ellipse(g.x + half * 0.5, g.y - 1.35 * s, 0.12 * s, 0.09 * s, '#2a2a30');
+    } else if (k === 'egg') {
+      const sway = this.reduced ? 0 : Math.sin(this.time * 2 + o.lane) * 0.06 * s;
+      this.stroke([[g.x, g.y - 3.4 * s], [g.x + sway, g.y - 1.45 * s]], '#f1f0e6', 0.05 * s);
+      const glow = c.createRadialGradient(g.x + sway, g.y - 1.1 * s, 0, g.x + sway, g.y - 1.1 * s, 0.9 * s);
+      glow.addColorStop(0, '#dff3ff77'); glow.addColorStop(1, '#dff3ff00'); c.fillStyle = glow; c.fillRect(g.x - s, g.y - 2.1 * s, 2 * s, 2 * s);
+      this.ellipse(g.x + sway, g.y - 1.1 * s, 0.27 * s, 0.36 * s, '#f6f3ea');
+      for (let i = 0; i < 4; i++) this.ellipse(g.x + sway + (noise(i + o.lane) - 0.5) * 0.3 * s, g.y - 1.1 * s + (noise(i + 7) - 0.5) * 0.4 * s, 0.04 * s, 0.03 * s, '#8fb4d8', true);
+    } else if (k === 'cliff') {
+      this.ink = null;
+      this.groundQuad(o.lane, o.z, o.z + o.len, '#2a2622', 0.02);
+      this.groundQuad(o.lane, o.z + 0.6, o.z + o.len - 0.6, '#14110f', 0.12);
+      const rim = this.project((o.lane - 1) * W, 0, o.z), far = this.project((o.lane - 1) * W, 0, o.z + o.len);
+      this.stroke([[rim.x - half, rim.y], [rim.x + half, rim.y]], '#b9a680', 0.08 * s);
+      this.stroke([[far.x - half * far.s / s, far.y], [far.x + half * far.s / s, far.y]], '#7f7257', 0.06 * far.s);
+      const mist = this.project((o.lane - 1) * W, 0, o.z + o.len * 0.5);
+      this.ellipse(mist.x, mist.y, half * 0.9 * mist.s / s, 0.2 * mist.s, '#c9d3d088', true);
+    } else if (k === 'applicant' || k === 'hunter') this.runner(g.x, g.y, s, { hair: k === 'hunter' ? '#2a2a2a' : ['#4a3a2c', '#7a5b3c', '#1f2528'][o.number % 3], top: k === 'hunter' ? '#5a3e3e' : ['#6c7a8a', '#8a6c5b', '#56705f'][o.number % 3], number: o.number, phase: (this.reduced ? 0 : this.time * 9) + o.number });
     else if (k === 'lugger') {
       // Revealed: the ape behind the applicant's silhouette.
-      this.ellipse(g.x, g.y - 0.15 * s, 0.45 * s, 0.2 * s, '#00000033');
+      this.ellipse(g.x, g.y - 0.15 * s, 0.45 * s, 0.2 * s, '#00000033', true);
       this.rect(g.x - 0.42 * s, g.y - 1.25 * s, 0.84 * s, 1.15 * s, '#5b4332', 0.3 * s);
       this.ellipse(g.x, g.y - 1.45 * s, 0.34 * s, 0.3 * s, '#6b4f3a');
       this.ellipse(g.x, g.y - 1.4 * s, 0.22 * s, 0.17 * s, '#c9a98d');
@@ -271,7 +373,7 @@ export class HunterScene {
       if (k === 'branch') for (let i = 0; i < 4; i++) this.ellipse(g.x - half + i * half * 0.66, g.y - 1.5 * s, 0.3 * s, 0.18 * s, '#3f8a46');
     } else if (k === 'pillar' || k === 'door' || k === 'tree' || k === 'boulder') {
       if (k === 'boulder') {
-        this.ellipse(g.x, g.y - 0.05 * s, half * 1.05, 0.25 * s, '#00000040');
+        this.ellipse(g.x, g.y - 0.05 * s, half * 1.05, 0.25 * s, '#00000040', true);
         this.ellipse(g.x, g.y - 0.75 * s, half, 0.8 * s, '#777a74');
         this.ellipse(g.x - 0.2 * s, g.y - 0.95 * s, half * 0.6, 0.45 * s, '#8f928b');
       } else if (k === 'tree') {
@@ -286,7 +388,7 @@ export class HunterScene {
         else for (let i = 0; i < 4; i++) this.stroke([[g.x - half + 0.1 * s, g.y - (0.7 + i * 0.75) * s], [g.x + half - 0.1 * s, g.y - (0.7 + i * 0.75) * s]], '#2a252e', 0.05 * s);
       }
     } else if (k === 'log' || k === 'trunk') {
-      this.ellipse(g.x, g.y - 0.05 * s, half * 1.1, 0.2 * s, '#00000040');
+      this.ellipse(g.x, g.y - 0.05 * s, half * 1.1, 0.2 * s, '#00000040', true);
       this.rect(g.x - half * 1.1, g.y - 0.6 * s, half * 2.2, 0.55 * s, k === 'log' ? '#5a4231' : '#8a6a44', 0.25 * s);
       this.ellipse(g.x + half * 1.1, g.y - 0.32 * s, 0.14 * s, 0.26 * s, '#c7a57a');
     } else if (k === 'vine') {
@@ -301,7 +403,7 @@ export class HunterScene {
       if (k === 'ravine') this.groundQuad(o.lane, o.z + 0.3, o.z + o.len - 0.3, '#0e0d0b', 0.25);
       if (k === 'mud') { const mid = this.project((o.lane - 1) * W, 0, o.z + o.len / 2); this.ellipse(mid.x + 0.3 * s, mid.y, 0.2 * s, 0.07 * s, '#5c5243'); }
     } else if (k === 'hippo') {
-      this.ellipse(g.x, g.y - 0.05 * s, half * 1.1, 0.3 * s, '#00000040');
+      this.ellipse(g.x, g.y - 0.05 * s, half * 1.1, 0.3 * s, '#00000040', true);
       this.ellipse(g.x, g.y - 0.55 * s, half * 1.05, 0.55 * s, '#5c5560');
       this.ellipse(g.x, g.y - 1.1 * s, half * 0.95, 0.5 * s, '#c96f88');
       this.ellipse(g.x, g.y - 1.65 * s, half * 1.05, 0.45 * s, '#6d6471');
@@ -324,12 +426,12 @@ export class HunterScene {
         const x = g.x + Math.sin(t + i * 1.7) * half * 0.8, y = g.y - 1.25 * s + Math.cos(t * 1.3 + i) * 0.25 * s;
         this.ellipse(x, y, 0.07 * s, 0.05 * s, i % 2 ? '#f2c94c' : '#2b2b2b');
       }
-      this.ellipse(g.x, g.y - 1.25 * s, half, 0.35 * s, '#f2c94c22');
+      this.ellipse(g.x, g.y - 1.25 * s, half, 0.35 * s, '#f2c94c22', true);
     } else if (k === 'plate' || k === 'target') {
       const bob = this.reduced ? 0 : Math.sin(this.time * 3 + o.z) * 0.05 * s;
       const y = g.y - 0.8 * s + bob;
       if (k === 'target') { const glow = c.createRadialGradient(g.x, y, 0, g.x, y, 0.9 * s); glow.addColorStop(0, '#ffd86b66'); glow.addColorStop(1, '#ffd86b00'); c.fillStyle = glow; c.fillRect(g.x - s, y - s, 2 * s, 2 * s); }
-      this.ellipse(g.x, g.y - 0.02 * s, 0.22 * s, 0.07 * s, '#00000030');
+      this.ellipse(g.x, g.y - 0.02 * s, 0.22 * s, 0.07 * s, '#00000030', true);
       this.rect(g.x - 0.28 * s, y - 0.22 * s, 0.56 * s, 0.44 * s, k === 'target' ? '#f5cf5c' : '#e6e1d2', 0.08 * s);
       this.rect(g.x - 0.24 * s, y - 0.18 * s, 0.48 * s, 0.36 * s, k === 'target' ? '#fff0b0' : '#f8f5ea', 0.06 * s);
       if (s > 18) this.text(String(o.number), g.x, y, Math.max(4, 0.24 * s), '#2a2d36');
@@ -349,16 +451,21 @@ export class HunterScene {
     if (o.tip && g.d < 45 && s > 9) {
       // First-run coaching: the first hazard of each kind in the tunnel says what to do.
       const bob = this.reduced ? 0 : Math.sin(this.time * 4) * 0.08 * s;
-      const y = g.y - (o.cls === 'high' ? 2.3 : 1.9) * s + bob, w = (o.tip.length * 0.19 + 0.5) * s;
+      const y = g.y - (o.cls === 'high' ? 2.3 : o.kind === 'egg' ? 2.1 : 1.9) * s + bob, w = (o.tip.length * 0.19 + 0.5) * s;
       c.globalAlpha = Math.min(1, alpha * 2);
       this.rect(g.x - w / 2, y - 0.26 * s, w, 0.52 * s, '#15131aee', 0.1 * s);
       this.fill([[g.x - 0.12 * s, y + 0.26 * s], [g.x + 0.12 * s, y + 0.26 * s], [g.x, y + 0.45 * s]], '#15131aee');
       this.text(o.tip, g.x, y, Math.max(4, 0.3 * s), pal.accent);
     }
+    this.ink = null;
     c.restore();
   }
 
-  seg(ax, ay, bx, by, width, color) { const c = this.c; c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.strokeStyle = color; c.lineWidth = width; c.lineCap = 'round'; c.stroke(); c.lineCap = 'butt'; }
+  seg(ax, ay, bx, by, width, color) {
+    const c = this.c; c.lineCap = 'round';
+    if (this.ink) { c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.strokeStyle = this.ink; c.lineWidth = width + this.inkW * 2; c.stroke(); }
+    c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.strokeStyle = color; c.lineWidth = width; c.stroke(); c.lineCap = 'butt';
+  }
 
   // A runner seen from behind. `look` sets hair, top, sleeve and pants colours, a plate number and the
   // stride phase; `pose` carries the hero's lift, lean, landing squash and slide. Limbs are two-segment
@@ -368,7 +475,9 @@ export class HunterScene {
     const phase = look.phase || 0;
     const lift = pose.y || 0, lean = pose.lean || 0, land = pose.land || 0;
     const skin = look.skin || '#e5bb9a', pants = look.pants || '#2b2f3a', sleeve = look.sleeve || look.top;
-    this.ellipse(x, y - 0.03 * s, 0.34 * s * (1 - lift * 0.3), 0.11 * s, '#00000045');
+    const outerInk = this.ink;
+    this.ellipse(x, y - 0.03 * s, 0.34 * s * (1 - lift * 0.3), 0.11 * s, '#00000045', true);
+    this.ink = '#1a1518'; this.inkW = Math.max(0.7, 0.05 * s);
     c.save();
     c.translate(x, y - lift * s);
     c.scale(1 + land * 0.12, 1 - land * 0.18);
@@ -382,6 +491,7 @@ export class HunterScene {
       this.ellipse(0, -0.78 * s, 0.24 * s, 0.22 * s, skin);
       this.ellipse(0, -0.86 * s, 0.26 * s, 0.2 * s, look.hair);
       c.restore();
+      this.ink = outerInk;
       return;
     }
     c.rotate(lean * 0.22);
@@ -398,8 +508,9 @@ export class HunterScene {
       this.seg(kneeX, kneeY, hipX + side * 0.02 * s, footY - 0.04 * s, 0.15 * s, pants);
       this.ellipse(hipX + side * 0.02 * s, footY - 0.03 * s, 0.1 * s, 0.06 * s, look.shoes || '#1c1b22');
     }
-    // Torso and arms.
+    // Torso and arms, with the light from the left so the right side sits in shadow.
     this.rect(-0.31 * s, hipY - 0.56 * s, 0.62 * s, 0.6 * s, look.top, 0.13 * s);
+    this.rect(0.02 * s, hipY - 0.54 * s, 0.27 * s, 0.56 * s, '#0000002a', [0, 0.11 * s, 0.11 * s, 0], true);
     for (const side of [-1, 1]) {
       const swing = Math.sin(phase + (side < 0 ? Math.PI : 0));
       const shoulderX = side * 0.33 * s, shoulderY = hipY - 0.48 * s;
@@ -449,6 +560,7 @@ export class HunterScene {
       this.ellipse(0, headY - 0.07 * s, 0.26 * s, 0.22 * s, look.hair);
     }
     c.restore();
+    this.ink = outerInk;
   }
 
   hero(model) {
@@ -475,6 +587,22 @@ export class HunterScene {
       const col = model.gyo ? '#b78bff' : hero.color;
       aura.addColorStop(0, col + (model.charge > 0 ? '77' : '33')); aura.addColorStop(1, col + '00');
       c.fillStyle = aura; c.fillRect(g.x - 1.2 * s, g.y - 2.2 * s - p.y * s, 2.4 * s, 2.6 * s);
+    }
+    if (!zetsu && !this.reduced && model.phase === 'playing') {
+      // Ten: a few motes of aura drifting up around the body.
+      for (let i = 0; i < 4; i++) {
+        const t = (this.time * 0.9 + i * 0.25) % 1;
+        const mx = g.x + Math.sin(this.time * 3 + i * 1.7) * 0.42 * s, my = g.y - (0.2 + t * 1.5 + p.y) * s;
+        c.globalAlpha = (1 - t) * 0.7; this.ellipse(mx, my, 0.05 * s, 0.05 * s, model.gyo ? '#d9c3ff' : hero.color, true);
+      }
+      c.globalAlpha = 1;
+    }
+    if (model.updraft > 0 && !this.reduced) {
+      for (let i = 0; i < 8; i++) {
+        const t = (this.time * 2.5 + i * 0.13) % 1, ux = g.x + (i - 3.5) * 0.3 * s;
+        c.globalAlpha = 0.5 * (1 - t); this.stroke([[ux, g.y + 0.3 * s - t * 2.4 * s], [ux, g.y + 0.3 * s - (t + 0.18) * 2.4 * s]], '#dff3ff', 0.06 * s);
+      }
+      c.globalAlpha = 1;
     }
     c.save();
     if (zetsu) c.globalAlpha = 0.55;
@@ -531,7 +659,7 @@ export class HunterScene {
         e.x += e.vx * dt; e.y += e.vy * dt; e.vy -= 3 * dt;
         const g = this.project(e.x, e.y, e.z);
         c.globalAlpha = 1 - t;
-        this.ellipse(g.x, g.y, 0.08 * g.s, 0.08 * g.s, e.color);
+        this.ellipse(g.x, g.y, 0.045 * g.s, 0.045 * g.s, e.color, true);
       } else if (e.type === 'ring') {
         const g = this.project((e.lane - 1) * W, 0.8, e.z);
         c.globalAlpha = 1 - t; c.beginPath(); c.ellipse(g.x, g.y, (0.3 + t * 1.4) * g.s, (0.3 + t * 1.4) * g.s * 0.8, 0, 0, Math.PI * 2); c.strokeStyle = e.color; c.lineWidth = 3; c.stroke();
@@ -559,8 +687,8 @@ export class HunterScene {
       const n = Math.round(z / spacing);
       const drift = this.reduced ? 0 : Math.sin(this.time * 0.6 + n) * 0.8;
       const g = this.project((noise(n) - 0.5) * 4 + drift, 0.35, z);
-      c.globalAlpha = this.fog(g.d, model) * 0.35;
-      this.ellipse(g.x, g.y, (1.4 + noise(n + 9)) * g.s, 0.3 * g.s, '#d9e2d5');
+      c.globalAlpha = this.fog(g.d, model) * 0.2;
+      this.ellipse(g.x, g.y, (0.9 + noise(n + 9) * 0.6) * g.s, 0.16 * g.s, '#d9e2d5', true);
     }
     c.globalAlpha = 1;
   }

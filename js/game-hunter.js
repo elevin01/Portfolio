@@ -21,12 +21,19 @@ root.innerHTML = `
   </div>
   <div class="hn-layout">
     <div class="hn-stage">
-      <canvas id="hunterCanvas" tabindex="0" aria-label="Hunter Exam runner play area" aria-describedby="hunterInstructions">Arrow keys change lanes, jump, and slide. Hold Z for Zetsu, X for Gyo, press C for your Hatsu.</canvas>
+      <canvas id="hunterCanvas" tabindex="0" aria-label="Hunter Exam runner play area" aria-describedby="hunterInstructions">Arrow keys change lanes, jump, and slide; swipe on touch screens. Hold Z for Zetsu, X for Gyo, press C for your Hatsu.</canvas>
       <div class="hn-hud" aria-hidden="true">
         <div class="hn-hud-stage"><span id="hunterPhase">PHASE 1</span><strong id="hunterStageName">Zaban Tunnel</strong><i class="hn-progress"><b id="hunterProgress"></b></i><span id="hunterApplicants">404 APPLICANTS LEFT</span></div>
         <div class="hn-hud-plates"><strong id="hunterPlates">0</strong><span id="hunterPlatesLabel">plates</span></div>
         <div id="hunterWarning" class="hn-warning" hidden>♠ Hisoka is right behind you</div>
         <div class="hn-hud-aura"><span id="hunterNenState">TEN</span><i><b id="hunterAuraBar"></b></i><span id="hunterAuraValue">100</span></div>
+      </div>
+      <div class="hn-abilities" role="group" aria-label="Nen techniques">
+        <div class="hn-abilities-left">
+          <button class="hn-ability" data-nen="zetsu" aria-pressed="false">${icon('zetsu')}<kbd>Z</kbd><small>ZETSU</small><i class="hn-ability-state" data-nen-state>Ready</i></button>
+          <button class="hn-ability" data-nen="gyo" aria-pressed="false">${icon('gyo')}<kbd>X</kbd><small>GYO</small><i class="hn-ability-state" data-nen-state>Ready</i></button>
+        </div>
+        <button class="hn-ability hn-hatsu" data-nen="hatsu" style="--hero:${model.hero.color}">${icon('hatsu')}<kbd>C</kbd><small id="hunterHatsuName">Hatsu</small><i class="hn-ability-state" data-nen-state>Ready</i></button>
       </div>
       <div id="hunterToast" class="hn-toast" aria-hidden="true"></div>
       <div id="hunterOverlay" class="hn-overlay" data-phase="ready">
@@ -57,15 +64,8 @@ root.innerHTML = `
         <p id="hunterSetupRecord" class="hn-setup-record"></p>
       </div>
       <div id="hunterLive" class="hn-live" hidden>
-        <div class="hn-nen" role="group" aria-label="Nen techniques">
-          <button class="hn-nen-button" data-nen="zetsu"><span class="hn-nen-top">${icon('zetsu')}<kbd>Z</kbd></span><strong>Zetsu</strong><span>Hold · vanish, recover, no defence</span><i class="hn-nen-state" data-nen-state>Ready</i></button>
-          <button class="hn-nen-button" data-nen="gyo"><span class="hn-nen-top">${icon('gyo')}<kbd>X</kbd></span><strong>Gyo</strong><span>Hold · see through In</span><i class="hn-nen-state" data-nen-state>Ready</i></button>
-          <button class="hn-nen-button hn-hatsu" data-nen="hatsu" style="--hero:${model.hero.color}"><span class="hn-nen-top">${icon('hatsu')}<kbd>C</kbd></span><strong id="hunterHatsuName">Hatsu</strong><span id="hunterHatsuAction"></span><i class="hn-nen-state" data-nen-state>Ready</i><em class="hn-nen-progress"></em></button>
-        </div>
-        <div class="hn-run-buttons" role="group" aria-label="Movement">
-          <button data-run="left" aria-label="Left lane">${icon('left')}</button><button data-run="jump" aria-label="Jump">${icon('up')}</button><button data-run="slide" aria-label="Slide">${icon('down')}</button><button data-run="right" aria-label="Right lane">${icon('right')}</button>
-        </div>
-        <p id="hunterInstructions" class="hn-instructions"><span class="hn-keyboard-hint">← → lanes · ↑ jump · ↓ slide · hold Z / X · C Hatsu · P pause</span><span class="hn-touch-hint">Swipe to move. Hold the Nen buttons.</span></p>
+        <div class="hn-kit hn-kit-live"><strong id="hunterLiveHatsu"></strong><p id="hunterHatsuAction"></p><small id="hunterLivePassive"></small></div>
+        <p id="hunterInstructions" class="hn-instructions"><span class="hn-keyboard-hint">← → lanes · ↑ jump · ↓ slide · hold Z Zetsu · hold X Gyo · C Hatsu · P pause</span><span class="hn-touch-hint">Swipe left or right for lanes, up to jump, down to slide. Hold the Nen buttons.</span></p>
         <div class="hn-tip"><span class="hn-eyebrow" id="hunterTipTag">FIELD NOTE</span><p id="hunterTip"></p></div>
       </div>
     </div>
@@ -102,7 +102,6 @@ const log = byId('hunterLog');
 const toast = byId('hunterToast');
 const status = byId('hunterStatus');
 const nenButtons = [...root.querySelectorAll('[data-nen]')];
-const runButtons = [...root.querySelectorAll('[data-run]')];
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const save = () => { try { localStorage.setItem(HUNTER_STORAGE, JSON.stringify(records)); } catch { /* Keep records for this visit. */ } };
 const rememberRun = () => { remember(records, model); save(); };
@@ -149,6 +148,7 @@ let swipe = null;
 const TIPS = {
   tunnel: ['Keep up with Satotz. Other applicants are not obstacles if you don’t run into them.', 'Free juice by the tunnel wall? Think about who’s offering.'],
   wetlands: ['The fog hides what In hides. Flash Gyo before each blind stretch.', 'If Hisoka turns up, run clean or stop your aura. Not both.'],
+  forest: ['Great Stamps charge the lane you are in. Change it before they arrive.', 'The ravine is too wide for one jump. Jump into an egg lane and the updraft takes you up.'],
   tower: ['Lippo’s doors read MAJORITY. Take the side they leave open.', 'A trapdoor is a jump, a blade is a slide. Spikes are a jump.'],
   island: ['Six points. Your target’s plate glows gold.', 'Another applicant wants your plate. Keep your distance.']
 };
@@ -171,6 +171,7 @@ function events() {
     else if (e.type === 'pursuer') say('Hisoka is behind you. One more stumble and he has you.', '#ff9aa8');
     else if (e.type === 'escape') say(e.zetsu ? 'Zetsu. Hisoka walked past without noticing.' : 'Hisoka lost interest.', '#d7c6ff');
     else if (e.type === 'juice') say(e.immune ? 'Tonpa’s juice. Tastes fine, Killua.' : 'Tonpa’s juice. That was a laxative.', e.immune ? '#bde8ff' : '#b8e39a');
+    else if (e.type === 'egg') say('Spider Eagle egg. The updraft has you.', '#cfe9ff');
     else if (e.type === 'wager') say(e.won ? 'Leroute’s coin landed your way · +5 points' : 'Leroute’s coin. You lost fifty hours and thirty aura.', e.won ? '#ffd86b' : '#f0b8a0');
     else if (e.type === 'cast') say(model.hero.hatsu, model.hero.color);
     else if (e.type === 'unavailable') say(e.reason, '#ecc5a0');
@@ -187,6 +188,13 @@ function events() {
       text(status, e.type === 'ko' ? `Run over. ${model.reason}` : `${STAGES.find(s => s.id === e.stage).name} cleared.`);
     }
   }
+}
+
+// The verdict card lists the notes this run produced; ones nobody had found before are starred.
+let knownAtStart = new Set(records.discoveries);
+function runNotes() {
+  if (!model.discoveries.length) return '';
+  return `<div class="hn-run-notes"><span>NOTES THIS RUN</span>${model.discoveries.map(id => `<b class="${knownAtStart.has(id) ? '' : 'is-new'}">${knownAtStart.has(id) ? '' : '✦ '}${DISCOVERIES[id].name}</b>`).join('')}</div>`;
 }
 
 function refreshLog() {
@@ -246,20 +254,20 @@ function refresh(focusOverlay = true) {
   pauseButton.setAttribute('aria-pressed', String(model.phase === 'paused'));
   soundButton.setAttribute('aria-pressed', String(records.sound));
   soundButton.setAttribute('aria-label', records.sound ? 'Mute sound' : 'Enable sound');
-  for (const b of runButtons) b.disabled = !playing;
-  const hatsu = byId('hunterHatsuName');
-  text(hatsu, model.hero.hatsu);
+  text(byId('hunterHatsuName'), model.hero.hatsu.split(':')[0].toUpperCase());
+  text(byId('hunterLiveHatsu'), `${model.hero.hatsu} · ${model.hero.cost} aura · ${model.hero.cooldown}s`);
   text(byId('hunterHatsuAction'), model.hero.action);
+  text(byId('hunterLivePassive'), model.hero.passive);
   root.querySelector('.hn-hatsu').style.setProperty('--hero', model.hero.color);
   for (const b of nenButtons) {
     const key = b.dataset.nen;
     b.disabled = !playing;
     let state, pressed = false;
-    if (key === 'zetsu') { pressed = model.nen === 'zetsu'; state = pressed ? 'Aura stopped' : 'Ready'; }
-    else if (key === 'gyo') { pressed = model.gyo; state = model.nen === 'zetsu' ? 'Needs aura flow' : pressed ? `Seeing · −${model.hero.key === 'chain' ? RUN.gyoDrain / 2 : RUN.gyoDrain}/s` : 'Ready'; }
+    if (key === 'zetsu') { pressed = model.nen === 'zetsu'; state = pressed ? 'Hidden' : 'Hold'; }
+    else if (key === 'gyo') { pressed = model.gyo; state = model.nen === 'zetsu' ? 'No aura' : pressed ? `−${model.hero.key === 'chain' ? RUN.gyoDrain / 2 : RUN.gyoDrain}/s` : 'Hold'; }
     else {
       const unavailable = model.availability();
-      state = unavailable || `${model.hero.cost} aura`;
+      state = unavailable || `${model.hero.cost}`;
       b.setAttribute('aria-disabled', String(!!unavailable && playing));
       const active = model.godspeed > 0 ? model.godspeed / 3.5 : model.chain > 0 ? model.chain / 7 : 0;
       b.dataset.state = active ? 'active' : model.cooldown > 0 ? 'charging' : unavailable ? 'empty' : 'ready';
@@ -299,7 +307,7 @@ function refresh(focusOverlay = true) {
       text(title, licensed ? 'You’re a Hunter.' : `${headline}.`);
       text(description, licensed ? 'The license is yours. The course continues as Endless from here, faster each lap.' : `${rest.join('. ')} ${previous.applicants[1]} applicants remain. Next: ${model.stage.name}. ${model.stage.intro}`);
       stats.hidden = false;
-      stats.innerHTML = `<span><strong>${Math.floor(model.distance)}<small>m</small></strong>so far</span><span><strong>${model.points}</strong>plates</span><span><strong>${Math.floor(model.aura)}</strong>aura</span>`;
+      stats.innerHTML = `<span><strong>${Math.floor(model.distance)}<small>m</small></strong>so far</span><span><strong>${model.points}</strong>plates</span><span><strong>${Math.floor(model.aura)}</strong>aura</span>` + (licensed ? runNotes() : '');
       text(play, licensed ? 'Keep running ↗' : `Enter ${model.stage.name} ↗`);
       text(hint, licensed ? 'Hunter’s notes updated.' : 'Netero’s airship. Your aura is where you left it.');
     } else {
@@ -307,7 +315,7 @@ function refresh(focusOverlay = true) {
       text(title, model.reason.includes('Hisoka') ? 'Not ripe yet.' : model.reason.includes('points') ? 'Next year, then.' : 'One more applicant down.');
       text(description, model.reason);
       stats.hidden = false;
-      stats.innerHTML = `<span><strong>${Math.floor(model.distance)}<small>m</small></strong>run</span><span><strong>${model.points}</strong>plates</span><span><strong>${model.passed}</strong>passed</span>`;
+      stats.innerHTML = `<span><strong>${Math.floor(model.distance)}<small>m</small></strong>run</span><span><strong>${model.points}</strong>plates</span><span><strong>${model.passed}</strong>passed</span>` + runNotes();
       text(play, 'Run this course again ↗');
       again.hidden = false; text(again, 'New course');
       const best = records.scores[recordKey(model.config)];
@@ -356,11 +364,13 @@ function begin(newSeed = false) {
     model = new HunterModel((Math.random() * 0xffffffff) >>> 0, selection);
     scene.reset();
     settingUp = false;
+    knownAtStart = new Set(records.discoveries);
     records.selection = { ...selection }; save();
   } else if (newSeed || model.phase === 'over') {
     rememberRun();
     model = new HunterModel(newSeed ? (Math.random() * 0xffffffff) >>> 0 : model.seed, selection);
     scene.reset();
+    knownAtStart = new Set(records.discoveries);
   }
   if (model.phase === 'paused') model.resume();
   else if (model.phase === 'rest') model.continue();
@@ -414,10 +424,6 @@ for (const b of root.querySelectorAll('[data-mode]')) b.addEventListener('click'
 // is keyboard or assistive activation (touch also synthesizes a click, which must not act twice).
 let lastPointer = 0;
 const keyboardClick = (button, action) => button.addEventListener('click', e => { if (button.disabled || performance.now() - lastPointer < 600) return; action(e); });
-for (const b of runButtons) {
-  b.addEventListener('pointerdown', e => { if (e.button !== 0 || b.disabled) return; e.preventDefault(); lastPointer = performance.now(); run(b.dataset.run); });
-  keyboardClick(b, () => run(b.dataset.run));
-}
 for (const b of nenButtons) {
   const key = b.dataset.nen;
   if (key === 'hatsu') {

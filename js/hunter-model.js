@@ -40,6 +40,8 @@ export const DISCOVERIES = Object.freeze({
   wager: { name: 'Leroute’s wager', note: 'Bet your hours on a coin. Sometimes you lose fifty.' },
   target: { name: 'Your target', note: 'Took your target’s plate. Three points, no questions asked.' },
   license: { name: 'Hunter License', note: 'Passed every phase of the 287th exam. The card opens most doors.' },
+  stamp: { name: 'Great Stamp', note: 'Buhara wanted it roasted whole. You just wanted it out of your lane.' },
+  egg: { name: 'Spider Eagle egg', note: 'Jumped into the ravine, caught an egg, rode the updraft back up. Menchi approved.' },
   rock: { name: 'Jajanken', note: 'Rock. The chant is not optional.' },
   godspeed: { name: 'Godspeed', note: 'Whirlwind moved your body before you decided to.' },
   chain: { name: 'Dowsing Chain', note: 'The chain pointed at every hidden thing on the course.' },
@@ -120,6 +122,8 @@ export class HunterModel {
     this.godspeed = 0;
     this.chain = 0;
     this.punch = null;
+    this.updraft = 0;
+    this.glide = null;
     this.pursuer = { active: false, timer: 0, zetsuTime: 0 };
     this.gyoSeen = new Set();
     this.nextStage();
@@ -278,6 +282,14 @@ export class HunterModel {
       if (nearest.cls === 'wall' && dist < speed * 0.3 && p.y <= 0) this.launch();
       return;
     }
+    if (nearest.kind === 'cliff' && p.lane === p.targetLane) {
+      // Only a lane with an egg over the ravine leads to the updraft.
+      const eggIn = l => this.objects.some(o => o.kind === 'egg' && !o.done && o.lane === l && o.z > nearest.z && o.z < nearest.z + nearest.len);
+      if (!eggIn(lane)) {
+        const choice = [lane - 1, lane + 1, lane - 2, lane + 2].find(l => l >= 0 && l < RUN.lanes && eggIn(l));
+        if (choice !== undefined) { this.shiftLane(Math.sign(choice - lane), Math.abs(choice - lane) === 2); return; }
+      }
+    }
     if (nearest.cls === 'gap' || nearest.cls === 'low') { if (dist < speed * (nearest.cls === 'gap' ? 0.26 : 0.3) && p.y <= 0 && p.jump <= 0) this.launch(); return; }
     if (nearest.cls === 'high' && dist < speed * 0.3 && p.slide < 0.1) { if (p.jump > 0) p.jump = Math.min(p.jump, 0.05); p.slide = RUN.slideTime; this.emit('slide'); }
   }
@@ -324,6 +336,14 @@ export class HunterModel {
     } else if (object.kind === 'juice') {
       if (this.hero.key === 'godspeed') { this.aura = Math.min(RUN.auraMax, this.aura + 10); this.discover('zoldyck'); this.emit('juice', { immune: true, lane: object.lane, z: object.z }); }
       else { this.aura = Math.max(0, this.aura - 15); this.cramp = 2.2; this.discover('juice'); this.emit('juice', { immune: false, lane: object.lane, z: object.z }); }
+    } else if (object.kind === 'egg') {
+      // The updraft: a fresh jump starts mid-air while the glide keeps the current height for a moment.
+      const p = this.p;
+      this.glide = { y: p.y, t: 0.35 };
+      p.jump = RUN.jumpTime;
+      this.updraft = 0.9;
+      this.discover('egg');
+      this.emit('egg', { lane: object.lane, z: object.z });
     } else if (object.kind === 'wager') {
       const won = this.random() < 0.5;
       this.discover('wager');
@@ -337,7 +357,7 @@ export class HunterModel {
     dt = Math.min(dt, 0.05);
     const p = this.p;
     this.elapsed += dt;
-    for (const key of ['stumble', 'cramp', 'cooldown', 'godspeed', 'chain', 'jumpBuffer']) this[key] = Math.max(0, this[key] - dt);
+    for (const key of ['stumble', 'cramp', 'cooldown', 'godspeed', 'chain', 'jumpBuffer', 'updraft']) this[key] = Math.max(0, this[key] - dt);
     if (this.charge > 0) {
       this.charge = Math.max(0, this.charge - dt);
       if (this.charge === 0) {
@@ -368,14 +388,19 @@ export class HunterModel {
       p.jump = Math.max(0, p.jump - dt);
       const t = 1 - p.jump / RUN.jumpTime;
       p.y = Math.sin(Math.PI * Math.min(1, t)) * RUN.jumpHeight;
-      if (p.jump === 0) { p.y = 0; this.emit('land'); if (this.jumpBuffer > 0) this.launch(); }
+      if (this.glide) { this.glide.t -= dt; if (this.glide.t <= 0) this.glide = null; else p.y = Math.max(p.y, this.glide.y * this.glide.t / 0.35); }
+      if (p.jump === 0) { p.y = 0; this.glide = null; this.emit('land'); if (this.jumpBuffer > 0) this.launch(); }
     } else p.y = 0;
     if (p.slide > 0 && p.jump === 0) p.slide = Math.max(0, p.slide - dt);
     // Forward motion
     const speed = this.speed;
     p.z += speed * dt;
     this.distance = p.z;
-    for (const o of this.objects) if (o.vz && !o.done && o.z < o.zMax) o.z = Math.min(o.zMax, o.z + o.vz * dt);
+    for (const o of this.objects) {
+      if (!o.vz || o.done) continue;
+      if (o.vz > 0) { if (o.z < o.zMax) o.z = Math.min(o.zMax, o.z + o.vz * dt); }
+      else if (o.z > o.zMin && o.z - p.z < 22) o.z = Math.max(o.zMin, o.z + o.vz * dt);
+    }
     // Gyo discoveries: the first concealed thing seen in the fog.
     if (this.revealed) for (const o of this.objects) {
       if (o.hidden && !o.done && !this.gyoSeen.has(o.id) && o.z > p.z && o.z < p.z + 40) { this.gyoSeen.add(o.id); this.emit('reveal', { kind: o.kind, lane: o.lane, z: o.z }); if (o.kind === 'lugger') this.discover('lugger'); }
@@ -389,7 +414,7 @@ export class HunterModel {
     const front = p.z + RUN.bodyFront, back = p.z - RUN.bodyBack;
     for (const o of this.objects) {
       if (o.done) continue;
-      if (o.z + o.len < back) { o.done = true; if ((o.kind === 'applicant' || o.kind === 'hunter') && o.lane !== p.lane) this.passed++; continue; }
+      if (o.z + o.len < back) { o.done = true; if ((o.kind === 'applicant' || o.kind === 'hunter') && o.lane !== p.lane) this.passed++; if (o.kind === 'pig') this.discover('stamp'); continue; }
       if (o.z > front) continue;
       if (Math.abs(p.x - o.lane) > 0.5) continue;
       if (o.cls === 'pickup') { this.collect(o); continue; }
