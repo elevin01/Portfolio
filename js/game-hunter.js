@@ -1,6 +1,6 @@
 import { RUN, STAGES, KINDS, CHARACTERS, DIFFICULTIES, DISCOVERIES, FAMOUS_PLATES, HunterModel, options, HUNTER_STORAGE, loadRecords, remember, recordKey } from './hunter-model.js';
 import { HunterScene } from './hunter-scene.js';
-import { portrait, hunterIcon as icon, hunterPreview } from './hunter-art.js';
+import { portrait, hunterIcon as icon, hunterPreview, cardArt } from './hunter-art.js';
 
 const root = document.getElementById('gameHunterPanel');
 document.getElementById('hunterPreview').innerHTML = hunterPreview;
@@ -38,6 +38,7 @@ root.innerHTML = `
       <div id="hunterToast" class="hn-toast" aria-hidden="true"></div>
       <div id="hunterOverlay" class="hn-overlay" data-phase="ready">
         <div class="hn-message">
+          <div id="hunterCardArt" class="hn-card-art" aria-hidden="true"></div>
           <span id="hunterMessageTag" class="hn-eyebrow">HUNTER EXAM · PHASE 1</span>
           <h5 id="hunterMessageTitle">Follow the examiner.</h5>
           <p id="hunterMessageText">Satotz has not said where the finish line is.</p>
@@ -233,6 +234,7 @@ function refresh(focusOverlay = true) {
   if (settingUp) refreshSetup();
   const hud = root.querySelector('.hn-hud');
   hud.hidden = settingUp;
+  root.querySelector('.hn-abilities').hidden = settingUp;
   text(byId('hunterDistance'), Math.floor(model.distance));
   text(byId('hunterPhase'), model.config.mode === 'endless' ? `LAP ${model.lap + 1} · ${model.stage.phase}` : model.stage.phase);
   text(byId('hunterStageName'), model.stage.name);
@@ -288,6 +290,8 @@ function refresh(focusOverlay = true) {
     overlay.dataset.phase = settingUp ? 'ready' : model.phase;
     const tag = byId('hunterMessageTag'), title = byId('hunterMessageTitle'), description = byId('hunterMessageText'), hint = byId('hunterMessageHint'), stats = byId('hunterResultStats'), again = byId('hunterNewCourse');
     stats.hidden = true; again.hidden = true;
+    const art = byId('hunterCardArt');
+    art.innerHTML = settingUp ? cardArt('exam') : model.phase === 'paused' ? '' : model.phase === 'rest' ? cardArt(model.licensed && STAGES[(model.stageIndex + STAGES.length - 1) % STAGES.length].id === 'island' ? 'license' : 'airship') : cardArt(model.reason.includes('Hisoka') ? 'hisoka' : 'plate');
     if (settingUp) {
       const hero = CHARACTERS[selection.character];
       text(tag, `${hero.name.toUpperCase()} · #${hero.number} · ${DIFFICULTIES[selection.difficulty].name.toUpperCase()}`);
@@ -334,7 +338,7 @@ function syncHeld() {
 }
 
 function draw(dt = 0) { scene.draw(model, { dt, reducedMotion: motion.matches, preview: settingUp }); }
-function animate() { return active && !suspended && !document.hidden && (model.phase === 'playing' || scene.hasEffects() || (model.phase === 'over' && scene.time < resultAt)); }
+function animate() { return active && !suspended && !document.hidden && (model.phase === 'playing' || scene.hasEffects() || (model.phase === 'over' && scene.time < resultAt) || (settingUp && !motion.matches)); }
 function requestFrame() { if (!frame && animate()) frame = requestAnimationFrame(tick); }
 function stopFrame() { cancelAnimationFrame(frame); frame = 0; previousTime = null; accumulator = 0; }
 function tick(now) {

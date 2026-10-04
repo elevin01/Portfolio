@@ -47,7 +47,11 @@
 .hn-toast { position: absolute; bottom: 58px; left: 50%; transform: translate(-50%, 6px); padding: 6px 12px; border-radius: 6px; background: #15131aee; border: 1px solid var(--toast-color, #efe7d2); color: var(--toast-color, #efe7d2); font: 11px/1.4 ui-monospace, monospace; max-width: 86%; text-align: center; opacity: 0; transition: opacity .18s ease, transform .18s ease; pointer-events: none; }
 .hn-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 .hn-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 18px; background: #0d0b11b8; backdrop-filter: blur(2px); }
+.hunter-game[data-screen="setup"] .hn-overlay { background: linear-gradient(#0d0b1150, #0d0b11cc); backdrop-filter: none; }
 .hn-message { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; max-width: 420px; }
+.hn-card-art { height: 56px; margin-bottom: -2px; }
+.hn-card-art:empty { display: none; }
+.hn-card-art svg { height: 56px; width: 140px; }
 .hn-message h5 { font-size: 30px; letter-spacing: -.04em; line-height: 1.05; color: #f5efe0; }
 .hn-message p { font-size: 13px; color: #d9cfbb; max-width: 380px; }
 .hn-message-hint { font: 10px/1.5 ui-monospace, monospace; color: #a89b82; }
@@ -150,6 +154,7 @@
   .hn-icon-button { width: 34px; height: 34px; }
   .hn-message h5 { font-size: 22px; }
   .hn-message p { font-size: 11.5px; }
+  .hn-card-art, .hn-card-art svg { height: 40px; }
   .hn-message { gap: 7px; }
   .hn-primary { min-height: 40px; padding: 8px 16px; font-size: 13px; }
   .hn-result-stats { gap: 12px; }

@@ -10,10 +10,10 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const noise = n => { const v = Math.sin(n * 127.1 + 31.7) * 43758.5453; return v - Math.floor(v); };
 
 const PALETTES = {
-  tunnel: { sky: ['#1b1a22', '#2a2730'], ground: '#3b3741', groundFar: '#221f27', lane: '#5e5866', wall: '#2d2932', wallDark: '#1d1a22', accent: '#f0c777', fog: null },
+  tunnel: { sky: ['#121117', '#1a181f'], ground: '#3b3741', groundFar: '#221f27', lane: '#5e5866', wall: '#2d2932', wallDark: '#1d1a22', accent: '#f0c777', fog: null },
   wetlands: { sky: ['#8ea39a', '#b9c7b6'], ground: '#3d4f44', groundFar: '#9fb09d', lane: '#6b5b45', wall: '#2e3f33', wallDark: '#2a2219', accent: '#c9d8bd', fog: '#aebbac' },
   forest: { sky: ['#9ed3a8', '#e6f2c9'], ground: '#3f6b36', groundFar: '#2f5a2e', lane: '#8a7452', wall: '#2f5a33', wallDark: '#4a3a26', accent: '#fff1b0', fog: null },
-  tower: { sky: ['#1a1c24', '#2b2e3b'], ground: '#454857', groundFar: '#23252f', lane: '#70748a', wall: '#363948', wallDark: '#24262f', accent: '#ffb55f', fog: null },
+  tower: { sky: ['#121319', '#1b1d26'], ground: '#454857', groundFar: '#23252f', lane: '#70748a', wall: '#363948', wallDark: '#24262f', accent: '#ffb55f', fog: null },
   island: { sky: ['#6fb7e6', '#d6ecf6'], ground: '#6c8f45', groundFar: '#4d7a46', lane: '#a08e62', wall: '#2f5a33', wallDark: '#5a4a30', accent: '#fff1b0', fog: null }
 };
 
@@ -29,6 +29,7 @@ export class HunterScene {
     this.reduced = false;
     this.land = 0;
     this.ink = null; this.inkW = 1;
+    this.ko = 0; this.flash = 0; this.flashColor = '#ffffff'; this.grain = null; this.previewing = false;
     this.H = 360; this.horizon = 112; this.F = 430; this.camH = 2.4;
   }
 
@@ -47,15 +48,15 @@ export class HunterScene {
     this.camH = clamp((this.H * 0.64 - this.horizon) * CAM_BACK / this.F, 2.2, 6);
   }
 
-  reset() { this.effects = []; this.shake = 0; this.time = 0; }
+  reset() { this.effects = []; this.shake = 0; this.time = 0; this.ko = 0; this.flash = 0; }
 
   accept(events, model) {
     for (const e of events) {
       if (this.reduced && !['ko', 'stumble'].includes(e.type)) continue;
       const lane = e.lane ?? model.p.lane, z = e.z ?? model.p.z;
       if (e.type === 'plate') this.burst(lane, z, e.target ? '#ffd86b' : '#f3e6b0', e.target ? 18 : 8, 0.7);
-      else if (e.type === 'stumble') { this.shake = 0.35; this.burst(lane, z, '#c8c2b8', 10, 0.5); }
-      else if (e.type === 'ko') this.shake = 0.6;
+      else if (e.type === 'stumble') { this.shake = 0.35; this.flash = 0.18; this.flashColor = '#ffffff'; this.burst(lane, z, '#c8c2b8', 10, 0.5); }
+      else if (e.type === 'ko') { this.shake = 0.6; this.ko = 0.001; this.flash = 0.3; this.flashColor = e.by === 'hisoka' ? '#d8333c' : '#ffffff'; }
       else if (e.type === 'destroy') this.burst(e.lane, e.z, e.by === 'punch' ? '#9fc5ea' : '#ffd27a', 14, 0.7);
       else if (e.type === 'cast') this.effects.push({ type: 'ring', lane: model.p.lane, z: model.p.z, color: model.hero.color, age: 0, life: 0.6 });
       else if (e.type === 'rock') this.effects.push({ type: 'wave', z: model.p.z, age: 0, life: 0.5 });
@@ -76,7 +77,7 @@ export class HunterScene {
     }
   }
 
-  hasEffects() { return this.effects.length > 0 || this.shake > 0; }
+  hasEffects() { return this.effects.length > 0 || this.shake > 0 || this.flash > 0 || (this.ko > 0 && this.ko < 1.2); }
 
   // Projection helpers
   project(x, y, z) {
@@ -100,22 +101,38 @@ export class HunterScene {
     this.fill([[a.x, a.y], [b.x, b.y], [cc.x, cc.y], [d.x, d.y]], color);
   }
 
+  clouds(count, y0, scroll, color) {
+    for (let i = 0; i < count; i++) {
+      const x = ((i * 173 + 40) - scroll * (0.6 + noise(i) * 0.5) + (this.reduced ? 0 : this.time * 4)) % 760 - 60;
+      const y = y0 - noise(i + 3) * 36, w = 36 + noise(i + 5) * 30;
+      this.ellipse(x, y, w, w * 0.32, color, true); this.ellipse(x - w * 0.45, y + 4, w * 0.6, w * 0.26, color, true); this.ellipse(x + w * 0.5, y + 3, w * 0.55, w * 0.24, color, true);
+    }
+  }
+
   backdrop(model, pal) {
     const c = this.c, stage = model.stage.id, H = this.H, horizon = this.horizon;
     const sky = c.createLinearGradient(0, 0, 0, horizon + 40);
     sky.addColorStop(0, pal.sky[0]); sky.addColorStop(1, pal.sky[1]);
     c.fillStyle = sky; c.fillRect(0, 0, 640, H);
+    // Far layers scroll slowly with distance so the world moves even when the road is empty.
+    const scroll = this.camZ * 0.9 + this.camX * 5;
     if (stage === 'island') {
-      this.ellipse(500, horizon - 60, 24, 24, '#fff6cf');
-      // The sea sits behind the hills: Zevil Island is reached and left by boat.
+      this.ellipse(500, horizon - 60, 24, 24, '#fff6cf', true);
+      this.clouds(5, horizon - 70, scroll * 0.3, '#ffffffcc');
       c.fillStyle = '#3f87bd'; c.fillRect(0, horizon - 14, 640, 18);
       for (let i = 0; i < 6; i++) this.stroke([[i * 120 - this.camX * 4, horizon - 9 + (i % 3) * 3], [i * 120 + 50 - this.camX * 4, horizon - 9 + (i % 3) * 3]], '#9fd2f0aa', 1);
-      for (let i = 0; i < 7; i++) { const x = ((i * 97 + 20) - this.camX * 6) % 700 - 30; this.fill([[x - 70, horizon + 6], [x, horizon - 42 + noise(i) * 20], [x + 80, horizon + 6]], i % 2 ? '#4d8c6a' : '#5f9f74'); }
+      for (let i = 0; i < 8; i++) { const x = ((i * 97 + 20) - scroll * 0.5) % 760 - 60; this.fill([[x - 70, horizon + 6], [x, horizon - 42 + noise(i) * 20], [x + 80, horizon + 6]], i % 2 ? '#4d8c6a' : '#5f9f74', true); }
     } else if (stage === 'forest') {
-      this.ellipse(140, horizon - 70, 30, 30, '#fff8d6');
-      for (let i = 0; i < 12; i++) { const x = (i * 60 - this.camX * 5) % 700 - 30; this.ellipse(x, horizon - 4 + noise(i) * 8, 42, 26 + noise(i + 2) * 16, i % 2 ? '#4f8f5a' : '#3f7a4c'); }
+      this.ellipse(140, horizon - 70, 30, 30, '#fff8d6', true);
+      this.clouds(4, horizon - 80, scroll * 0.25, '#ffffffb0');
+      for (let i = 0; i < 14; i++) { const x = ((i * 60) - scroll * 0.6) % 760 - 60; this.ellipse(x, horizon - 4 + noise(i) * 8, 42, 26 + noise(i + 2) * 16, i % 2 ? '#4f8f5a' : '#3f7a4c', true); }
     } else if (stage === 'wetlands') {
-      for (let i = 0; i < 10; i++) { const x = (i * 71 - this.camX * 5) % 680 - 20; this.fill([[x - 30, horizon + 10], [x - 6, horizon - 52 + noise(i) * 30], [x + 4, horizon - 58 + noise(i + 1) * 26], [x + 34, horizon + 10]], '#7f948a'); }
+      for (let i = 0; i < 12; i++) { const x = ((i * 71) - scroll * 0.55) % 760 - 60; this.fill([[x - 30, horizon + 10], [x - 6, horizon - 52 + noise(i) * 30], [x + 4, horizon - 58 + noise(i + 1) * 26], [x + 34, horizon + 10]], '#7f948a', true); }
+    } else {
+      // Indoors: the far end of the corridor fades into darkness.
+      const deep = c.createRadialGradient(320, horizon, 10, 320, horizon, 240);
+      deep.addColorStop(0, '#000000aa'); deep.addColorStop(1, '#00000000');
+      c.fillStyle = deep; c.fillRect(0, 0, 640, H);
     }
     const ground = c.createLinearGradient(0, horizon, 0, H);
     ground.addColorStop(0, pal.groundFar); ground.addColorStop(1, pal.ground);
@@ -145,8 +162,9 @@ export class HunterScene {
         for (const side of [-1, 1]) {
           const g = this.project(side * 1.5 * W, 0, z);
           if (g.y < this.horizon + 2) continue;
+          const flicker = stage === 'tower' && !this.reduced ? 0.7 + noise(Math.floor(this.time * 12) + z) * 0.3 : 1;
           const light = c.createRadialGradient(g.x, g.y, 0, g.x, g.y, 2.4 * g.s);
-          light.addColorStop(0, pal.accent + '33'); light.addColorStop(1, pal.accent + '00');
+          light.addColorStop(0, pal.accent + (flicker > 0.85 ? '3a' : '28')); light.addColorStop(1, pal.accent + '00');
           c.fillStyle = light; c.beginPath(); c.ellipse(g.x, g.y, 2.4 * g.s, 0.8 * g.s, 0, 0, Math.PI * 2); c.fill();
         }
       }
@@ -240,12 +258,31 @@ export class HunterScene {
             for (let k = 0.5; k < spacing; k += spacing / 3) { const a = this.project(x, 0, z + k), b = this.project(x, wall, z + k); this.stroke([[a.x, a.y], [b.x, b.y]], '#00000022', 1); }
           }
           this.rect(top.x - 0.2 * s, top.y, 0.4 * s, base.y - top.y, pal.wallDark);
+          if (side === -1) {
+            // The ceiling: a vaulted arch per bay in the tunnel, flat stone with beams in the tower.
+            const l = top, r = this.project(-x, wall, z), ln = nextTop, rn = this.project(-x, wall, z + spacing);
+            this.fill([[l.x, l.y], [r.x, r.y], [rn.x, rn.y], [ln.x, ln.y]], stage === 'tunnel' ? '#17151c' : '#1c1e27', true);
+            if (stage === 'tunnel') {
+              const apex = this.project(0, wall + 1.3, z);
+              c.beginPath(); c.moveTo(l.x, l.y); c.quadraticCurveTo(l.x + (apex.x - l.x) * 0.3, apex.y, apex.x, apex.y); c.quadraticCurveTo(r.x - (r.x - apex.x) * 0.3, apex.y, r.x, r.y);
+              c.strokeStyle = n % 2 ? pal.wall : '#3a3540'; c.lineWidth = 0.3 * s; c.stroke();
+              c.strokeStyle = '#ffffff10'; c.lineWidth = 0.08 * s; c.stroke();
+            } else {
+              const l2 = this.project(x, wall, z + 0.5), r2 = this.project(-x, wall, z + 0.5);
+              this.fill([[l.x, l.y], [r.x, r.y], [r2.x, r2.y], [l2.x, l2.y]], '#2a2c38', true);
+            }
+          }
           if (n % 2 === 0) {
+            const flicker = stage === 'tower' && !this.reduced ? 0.6 + noise(Math.floor(this.time * 12) + n) * 0.4 : 1;
             const lamp = this.project(x - side * 0.35, 2.4, z);
             const glow = c.createRadialGradient(lamp.x, lamp.y, 0, lamp.x, lamp.y, 1.6 * s);
-            glow.addColorStop(0, pal.accent + '55'); glow.addColorStop(1, pal.accent + '00');
+            glow.addColorStop(0, pal.accent + (flicker > 0.8 ? '66' : '44')); glow.addColorStop(1, pal.accent + '00');
             c.fillStyle = glow; c.fillRect(lamp.x - 1.6 * s, lamp.y - 1.6 * s, 3.2 * s, 3.2 * s);
+            // A cone of light reaching the floor.
+            const fa = this.project(x - side * 0.1, 0, z - 1.2), fb = this.project(x - side * 1.9, 0, z + 0.8);
+            c.globalAlpha = fade * 0.09 * flicker; this.fill([[lamp.x, lamp.y], [fa.x, fa.y], [fb.x, fb.y]], pal.accent, true); c.globalAlpha = fade;
             this.rect(lamp.x - 0.08 * s, lamp.y - 0.1 * s, 0.16 * s, stage === 'tower' ? 0.5 * s : 0.2 * s, pal.accent);
+            if (stage === 'tower') this.ellipse(lamp.x, lamp.y - 0.22 * s - (this.reduced ? 0 : noise(Math.floor(this.time * 14) + n) * 0.08 * s), 0.14 * s, 0.22 * s, '#ffd27a', true);
           }
           if (stage === 'tower' && n % 4 === 1 && side === -1) {
             const sign = this.project(x - side * 0.3, 1.8, z);
@@ -375,17 +412,28 @@ export class HunterScene {
       if (k === 'boulder') {
         this.ellipse(g.x, g.y - 0.05 * s, half * 1.05, 0.25 * s, '#00000040', true);
         this.ellipse(g.x, g.y - 0.75 * s, half, 0.8 * s, '#777a74');
-        this.ellipse(g.x - 0.2 * s, g.y - 0.95 * s, half * 0.6, 0.45 * s, '#8f928b');
+        this.ellipse(g.x - 0.2 * s, g.y - 0.95 * s, half * 0.6, 0.45 * s, '#8f928b', true);
+        this.stroke([[g.x + 0.1 * s, g.y - 1.4 * s], [g.x + 0.25 * s, g.y - 0.9 * s], [g.x + 0.1 * s, g.y - 0.6 * s]], '#4f524d', 0.04 * s);
+        this.ellipse(g.x + half * 0.45, g.y - 0.35 * s, 0.22 * s, 0.1 * s, '#6f9a4f', true); this.ellipse(g.x - half * 0.5, g.y - 0.25 * s, 0.16 * s, 0.08 * s, '#6f9a4f', true);
       } else if (k === 'tree') {
         this.rect(g.x - half * 0.6, g.y - 3.6 * s, half * 1.2, 3.6 * s, '#3f3327', 0.1 * s);
         this.stroke([[g.x - half * 0.3, g.y], [g.x - half * 0.6, g.y - 1.6 * s]], '#2e251c', 0.08 * s);
         this.ellipse(g.x, g.y - 3.6 * s, half * 2.2, 0.9 * s, '#2f4a35');
       } else {
         const stone = k === 'door' ? '#4d505f' : '#4a434f';
-        this.rect(g.x - half, g.y - 3.4 * s, half * 2, 3.4 * s, stone, 0.08 * s);
-        this.rect(g.x - half + 0.1 * s, g.y - 3.3 * s, half * 2 - 0.2 * s, 3.2 * s, k === 'door' ? '#3a3c48' : '#39333d', 0.08 * s);
-        if (k === 'door') { this.text('MAJORITY', g.x, g.y - 2.6 * s, Math.max(3, 0.2 * s), '#ffb55f'); this.ellipse(g.x + half * 0.5, g.y - 1.6 * s, 0.08 * s, 0.08 * s, '#ffb55f'); }
-        else for (let i = 0; i < 4; i++) this.stroke([[g.x - half + 0.1 * s, g.y - (0.7 + i * 0.75) * s], [g.x + half - 0.1 * s, g.y - (0.7 + i * 0.75) * s]], '#2a252e', 0.05 * s);
+        const tall = k === 'door' ? 3.4 : Math.max(3.4, this.camH + 1.6);
+        this.rect(g.x - half, g.y - tall * s, half * 2, tall * s, stone, 0.08 * s);
+        this.rect(g.x - half, g.y - tall * s, half * 0.5, tall * s, '#ffffff14', 0, true);
+        this.rect(g.x + half * 0.45, g.y - tall * s, half * 0.55, tall * s, '#0000002e', 0, true);
+        if (k === 'door') {
+          this.rect(g.x - half + 0.1 * s, g.y - 3.3 * s, half * 2 - 0.2 * s, 3.2 * s, '#3a3c48', 0.08 * s);
+          this.rect(g.x - half * 1.1, g.y - 3.55 * s, half * 2.2, 0.25 * s, '#5c5f70', 0.03 * s);
+          this.text('MAJORITY', g.x, g.y - 2.6 * s, Math.max(3, 0.2 * s), '#ffb55f'); this.ellipse(g.x + half * 0.5, g.y - 1.6 * s, 0.08 * s, 0.08 * s, '#ffb55f');
+        } else {
+          this.rect(g.x - half * 1.15, g.y - tall * s - 0.1 * s, half * 2.3, 0.3 * s, '#5a525f', 0.03 * s);
+          this.rect(g.x - half * 1.1, g.y - 0.35 * s, half * 2.2, 0.35 * s, '#5a525f', 0.03 * s);
+          for (let i = 0; i < 4; i++) this.stroke([[g.x - half + 0.1 * s, g.y - (0.7 + i * 0.75) * s], [g.x + half - 0.1 * s, g.y - (0.7 + i * 0.75) * s]], '#2a252e', 0.05 * s);
+        }
       }
     } else if (k === 'log' || k === 'trunk') {
       this.ellipse(g.x, g.y - 0.05 * s, half * 1.1, 0.2 * s, '#00000040', true);
@@ -433,9 +481,23 @@ export class HunterScene {
       if (k === 'target') { const glow = c.createRadialGradient(g.x, y, 0, g.x, y, 0.9 * s); glow.addColorStop(0, '#ffd86b66'); glow.addColorStop(1, '#ffd86b00'); c.fillStyle = glow; c.fillRect(g.x - s, y - s, 2 * s, 2 * s); }
       this.ellipse(g.x, g.y - 0.02 * s, 0.22 * s, 0.07 * s, '#00000030', true);
       this.rect(g.x - 0.28 * s, y - 0.22 * s, 0.56 * s, 0.44 * s, k === 'target' ? '#f5cf5c' : '#e6e1d2', 0.08 * s);
-      this.rect(g.x - 0.24 * s, y - 0.18 * s, 0.48 * s, 0.36 * s, k === 'target' ? '#fff0b0' : '#f8f5ea', 0.06 * s);
+      this.rect(g.x - 0.24 * s, y - 0.18 * s, 0.48 * s, 0.36 * s, k === 'target' ? '#fff0b0' : '#f8f5ea', 0.06 * s, true);
+      const shine = this.reduced ? 0.2 : (this.time * 0.7 + o.z * 0.05) % 1;
+      this.rect(g.x - 0.24 * s + shine * 0.4 * s, y - 0.18 * s, 0.07 * s, 0.36 * s, '#ffffff99', 0.02 * s, true);
       if (s > 18) this.text(String(o.number), g.x, y, Math.max(4, 0.24 * s), '#2a2d36');
     } else if (k === 'juice') {
+      // Tonpa, #16, thirty-five attempts and counting, standing beside his tray with a smile.
+      const tx = g.x + (o.lane === 2 ? -0.95 : 0.95) * s;
+      this.ellipse(tx, g.y - 0.03 * s, 0.4 * s, 0.1 * s, '#00000045', true);
+      this.seg(tx - 0.18 * s, g.y - 0.45 * s, tx - 0.2 * s, g.y - 0.05 * s, 0.17 * s, '#3b3a46'); this.seg(tx + 0.18 * s, g.y - 0.45 * s, tx + 0.2 * s, g.y - 0.05 * s, 0.17 * s, '#3b3a46');
+      this.ellipse(tx, g.y - 0.78 * s, 0.42 * s, 0.48 * s, '#6e5a3c');
+      this.rect(tx - 0.14 * s, g.y - 0.92 * s, 0.28 * s, 0.2 * s, '#f1ecdf', 0.03 * s); if (s > 16) this.text('16', tx, g.y - 0.82 * s, Math.max(3, 0.14 * s), '#2a2d36');
+      this.seg(tx + 0.36 * s, g.y - 0.95 * s, tx + 0.62 * s, g.y - 0.75 * s, 0.12 * s, '#6e5a3c'); this.rect(tx + 0.56 * s, g.y - 0.95 * s, 0.14 * s, 0.22 * s, '#f0882c', 0.03 * s);
+      this.ellipse(tx, g.y - 1.42 * s, 0.3 * s, 0.3 * s, '#e5bb9a');
+      this.fill([[tx - 0.3 * s, g.y - 1.5 * s], [tx - 0.08 * s, g.y - 1.95 * s], [tx + 0.1 * s, g.y - 1.62 * s], [tx + 0.3 * s, g.y - 1.9 * s], [tx + 0.32 * s, g.y - 1.5 * s]], '#3e3028');
+      this.fill([[tx - 0.02 * s, g.y - 1.42 * s], [tx + 0.3 * s, g.y - 1.34 * s], [tx - 0.02 * s, g.y - 1.26 * s]], '#d9a98b');
+      this.ellipse(tx - 0.12 * s, g.y - 1.46 * s, 0.035 * s, 0.045 * s, '#1a1518', true); this.ellipse(tx + 0.1 * s, g.y - 1.46 * s, 0.035 * s, 0.045 * s, '#1a1518', true);
+      this.stroke([[tx - 0.12 * s, g.y - 1.24 * s], [tx + 0.02 * s, g.y - 1.18 * s], [tx + 0.14 * s, g.y - 1.26 * s]], '#1a1518', 0.035 * s);
       this.rect(g.x - 0.3 * s, g.y - 0.55 * s, 0.6 * s, 0.1 * s, '#7e6a4e');
       this.rect(g.x - 0.14 * s, g.y - 0.95 * s, 0.28 * s, 0.42 * s, '#f0882c', 0.05 * s);
       this.rect(g.x - 0.14 * s, g.y - 0.95 * s, 0.28 * s, 0.1 * s, '#c9c9c9', 0.03 * s);
@@ -494,13 +556,14 @@ export class HunterScene {
       this.ink = outerInk;
       return;
     }
-    c.rotate(lean * 0.22);
-    const bob = Math.abs(Math.sin(phase)) * 0.05 * s;
+    c.rotate(lean * 0.22 + (pose.tumble || 0));
+    const airborne = lift > 0.18;
+    const bob = airborne ? 0 : Math.abs(Math.sin(phase)) * 0.05 * s;
     const hipY = -0.52 * s - bob;
-    // Legs: the back leg folds up at the knee, the front leg reaches down.
+    // Legs: the back leg folds up at the knee, the front leg reaches down; both tuck in the air.
     for (const side of [-1, 1]) {
       const swing = Math.sin(phase + (side < 0 ? 0 : Math.PI));
-      const raise = Math.max(0, swing) * 0.42;
+      const raise = airborne ? 0.36 + side * 0.06 : Math.max(0, swing) * 0.42;
       const hipX = side * 0.12 * s;
       const kneeX = hipX + side * (0.04 + raise * 0.12) * s, kneeY = hipY + (0.26 - raise * 0.18) * s;
       const footY = -(raise * 0.9) * s;
@@ -511,11 +574,20 @@ export class HunterScene {
     // Torso and arms, with the light from the left so the right side sits in shadow.
     this.rect(-0.31 * s, hipY - 0.56 * s, 0.62 * s, 0.6 * s, look.top, 0.13 * s);
     this.rect(0.02 * s, hipY - 0.54 * s, 0.27 * s, 0.56 * s, '#0000002a', [0, 0.11 * s, 0.11 * s, 0], true);
+    if (look.hero === 'killua') {
+      // The skateboard he carried through Phase 1, slung across his back.
+      c.save(); c.translate(0.05 * s, hipY - 0.3 * s); c.rotate(-1.05);
+      this.rect(-0.6 * s, -0.11 * s, 1.2 * s, 0.22 * s, '#e8b04b', 0.09 * s);
+      this.rect(-0.5 * s, -0.06 * s, 1 * s, 0.12 * s, '#f6c96a', 0.05 * s, true);
+      this.ellipse(-0.36 * s, 0.14 * s, 0.07 * s, 0.07 * s, '#2a2a30'); this.ellipse(0.36 * s, 0.14 * s, 0.07 * s, 0.07 * s, '#2a2a30');
+      c.restore();
+    }
+    if (look.hero === 'gon') { this.rect(-0.24 * s, hipY - 0.5 * s, 0.48 * s, 0.42 * s, '#2a4a3a', 0.1 * s); this.stroke([[-0.2 * s, hipY - 0.5 * s], [-0.28 * s, hipY - 0.1 * s]], '#1f3a2d', 0.05 * s); this.stroke([[0.2 * s, hipY - 0.5 * s], [0.28 * s, hipY - 0.1 * s]], '#1f3a2d', 0.05 * s); }
     for (const side of [-1, 1]) {
-      const swing = Math.sin(phase + (side < 0 ? Math.PI : 0));
+      const swing = airborne ? 0.9 : Math.sin(phase + (side < 0 ? Math.PI : 0));
       const shoulderX = side * 0.33 * s, shoulderY = hipY - 0.48 * s;
-      const elbowX = shoulderX + side * 0.08 * s, elbowY = shoulderY + (0.3 - swing * 0.08) * s;
-      const handY = elbowY + (0.1 + swing * 0.18) * s;
+      const elbowX = shoulderX + side * (airborne ? 0.16 : 0.08) * s, elbowY = shoulderY + (airborne ? -0.1 : 0.3 - swing * 0.08) * s;
+      const handY = airborne ? elbowY - 0.3 * s : elbowY + (0.1 + swing * 0.18) * s;
       this.seg(shoulderX, shoulderY, elbowX, elbowY, 0.13 * s, sleeve);
       this.seg(elbowX, elbowY, shoulderX + side * 0.02 * s, handY, 0.11 * s, sleeve);
       this.ellipse(shoulderX + side * 0.02 * s, handY + 0.02 * s, 0.06 * s, 0.06 * s, skin);
@@ -523,6 +595,7 @@ export class HunterScene {
     const headY = hipY - 0.83 * s;
     this.rect(-0.07 * s, headY + 0.12 * s, 0.14 * s, 0.14 * s, skin);
     this.ellipse(0, headY, 0.24 * s, 0.25 * s, skin);
+    this.ellipse(0.1 * s, headY + 0.02 * s, 0.13 * s, 0.22 * s, '#00000022', true);
     if (look.number !== undefined && s > 14) {
       this.rect(-0.17 * s, hipY - 0.46 * s, 0.34 * s, 0.26 * s, '#f1ecdf', 0.04 * s);
       this.text(String(look.number), 0, hipY - 0.33 * s, Math.max(3, 0.17 * s), '#2a2d36');
@@ -565,7 +638,8 @@ export class HunterScene {
 
   hero(model) {
     const c = this.c, p = model.p, hero = model.hero;
-    const g = this.project((p.x - 1) * W, 0, p.z);
+    const hz = this.camZ + CAM_BACK;
+    const g = this.project((p.x - 1) * W, 0, hz);
     const s = g.s;
     const looks = {
       gon: { hair: '#1c2a26', top: '#3f8f5a', sleeve: '#3f8f5a', pants: '#1f3a33' },
@@ -573,8 +647,10 @@ export class HunterScene {
       kurapika: { hair: '#f0cd6a', top: '#eef0f5', sleeve: '#eef0f5', pants: '#2f63b8' },
       leorio: { hair: '#1b1b22', top: '#2c3a72', sleeve: '#2c3a72', pants: '#1f2a56' }
     };
-    const look = { ...looks[model.config.character], hero: model.config.character, phase: p.z * 2.6, number: hero.number };
+    const look = { ...looks[model.config.character], hero: model.config.character, phase: this.previewing ? this.time * 9 : p.z * 2.6, number: hero.number };
     const lean = clamp(p.targetLane - p.x, -1, 1);
+    // Knocked out: the body tumbles forward and down over the next half second.
+    const fall = model.phase === 'over' && !this.reduced ? Math.min(1, this.ko / 0.55) : 0;
     const zetsu = model.nen === 'zetsu';
     if (model.godspeed > 0 && !this.reduced) {
       for (let i = 0; i < 5; i++) {
@@ -606,7 +682,7 @@ export class HunterScene {
     }
     c.save();
     if (zetsu) c.globalAlpha = 0.55;
-    this.runner(g.x, g.y, s, look, { slide: p.slide > 0 && p.y <= 0.05, y: p.y, lean: this.reduced ? 0 : lean, land: this.reduced ? 0 : this.land });
+    this.runner(g.x, g.y + fall * 0.35 * s, s, look, { slide: p.slide > 0 && p.y <= 0.05, y: p.y + fall * 0.4, lean: this.reduced ? 0 : lean, land: this.reduced ? 0 : this.land, tumble: fall * 1.35 });
     c.restore();
     if (model.gyo && !zetsu) { const eye = g.y - 1.36 * s - p.y * s; this.ellipse(g.x - 0.26 * s, eye, 0.06 * s, 0.05 * s, '#e9d7ff'); this.ellipse(g.x + 0.26 * s, eye, 0.06 * s, 0.05 * s, '#e9d7ff'); }
     if (model.charge > 0 && !this.reduced) {
@@ -633,7 +709,7 @@ export class HunterScene {
   examiner(model) {
     const c = this.c, p = model.p;
     const ahead = model.stage.id === 'tunnel' ? 46 : 60;
-    const g = this.project(0, 0, p.z + ahead);
+    const g = this.project(0, 0, this.camZ + CAM_BACK + ahead);
     c.save(); c.globalAlpha = this.fog(g.d, model) * 0.95;
     this.runner(g.x, g.y, g.s * 1.25, { hair: '#4a3a5c', top: '#5a4a86', sleeve: '#5a4a86', pants: '#3b2f5a', phase: p.z * 2.1 });
     this.ellipse(g.x, g.y - 1.55 * g.s * 1.25, 0.2 * g.s, 0.06 * g.s, '#2b2338');
@@ -643,7 +719,7 @@ export class HunterScene {
   pursuer(model) {
     if (!model.pursuer.active) return;
     const c = this.c, p = model.p;
-    const g = this.project((p.x - 1) * W - 1.25, 0, p.z - 2.4);
+    const g = this.project((p.x - 1) * W - 1.25, 0, this.camZ + CAM_BACK - 2.4);
     c.save(); c.globalAlpha = 0.9;
     this.runner(g.x, g.y, g.s, { hair: '#d8333c', top: '#f2eee8', sleeve: '#f2eee8', pants: '#5b3f8a', hero: 'hisoka', phase: p.z * 2.2 + 1 });
     c.restore();
@@ -693,6 +769,55 @@ export class HunterScene {
     c.globalAlpha = 1;
   }
 
+  // Ambient particles: dust indoors, leaves in the forest, fireflies at dusk in the swamp.
+  ambient(model) {
+    if (this.reduced) return;
+    const c = this.c, stage = model.stage.id, H = this.H;
+    if (stage === 'forest') {
+      for (let i = 0; i < 14; i++) {
+        const t = (this.time * (0.12 + noise(i) * 0.1) + noise(i + 2)) % 1;
+        const x = (noise(i + 4) * 700 - 30 + Math.sin(this.time * 1.4 + i) * 22 - this.camZ * 2) % 700, y = -10 + t * (H + 20);
+        c.save(); c.translate(x, y); c.rotate(this.time * 2 + i); this.ellipse(0, 0, 4, 2.2, i % 3 ? '#8cc46a' : '#d9c46a', true); c.restore();
+      }
+      // Light through the canopy.
+      c.globalAlpha = 0.11;
+      for (let i = 0; i < 5; i++) {
+        const x = 90 + i * 120 + Math.sin(this.time * 0.3 + i) * 10;
+        this.fill([[x, -10], [x + 60, -10], [x - 60 + 120, H * 0.7], [x - 150 + 120, H * 0.7]], '#fff6c8', true);
+      }
+      c.globalAlpha = 1;
+    } else if (stage === 'tunnel' || stage === 'tower') {
+      c.globalAlpha = 0.22;
+      for (let i = 0; i < 24; i++) {
+        const x = (noise(i) * 640 + Math.sin(this.time * 0.5 + i) * 14 - this.camZ * 3) % 680 - 20, y = (noise(i + 9) * H + this.time * 6 + i * 3) % (H + 10);
+        this.ellipse(x, y, 1.3, 1.3, '#f6e7c2', true);
+      }
+      c.globalAlpha = 1;
+    } else if (stage === 'wetlands') {
+      for (let i = 0; i < 10; i++) {
+        const blink = 0.3 + 0.7 * Math.abs(Math.sin(this.time * 1.7 + i * 2));
+        const x = (noise(i + 20) * 640 + Math.sin(this.time * 0.7 + i) * 18 - this.camZ * 2) % 680 - 20, y = this.horizon + 20 + noise(i + 30) * (H - this.horizon - 60) + Math.cos(this.time + i) * 6;
+        c.globalAlpha = blink * 0.8; this.ellipse(x, y, 1.6, 1.6, '#e6ffb0', true);
+      }
+      c.globalAlpha = 1;
+    }
+  }
+
+  // A per-stage colour grade and a fine grain over everything, so flat fills read as painted.
+  finish(model) {
+    const c = this.c, H = this.H;
+    const grade = { tunnel: '#ffb86c', wetlands: '#9fd9c6', forest: '#f0e68c', tower: '#8fa4ff', island: '#ffd9a0' }[model.stage.id];
+    c.save(); c.globalCompositeOperation = 'overlay'; c.globalAlpha = 0.16; c.fillStyle = grade; c.fillRect(0, -20, 640, H + 40); c.restore();
+    if (!this.grain && typeof document !== 'undefined') {
+      const tile = document.createElement('canvas'); tile.width = tile.height = 96;
+      const t = tile.getContext('2d'), img = t.createImageData(96, 96);
+      for (let i = 0; i < img.data.length; i += 4) { const v = 110 + Math.floor(noise(i) * 110); img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+      t.putImageData(img, 0, 0);
+      this.grain = c.createPattern(tile, 'repeat');
+    }
+    if (this.grain) { c.save(); c.globalCompositeOperation = 'overlay'; c.globalAlpha = 0.09; c.fillStyle = this.grain; c.fillRect(0, -20, 640, H + 40); c.restore(); }
+  }
+
   speedLines(model) {
     if (this.reduced || !(model.godspeed > 0 || model.speed > model.stage.speed * 1.25)) return;
     const c = this.c, H = this.H;
@@ -714,9 +839,13 @@ export class HunterScene {
     if (!reducedMotion) this.time += dt;
     this.shake = Math.max(0, this.shake - dt);
     this.land = Math.max(0, this.land - dt * 4);
+    this.flash = Math.max(0, this.flash - dt);
+    if (this.ko > 0) this.ko += dt;
+    this.previewing = preview && !reducedMotion;
     const p = model.p;
     const pal = PALETTES[model.stage.id];
-    this.camZ = p.z - CAM_BACK;
+    // The setup screen runs an attract loop: the tunnel scrolls past while the hero jogs in place.
+    this.camZ = p.z - CAM_BACK + (this.previewing ? this.time * 7 : 0);
     const targetX = (p.x - 1) * W * 0.45;
     this.camX = reducedMotion || !dt ? targetX : lerp(this.camX, targetX, 1 - Math.exp(-dt * 10));
     const jitter = this.shake > 0 && !reducedMotion ? (noise(this.time * 60) - 0.5) * 8 * this.shake : 0;
@@ -726,7 +855,7 @@ export class HunterScene {
     this.backdrop(model, pal);
     this.road(model, pal);
     // Everything with depth is painted far to near.
-    const visible = model.objects.filter(o => !o.done && o.z > this.camZ + 0.5 && o.z < this.camZ + FAR).sort((a, b) => b.z - a.z);
+    const visible = this.previewing ? [] : model.objects.filter(o => !o.done && o.z > this.camZ + 0.5 && o.z < this.camZ + FAR).sort((a, b) => b.z - a.z);
     const gaps = visible.filter(o => o.cls === 'gap');
     for (const o of gaps) this.object(o, model, pal);
     this.scenery(model, pal);
@@ -739,6 +868,7 @@ export class HunterScene {
     this.pursuer(model);
     this.drawEffects(model, dt);
     this.wisps(model);
+    this.ambient(model);
     if (pal.fog) {
       const fog = c.createLinearGradient(0, this.horizon - 30, 0, this.horizon + 90);
       fog.addColorStop(0, pal.fog + 'ee'); fog.addColorStop(1, pal.fog + '00');
@@ -753,10 +883,12 @@ export class HunterScene {
     } else if (model.nen === 'zetsu') {
       c.fillStyle = '#1a243a44'; c.fillRect(0, -20, 640, H + 40);
     }
+    this.finish(model);
     const vignette = c.createRadialGradient(320, H / 2, H * 0.45, 320, H / 2, H * 1.15);
     vignette.addColorStop(0, '#00000000'); vignette.addColorStop(1, '#00000066');
     c.fillStyle = vignette; c.fillRect(0, -20, 640, H + 40);
-    if (preview) { c.fillStyle = '#0b0e1466'; c.fillRect(0, -20, 640, H + 40); }
+    if (this.flash > 0 && !reducedMotion) { c.globalAlpha = Math.min(0.45, this.flash * 2.5); c.fillStyle = this.flashColor; c.fillRect(0, -20, 640, H + 40); c.globalAlpha = 1; }
+    if (preview) { c.fillStyle = '#0b0e1433'; c.fillRect(0, -20, 640, H + 40); }
     c.setTransform(1, 0, 0, 1, 0, 0);
   }
 }
