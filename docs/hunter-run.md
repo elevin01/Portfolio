@@ -1,81 +1,69 @@
-# Hunter × Hunter: The platform trial
+# Hunter × Hunter: Nen run
 
-A manually controlled 2D platformer in the hidden portfolio arcade. The user chose **Santa Run-style platforming** after rejecting both the 3D runner and a flat side-scrolling auto-runner. The replacement therefore changes the actual movement, terrain, and failure loop.
+A behind-view, three-lane runner through the 287th Hunter Exam, drawn in pseudo-3D on a 2D canvas. It replaces the earlier 3D runner and the Santa Run-style platformer. The Temple Run shape stays; the depth comes from Nen and from the exam itself, the way Slime Crossing takes its skills from Tensura and Ghostbusters takes its tools from the films.
 
 ## What you play
 
-Choose Killua, Gon, Kurapika, or Hisoka. Pick Hunter Exam, Yorknew City, or Greed Island. Trial is the default and has six authored rooms per course, for eighteen distinct layouts. Reach the yellow exit in each room before the shared countdown expires. Rooms progress immediately after a short clear animation.
+Pick Gon, Killua, Kurapika, or Leorio, with their canonical applicant numbers. The exam is four phases of the actual course. Phase 1 is literally a long run behind Satotz, which is why the game is a runner at all.
 
-You control horizontal movement and can stop, reverse, or steer in the air. Holding Jump gives a high jump; tapping gives a short hop. There is a small grace period after leaving a ledge and input buffering just before landing. Thin ledges are one-way platforms that can be jumped through from below; full-height terrain and wooden crates are solid.
+| Phase | Stage | Length | What's different |
+| --- | --- | ---: | --- |
+| Phase 1 | Zaban Tunnel | 450 m | Other applicants (lane obstacles with number plates), collapsed applicants and luggage to jump, pipes to slide, pillars. Tonpa's juice is a trap pickup. Satotz runs ahead the whole way. |
+| Phase 1 · second half | Numere Wetlands | 500 m | Fog shortens visibility. Many hazards are concealed with In and only readable through Gyo: logs, vines, a hippo's jaws, Noggin Luggers posing as applicants. Hisoka starts thinning the field. |
+| Phase 3 | Trick Tower | 500 m | MAJORITY doors that close two lanes, trapdoors, spike rows, swinging blades, hidden floors. The wall clock counts down 72 hours over the stage. Leroute's wager is a coin-flip pickup. |
+| Phase 4 | Zevil Island | 550 m | Plates are scarcer and you need six points to pass. Your target's plate is worth three. Another applicant is hunting your plate. Bees, branches, boulders, ravines. |
 
-| Course | Six rooms |
-| --- | --- |
-| Hunter Exam | The entrance; The long staircase; Broken passage; A higher path; Over the wetlands; Follow the examiner |
-| Yorknew | Auction district; Fire escape; Old rooftops; Across the avenue; Service lifts; Backstreet exit |
-| Greed Island | Out of the village; Rocky ascent; Fragile stepping stones; The shortcut; Drifting stone; Road to Masadora |
+Pass all four and the license is yours; the course then continues as Endless, a little faster each lap. Endless mode from the menu skips the rest cards and the Zevil quota.
 
-The rooms include height changes, gaps, optional upper routes, badges, cracked platforms that crumble, moving platforms that carry the player, spikes, crates, and occasional patrolling sentries. Green checkpoint flags save your position. Falling or hitting a hazard returns you to the flag in 0.35 seconds and deducts a few seconds. Collected badges stay collected. No ability is required to finish.
+## Nen is the depth
 
-## Modes and challenge
+Aura is the one resource (100 max). The four controls on top of running are the four states of aura you actually use in the manga.
 
-| Challenge | Initial time | Mistake penalty | Aura/stamina recovery |
-| --- | --- | --- | --- |
-| Rookie | 120 seconds | 2 seconds | 5 per second |
-| Hunter | 95 seconds | 3 seconds | 3.5 per second |
-| Veteran | 75 seconds | 4 seconds | 2.5 per second |
+- **Ten** is default. Aura trickles back (4/s) and absorbs stumbles (25 aura each). With no aura, a stumble ends the run.
+- **Zetsu** (hold Z) stops the aura flow. It recovers fast (14/s) and Hisoka loses your presence within about a second, but one hit of any kind ends the run and Gyo and Hatsu are unavailable.
+- **Gyo** (hold X) focuses aura on the eyes. In-concealed hazards are invisible until about 13 m away unless Gyo is up. It costs 9 aura per second (half for Kurapika).
+- **Hatsu** (C) is each character's technique, with a cost and a cooldown.
 
-The clock starts with the first movement, jump, or power input. It pauses when the game is paused or hidden and during room-clear transitions. Difficulty changes the time and resource budget while preserving familiar movement physics.
+| Character | Type | Hatsu | Cost / recharge | Passive |
+| --- | --- | --- | --- | --- |
+| Gon #405 | Enhancer | Jajanken: Rock. Half a second of chant, then everything but gaps within 26 m, in every lane, is destroyed. | 40 / 6 s | Aura recovers 30 % faster; stumbles cost 20. |
+| Killua #99 | Transmuter | Godspeed. For 3.5 s the body dodges on its own, using the same reflexes the solvability tests use. | 45 / 10 s | Tonpa's juice is harmless (Zoldyck poison training) and restores aura. Faster lane changes. |
+| Kurapika #404 | Conjurer | Dowsing Chain. Seven seconds of free Gyo, with chains pointing at every hidden thing. | 30 / 9 s | Gyo costs half. |
+| Leorio #403 | Emitter | Remote Punch. The next hazard in your lane, up to 42 m out, breaks 0.35 s later. | 18 / 4 s | Cheapest Hatsu and shortest recharge. |
 
-Endless is a separate selection. It continues through the authored room set in a rotating order and grants 18 seconds per exit, capped at the challenge's initial time. It has no final room count. Only the current room's terrain and objects are retained. It is a survival sequence of designed rooms, not an infinitely unique generated map.
+**Hisoka** plays the Temple Run monkeys. From the wetlands on, a stumble puts him right behind you. A second stumble while he is there ends the run with his verdict. Nine seconds of clean running, or about a second of Zetsu, loses him.
 
-Records use `portfolio.hunter-platformer.v3` because scores from the earlier runners are not comparable. Records are separated by character, course, difficulty, and mode. Trial remains the default on reload.
+## Easter eggs that are mechanics
+
+- Tonpa's juice: a "FREE JUICE" tray in the tunnel. It costs 15 aura and cramps you for two seconds. Killua drinks it fine.
+- Numbered plates: applicants wear random numbers, but famous ones turn up (405 Gon, 99 Killua, 404 Kurapika, 403 Leorio, 44 Hisoka, 16 Tonpa, 294 Hanzo, 301 Gittarackur, 53 Pokkle, 246 Ponzu, 118 Geretta, 191 Bodoro). Collected famous plates are kept in the notes.
+- Your target on Zevil Island: Gon draws #44, as in the manga. The other targets are game assignments.
+- Leroute's wager: half the time +5 points, half the time you lose fifty hours and thirty aura.
+- Noggin Luggers: a Gyo reveal in the fog turns an "applicant" into an ape.
+- Satotz's pace: run the whole tunnel without a stumble.
+- Hunter's notes: fourteen discoveries, unlocked by doing the thing, plus the plate collection. Stored under `portfolio.hunter-nen-run.v4`.
 
 ## Controls
 
-- Left / Right or A / D: move; release to brake.
-- Space / Up / W: jump; hold for height, release for a short hop.
-- X or 3: optional character action.
-- P: pause/resume. R or Retry: return to your checkpoint, with the normal retry penalty.
-- Phone: hold a direction with one thumb and Jump with the other. Pointer capture supports simultaneous held inputs and releases them on cancellation, blur, or closing.
-
-The selector is outside the gameplay view. Once started, the screen emphasizes the map, room number, time, and four touch controls. The same logical view is used across viewport sizes. Landscape retains visible pause and retry buttons. Sound is optional and synthesized locally; reduced motion disables decorative effects.
-
-## Character actions
-
-| Character | Exam Trial | Yorknew Trial | Greed Island Trial | Endless |
-| --- | --- | --- | --- | --- |
-| Killua | Skateboard ground dash | Rhythm Echo dash | Lightning Palm stuns a nearby sentry | Godspeed dash with one sentry deflection |
-| Gon | Fishing rod retrieves a nearby badge | Fishing rod | Jajanken: Rock charges and breaks a nearby crate | Jajanken: Rock |
-| Kurapika | Twin blades cut a nearby crate | Dowsing Chain holds off a nearby sentry | Dowsing Chain | Dowsing Chain |
-| Hisoka | Bungee Gum pulls toward a visible anchor | Bungee Gum | Bungee Gum | Bungee Gum |
-
-Actions are optional shortcuts or assists, not the movement foundation. Their button states specify the missing target or cooldown. Jajanken has a charge delay; Bungee Gum gives a visible tether and physical aerial impulse; ground dashes still require steering and jumping. Electricity does not regenerate by waiting: entering the next room supplies 30 charge. Other energy regenerates gradually. No Chain Jail against ordinary enemies, and no trained Nen for early Exam Gon/Killua/Kurapika.
-
-These are deliberately limited arcade adaptations, not full simulations of canonical powers. The backgrounds are original pixel-style interpretations rather than exact episode geography. Platforms, pickups, crates, and sentries are game inventions.
+- ← / → or A / D change lanes (one more can be queued). ↑ / W / Space jumps. ↓ / S slides, or drops you out of a jump.
+- Hold Z (or 1) for Zetsu, hold X (or 2) for Gyo, C (or 3) for Hatsu. P pauses. Switching tabs pauses.
+- Touch: swipe on the play area; tap to jump. The four arrow buttons do the same. The Nen buttons are held with pointer capture and release on cancellation. Hatsu is a tap.
+- Three challenges scale speed and recovery: Rookie (0.85×, 1.3× regen), Applicant, Pro Hunter (1.18×, 0.8× regen, more In).
 
 ## Implementation
 
-- `hunter-levels.js`: eighteen authored maps, checkpoints, hazards, badges, and anchors.
-- `hunter-model.js`: 120 Hz movement, solid and one-way collisions, moving/crumbling surfaces, room progression, checkpoints, countdowns, powers, and records.
-- `hunter-scene.js`: original Canvas 2D sprites and layered setting art, with platforms drawn at the collision geometry.
-- `game-hunter.js`: manual held-key/multi-pointer input, lifecycle, selector, controls, and HUD.
-- `hunter.css`: scoped responsive interface.
+- `hunter-track.js`: stage data, hazard classes, hand-authored lane patterns per stage, seeded generation, famous plates.
+- `hunter-model.js`: 120 Hz simulation. Lanes, jump and slide arcs, collision classes (low/high/gap/wall/soft/pickup), aura states, Hatsu, pursuer, stage progression, the Zevil quota, discoveries, and records. `autopilot()` is both Godspeed and the test pilot.
+- `hunter-scene.js`: pseudo-3D projection (camera 8.5 m behind, 2.6 m up, 430 px focal length), stage backdrops and side scenery anchored to world distance, hazard art, back-view characters, Satotz, Hisoka, fog, In shimmer and Gyo halos, effects.
+- `game-hunter.js`: setup, HUD, overlays (rest cards between phases, verdicts), keyboard and touch input, synthesized sound, records, arcade lifecycle, Hunter's notes.
+- `hunter.css`: scoped desktop, phone portrait, phone landscape, and reduced-motion layouts.
 
-There is no WebGL dependency, automatic horizontal movement, slide button, or flat-track obstacle generator.
+No build step, no dependencies, no WebGL.
 
 ## Verified checks
 
-Run `node --test tests/*.test.mjs`.
+`node --test tests/*.test.mjs` runs 52 tests across the arcade. The Hunter suite covers lane queueing, each collision class, stumble and Zetsu rules, aura economy for every state and passive, Hisoka's appearance, catch and escape, every Hatsu, plates and the target, rest cards, the Zevil quota and the license, deterministic generation, pause, storage safety, and records. The pilot drives every character at every difficulty through the whole exam, collecting the plates it needs, and Killua through three Endless laps. A 300-run sweep (4 characters × 3 difficulties × 25 seeds) passes with a single stumble.
 
-The 55-test arcade suite includes manual start/stop/reverse, variable jump height and air control, coyote time and jump buffering, solid/one-way surfaces, checkpoint recovery, moving/crumbling platforms, timer expiry, pause, abilities, and validated records. All 36 character/course/difficulty combinations complete their six authored rooms without using powers. A 40-room Endless simulation verifies continued progression and bounded level storage.
+Browser checks with Playwright cover keyboard lanes, jump, slide, Zetsu and Gyo holds, pause, a scripted stumble summoning Hisoka and a second one ending the run, retry, records, guide and modal pausing, selection persistence across reload, touch swipes, held touch Nen buttons, and reduced motion, at 1280×900, 390×844, and 844×390. Screenshots of each stage were inspected.
 
-Browser verification uses keyboard input with controlled browser-clock advancement for an entire six-room Exam Trial, plus a native simultaneous two-thumb touch run through its first room. It checks no auto-run before input, braking and reversing, pause/reopen, records, default mode, pointer release, modal close, and control visibility at 1280×960, 390×844, 320×568, and 844×390. Screenshots are visually inspected. Model tests alone do not establish enjoyable play.
-
-## Design references
-
-- [60 Second Santa Run on Coolmath Games](https://www.coolmathgames.com/0-60-second-santa-run): manual run/jump controls, a destination, and time pressure.
-- [Santa Run 2](https://www.coolmathgames.com/0-santa-run-2): compact platforming, hazards, and quick retries.
-- [Run](https://www.coolmathgames.com/0-run): short course progression and spatial route reading. The user explicitly chose the Santa Run-style 2D direction over a Run-style tunnel.
-- Original setting research: [NTV character profiles](https://www.ntv.co.jp/hunterhunter/character/) and [official dictionary](https://www.ntv.co.jp/hunterhunter/dictionary/).
-
-![Platformer gameplay](hunter-platformer-preview.png)
+![Nen run gameplay](hunter-nen-run-preview.png)

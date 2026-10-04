@@ -1,15 +1,15 @@
-export function pilot(m) {
-  if(!['playing','transition'].includes(m.phase))return;
-  m.setInput('right',true);
-  const p=m.p;
-  if(p.grounded&&m.respawn===0){
-    const b=m.level.platforms.find(b=>b.id===p.support);
-    let jump=b&&b.x+b.w-p.x<34;
-    if(m.level.platforms.some(b=>!b.removed&&!b.broken&&b.x>p.x+8&&b.x-p.x<53&&b.y<p.y-3&&b.y+b.h>p.y-40))jump=true;
-    if(m.level.hazards.some(h=>h.x+h.w>p.x&&h.x-p.x<56&&Math.abs(h.y-p.y)<10))jump=true;
-    const g=m.level.guard;if(g&&g.stun===0&&Math.abs(g.x-p.x)<63&&Math.abs(g.y-p.y)<10)jump=true;
-    m.setInput('jump',!!jump);
+// A greedy pilot for solvability checks: it reuses the model's own dodging reflexes
+// and additionally steers toward plates when the lane ahead is clear.
+export function pilot(model) {
+  if (model.phase === 'rest') model.continue();
+  if (model.phase !== 'playing') return;
+  const p = model.p;
+  model.autopilot();
+  if (p.lane === p.targetLane && model.godspeed <= 0) {
+    const ahead = model.objects.filter(o => !o.done && o.z + o.len > p.z - 1 && o.z < p.z + 24);
+    const hazardNear = ahead.some(o => o.cls !== 'pickup' && o.z < p.z + 16);
+    const plate = ahead.find(o => (o.kind === 'plate' || o.kind === 'target') && Math.abs(o.lane - p.lane) === 1);
+    if (!hazardNear && plate && !ahead.some(o => o.cls !== 'pickup' && o.lane === plate.lane)) model.moveLane(plate.lane - p.lane);
   }
-  if(!p.grounded&&p.vy>0)m.setInput('jump',false);
-  m.step();m.drainEvents();
+  model.step();
 }
