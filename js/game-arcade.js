@@ -2,6 +2,7 @@ import { game2048 } from './game-2048.js';
 import { flappyBird } from './game-flappy.js';
 import { ghostbusters } from './game-ghosts.js';
 import { slimeCrossing } from './game-crossing.js';
+import { hunterRun } from './game-hunter.js';
 
 const toggle = document.getElementById('gameToggle');
 const footer = document.querySelector('.sidebar-footer');
@@ -14,7 +15,8 @@ const games = {
   '2048': { title: '2048', panel: document.getElementById('game2048Panel'), controller: game2048 },
   flappy: { title: 'Flappy Bird', panel: document.getElementById('gameFlappyPanel'), controller: flappyBird },
   ghosts: { title: 'Ghostbusters', panel: document.getElementById('gameGhostPanel'), controller: ghostbusters },
-  crossing: { title: 'Slime × NYC', panel: document.getElementById('gameCrossingPanel'), controller: slimeCrossing }
+  crossing: { title: 'Slime × NYC', panel: document.getElementById('gameCrossingPanel'), controller: slimeCrossing },
+  hunter: { title: 'Hunter × Hunter', panel: document.getElementById('gameHunterPanel'), controller: hunterRun }
 };
 let activeGame = null;
 let isOpen = false;
