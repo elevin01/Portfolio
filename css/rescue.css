@@ -41,6 +41,7 @@
 .sr-briefing h5 { font-size:25px; font-weight:650; letter-spacing:-.7px; margin:5px 0 7px; }
 .sr-briefing p { font-size:13px; color:#bcc0ca; max-width:560px; }
 .sr-briefing .sr-rule { margin-top:8px; color:#e8d8bd; font-size:11px; }
+.sr-briefing .sr-ability-brief { margin-top:5px; color:var(--sr-accent); font-size:11px; }
 .sr-deploy { display:flex; flex-direction:column; align-items:center; gap:9px; }
 .sr-deploy>span { color:#a3a8b5; font:10px ui-monospace,monospace; }
 .sr-primary { display:flex; justify-content:space-between; align-items:center; gap:26px; background:var(--sr-accent); color:#201a26; border:1px solid transparent; border-radius:6px; padding:14px 21px; font-weight:750!important; min-height:48px; white-space:nowrap; transition:filter .15s; }
@@ -53,7 +54,24 @@
 .sr-pressure-track i { flex:1; height:4px; background:#343342; border-radius:1px; transition:background .25s; }
 .sr-pressure-track i.is-filled { background:#ee827e; box-shadow:0 0 12px #ee827e30; }
 .sr-puzzle-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:30px; align-items:center; }
-.sr-puzzle #srClue { color:#e2dfe4; font-size:14px; min-height:42px; margin:7px 0 14px; }
+.sr-puzzle #srClue { color:#e2dfe4; font-size:14px; margin:0 0 14px; padding-left:10px; border-left:2px solid var(--sr-accent); }
+.sr-word-meta { color:#adb4c0; font-size:11px; margin:6px 0 16px!important; }
+.sr-help-actions { display:flex; gap:8px; margin-top:16px; }
+.sr-help-button { flex:1; min-width:0; text-align:left; padding:9px 11px; border:1px solid #414958; border-radius:6px; color:#e1e3ea; background:#1b2330; }
+.sr-help-button>span { display:block; font-size:12px; font-weight:600; }
+.sr-help-button>small { display:block; font-size:10px; line-height:1.5; color:#aeb8ca; margin-top:2px; }
+.sr-help-button:not(:disabled):hover { border-color:var(--sr-accent); background:#283142; }
+.sr-ability-button { border-color:color-mix(in srgb,var(--sr-accent) 45%,#303948); }
+.sr-ability-button>span { color:var(--sr-accent); }
+.sr-help-button:disabled { opacity:.6; cursor:default; }
+.sr-ability-feedback { margin-top:10px; padding:10px 12px; border-left:2px solid var(--sr-accent); background:#171f2c; border-radius:0 5px 5px 0; }
+.sr-ability-feedback p { font-size:12px; color:#e0d9cc; }
+.sr-ability-feedback:has(svg) { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.sr-ability-feedback:has(svg) #srSketch { flex:0 0 150px; max-width:65%; }
+.sr-scout-sketch { display:block; width:100%; height:auto; color:#524738; background:#e2d6be; border:4px solid #c5b89e; border-radius:2px; }
+.rescue-game[data-phase="won"] .sr-help-actions, .rescue-game[data-phase="lost"] .sr-help-actions,
+.rescue-game[data-phase="won"] .sr-word-meta, .rescue-game[data-phase="lost"] .sr-word-meta,
+.rescue-game[data-phase="won"] .sr-ability-feedback, .rescue-game[data-phase="lost"] .sr-ability-feedback { display:none; }
 .sr-word { width:fit-content; max-width:100%; display:flex; gap:5px; flex-wrap:wrap; }
 .sr-word:focus-visible { outline:1px solid var(--sr-accent); outline-offset:6px; border-radius:4px; }
 .sr-word span { display:grid; place-items:center; width:clamp(22px,3vw,35px); height:41px; font:600 19px ui-monospace,monospace; background:#1a2330; border:1px solid #344251; border-bottom:2px solid #68798e; border-radius:4px; color:#8da0b5; }
@@ -66,6 +84,7 @@
 .rescue-game .sr-key-row button:disabled { opacity:1; }
 .sr-key-row button.is-hit { color:var(--sr-energy); border-color:#547980; background:#23393f; }
 .sr-key-row button.is-miss { color:#a09ba5; background:#1a1f29; border-color:#2c323d; text-decoration:line-through; }
+.sr-key-row button.is-excluded { color:#bbace0; background:#242034; border-color:#4c425d; text-decoration:line-through; }
 .sr-key-help { margin-top:8px!important; color:#a4a8b5; font-size:10px; text-align:center; }
 .sr-status { color:#aeb6c5; font-size:11px; line-height:1.5; margin-top:13px!important; min-height:33px; }
 .sr-result { display:flex; align-items:center; justify-content:space-between; gap:18px; border-top:1px solid #353b47; padding:18px 0 4px; margin-top:6px; }

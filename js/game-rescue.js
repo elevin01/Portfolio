@@ -1,6 +1,8 @@
 import { MISSIONS, MAX_MISSES, RescueModel, WordDeck } from './rescue-model.js';
 import { portrait, scene, setFrame, preloadSheet } from './rescue-art.js';
 import { STORIES, storyFrame, reaction } from './rescue-story.js';
+import { ABILITIES } from './rescue-words.js';
+import { SKETCHES, scoutSketch } from './rescue-sketches.js';
 
 const root = document.getElementById('gameRescuePanel');
 const preview = document.getElementById('rescuePreview');
@@ -37,18 +39,20 @@ root.innerHTML = `
     <div class="sr-story-actions"><button type="button" id="srContinue" class="sr-story-next">Continue <span aria-hidden="true">→</span></button><button type="button" id="srSkip" class="sr-text-button">Skip opening</button></div>
   </div>
   <div id="srBriefing" class="sr-briefing">
-    <div><span class="sr-eyebrow" id="srMissionLabel"></span><h5 id="srMissionTitle"></h5><p id="srIntro"></p><p class="sr-rule">Correct letters crack the seal. Six wrong guesses complete it.</p></div>
+    <div><span class="sr-eyebrow" id="srMissionLabel"></span><h5 id="srMissionTitle"></h5><p id="srIntro"></p><p class="sr-rule">Everyday words and shinobi lore. Six mistakes. One ability.</p><p class="sr-ability-brief" id="srAbilityBrief"></p></div>
     <div class="sr-deploy"><button type="button" class="sr-primary" id="srBegin">Begin rescue <span aria-hidden="true">↗</span></button><button type="button" class="sr-text-button" id="srResume" hidden>Resume current rescue</button><span id="srRecord"></span><span id="srAssetStatus" role="status"></span></div>
   </div>
   <div id="srPlay" class="sr-play" hidden>
     <div class="sr-pressure"><div><span id="srJutsu"></span><strong id="srRemaining"></strong></div><div class="sr-pressure-track" aria-hidden="true">${Array.from({length:MAX_MISSES},()=>'<i></i>').join('')}</div></div>
-    <div class="sr-puzzle-layout"><div class="sr-puzzle"><span class="sr-eyebrow">BREAK THE INSCRIPTION</span><p id="srClue"></p><div id="srWord" class="sr-word" role="group" tabindex="0" aria-label="Hidden word" aria-describedby="srClue srTypeHint"></div><span id="srWordReader" class="sr-reader"></span></div>
+    <div class="sr-puzzle-layout"><div class="sr-puzzle"><span class="sr-eyebrow">BREAK THE INSCRIPTION</span><p id="srWordMeta" class="sr-word-meta"></p><p id="srClue" hidden></p><div id="srWord" class="sr-word" role="group" tabindex="0" aria-label="Hidden word" aria-describedby="srClue srTypeHint"></div><span id="srWordReader" class="sr-reader"></span>
+      <div class="sr-help-actions"><button type="button" id="srHint" class="sr-help-button" aria-controls="srClue"><span id="srHintLabel">Ask for a hint</span><small>Expect a taunt</small></button><button type="button" id="srAbility" class="sr-help-button sr-ability-button" aria-controls="srAbilityFeedback"><span id="srAbilityLabel"></span><small id="srAbilityEffect"></small></button></div>
+      <div id="srAbilityFeedback" class="sr-ability-feedback" hidden><p id="srAbilityNote"></p><div id="srSketch"></div></div></div>
       <div class="sr-desktop-input"><p id="srTypeHint">Type a letter on your keyboard.</p><p class="sr-missed-label">MISSED LETTERS</p><p id="srMissed" class="sr-missed">None yet</p><span>No timer. Take your time.</span></div><div class="sr-input"><div id="srKeyboard" class="sr-keyboard" role="group" aria-label="Guess a letter">${['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'].map(row=>`<div class="sr-key-row">${[...row].map(c=>`<button type="button" data-letter="${c}" aria-label="Guess ${c}">${c}</button>`).join('')}</div>`).join('')}</div><p class="sr-key-help">Type a letter or tap a key. No timer.</p></div>
     </div>
     <p id="srStatus" class="sr-status" aria-hidden="true"></p><p id="srAnnouncement" class="sr-reader" role="status" aria-live="polite" aria-atomic="true"></p>
     <div id="srResult" class="sr-result" hidden><div><span class="sr-eyebrow" id="srResultTag"></span><h5 id="srResultTitle"></h5><p id="srResultText"></p></div><button type="button" class="sr-primary" id="srNext">Next rescue <span aria-hidden="true">↗</span></button></div>
   </div>
-  <div class="sr-footer"><span>Original fan encounters · Techniques adapted for play</span><details><summary>How to play</summary><p>Use the clue to guess the hidden word, one letter at a time. Every matching letter is revealed together. Correct guesses fracture the prison; each wrong guess advances the restraint. Save your teammate before six mistakes. Repeated letters cost nothing. Escape closes the arcade. The opening can be skipped. Dialogue has no time limit. Three illustrated threat levels and three damage levels show your progress. Changing missions starts a new word; you can resume before starting another rescue.</p><button type="button" id="srToggleKeys" class="sr-text-button" aria-pressed="false">Show letter keys on desktop</button></details></div>
+  <div class="sr-footer"><span>Original fan encounters · Techniques adapted for play</span><details><summary>How to play</summary><p>Guess a mixed everyday or Naruto word, one letter at a time. Clues stay hidden until you ask for a hint, earning a taunt from your opponent. Hints cost no mistakes. Each hero has one ability per rescue: Naruto reveals a missing letter, Sasuke rules out three wrong letters, Sakura gives a vague association, and Kakashi shows a rough sketch. Correct guesses fracture the prison; six wrong guesses complete it. Repeated or ruled-out letters cost nothing. There is no timer. Escape closes the arcade; the opening can be skipped. Resuming preserves guesses, hints, and spent abilities. Starting a new word refreshes your ability.</p><button type="button" id="srToggleKeys" class="sr-text-button" aria-pressed="false">Show letter keys on desktop</button></details></div>
 `;
 const $ = selector => root.querySelector(selector);
 function stopIdle() { clearTimeout(idleTimer); idleTimer = 0; }
@@ -116,6 +120,7 @@ function choose(mission = selected) {
   $('#srMissionLabel').textContent = `SAVE ${mission.captive.toUpperCase()} · ${mission.jutsu.toUpperCase()}`;
   $('#srMissionTitle').textContent = mission.title;
   $('#srIntro').textContent = mission.intro;
+  $('#srAbilityBrief').textContent = `${ABILITIES[mission.id].name}: ${ABILITIES[mission.id].effect.toLowerCase()}. Once per rescue.`;
   $('#srRecord').textContent = `Successful rescues: ${records[mission.id] || 0}`;
   $('#srBegin').firstChild.textContent = `Save ${mission.captive} `;
   $('#srResume').hidden = model.phase !== 'playing';
@@ -176,15 +181,20 @@ function render() {
   $('#srJutsu').textContent = selected.jutsu;
   $('#srRemaining').textContent = model.phase === 'won' ? 'SEAL BROKEN' : `${remaining} ${remaining===1?'mistake':'mistakes'} left`;
   root.querySelectorAll('.sr-pressure-track i').forEach((bar,i)=>bar.classList.toggle('is-filled', i<model.misses));
-  $('#srClue').textContent = model.clue;
+  $('#srWordMeta').textContent = `${model.answer.length} letters`;
+  $('#srClue').hidden = !model.hintUsed;
+  $('#srClue').textContent = model.hintUsed ? model.clue : '';
+  renderHelp();
   $('#srWord').innerHTML = [...model.answer].map(c=>`<span class="${model.guessed.has(c)?'is-found':model.phase==='lost'?'is-revealed':''}" aria-hidden="true">${model.guessed.has(c)||model.phase==='lost'?c:'·'}</span>`).join('');
   $('#srWord').setAttribute('aria-label', `${model.answer.length} letters: ${[...model.answer].map(c=>model.guessed.has(c)||model.phase==='lost'?c:'blank').join(', ')}`);
   $('#srWordReader').textContent = `Word: ${[...model.answer].map(c=>model.guessed.has(c)||model.phase==='lost'?c:'blank').join(', ')}.`;
   root.querySelectorAll('[data-letter]').forEach(button=>{
     const c = button.dataset.letter, guessed = model.guessed.has(c), hit = guessed && model.answer.includes(c);
-    button.disabled = guessed || model.phase !== 'playing';
+    const excluded = model.excluded.has(c);
+    button.disabled = guessed || excluded || model.phase !== 'playing';
     button.classList.toggle('is-hit', hit); button.classList.toggle('is-miss', guessed && !hit);
-    button.setAttribute('aria-label', `${c}${guessed?hit?', correct':', incorrect':', unguessed'}`);
+    button.classList.toggle('is-excluded', excluded);
+    button.setAttribute('aria-label', `${c}${excluded?', ruled out by Sharingan':guessed?hit?', correct':', incorrect':', unguessed'}`);
   });
   const missed = [...model.guessed].filter(c => !model.answer.includes(c));
   $('#srMissed').textContent = missed.length ? missed.join('  ') : 'None yet';
@@ -207,8 +217,11 @@ function guess(letter) {
   if (!active || screen !== 'play' || document.hidden) return;
   const outcome = model.guess(letter);
   if (outcome === 'ignored') return;
+  resolveGuess(outcome, letter);
+}
+function resolveGuess(outcome, letter, dialogue) {
   clearEffects(); render();
-  say(reaction(selected.id, model.phase === 'playing' ? outcome : model.phase, model.misses, model.progress, beat++));
+  say(model.phase === 'playing' && dialogue ? dialogue : reaction(selected.id, model.phase === 'playing' ? outcome : model.phase, model.misses, model.progress, beat++));
   if (model.phase === 'playing') scheduleIdle(true);
   // Restart the short CSS response without an animation loop or blocked input.
   void root.offsetWidth;
@@ -227,6 +240,35 @@ function guess(letter) {
     focusGuessInput();
   }
 }
+function renderHelp() {
+  const ability = ABILITIES[selected.id], terminal = model.phase !== 'playing';
+  $('#srHint').disabled = model.hintUsed || terminal;
+  $('#srHintLabel').textContent = model.hintUsed ? 'Hint revealed' : 'Ask for a hint';
+  $('#srHint').setAttribute('aria-expanded', String(model.hintUsed));
+  $('#srAbility').disabled = model.abilityUsed || terminal;
+  $('#srAbilityLabel').textContent = `${ability.name} · ${model.abilityUsed ? 'Used' : '1 use'}`;
+  $('#srAbilityEffect').textContent = ability.effect;
+  const help = model.abilityResult;
+  $('#srAbilityFeedback').hidden = !help;
+  $('#srSketch').innerHTML = help?.kind === 'sketch' ? scoutSketch(help.sketch) : '';
+  $('#srAbilityNote').textContent = !help ? '' : help.kind === 'letter' ? `Clone found: ${help.letter}` : help.kind === 'eliminate' ? `Ruled out: ${help.letters.join(' · ')}` : help.kind === 'association' ? help.text : 'Pakkun’s sketch';
+}
+$('#srHint').addEventListener('click', () => {
+  if (!active || screen !== 'play' || document.hidden) return;
+  const clue = model.requestHint(); if (!clue) return;
+  render(); say(['enemy', STORIES[selected.id].hint]); scheduleIdle(true);
+  announce(`Hint: ${clue}`); focusGuessInput();
+});
+$('#srAbility').addEventListener('click', () => {
+  if (!active || screen !== 'play' || document.hidden) return;
+  const help = model.useAbility(); if (!help) return;
+  if (help.kind === 'letter') resolveGuess('hit', help.letter, ['hero', ABILITIES[selected.id].line]);
+  else {
+    render(); say(['hero', ABILITIES[selected.id].line]); scheduleIdle(true);
+    announce(help.kind === 'eliminate' ? `Sharingan ruled out ${help.letters.join(', ')}. No mistakes spent.` : help.kind === 'association' ? `Association: ${help.text}` : `Scout sketch: ${SKETCHES[help.sketch][0]}`);
+  }
+  if (model.phase === 'playing') focusGuessInput();
+});
 root.addEventListener('click', event=>{
   const button = event.target.closest('button'); if (!button || !active) return;
   if (button.dataset.shinobi) choose(MISSIONS.find(m=>m.id===button.dataset.shinobi));
