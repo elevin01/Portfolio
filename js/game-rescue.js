@@ -6,6 +6,8 @@ const preview = document.getElementById('rescuePreview');
 const model = new RescueModel();
 const deck = new WordDeck();
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const desktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+let showDesktopKeys = false;
 let selected = MISSIONS[0], active = false, screen = 'choose', effectTimer = 0, finishTimer = 0;
 root.dataset.active = 'false';
 let records = {};
@@ -32,15 +34,31 @@ root.innerHTML = `
   </div>
   <div id="srPlay" class="sr-play" hidden>
     <div class="sr-pressure"><div><span id="srJutsu"></span><strong id="srRemaining"></strong></div><div class="sr-pressure-track" aria-hidden="true">${Array.from({length:MAX_MISSES},()=>'<i></i>').join('')}</div></div>
-    <div class="sr-puzzle-layout"><div class="sr-puzzle"><span class="sr-eyebrow">BREAK THE INSCRIPTION</span><p id="srClue"></p><div id="srWord" class="sr-word" aria-label="Hidden word"></div><span id="srWordReader" class="sr-reader"></span></div>
-      <div class="sr-input"><div id="srKeyboard" class="sr-keyboard" role="group" aria-label="Guess a letter">${['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'].map(row=>`<div class="sr-key-row">${[...row].map(c=>`<button type="button" data-letter="${c}" aria-label="Guess ${c}">${c}</button>`).join('')}</div>`).join('')}</div><p class="sr-key-help">Type a letter or tap a key. No timer.</p></div>
+    <div class="sr-puzzle-layout"><div class="sr-puzzle"><span class="sr-eyebrow">BREAK THE INSCRIPTION</span><p id="srClue"></p><div id="srWord" class="sr-word" role="group" tabindex="0" aria-label="Hidden word" aria-describedby="srClue srTypeHint"></div><span id="srWordReader" class="sr-reader"></span></div>
+      <div class="sr-desktop-input"><p id="srTypeHint">Type a letter on your keyboard.</p><p class="sr-missed-label">MISSED LETTERS</p><p id="srMissed" class="sr-missed">None yet</p><span>No timer. Take your time.</span></div><div class="sr-input"><div id="srKeyboard" class="sr-keyboard" role="group" aria-label="Guess a letter">${['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'].map(row=>`<div class="sr-key-row">${[...row].map(c=>`<button type="button" data-letter="${c}" aria-label="Guess ${c}">${c}</button>`).join('')}</div>`).join('')}</div><p class="sr-key-help">Type a letter or tap a key. No timer.</p></div>
     </div>
     <p id="srStatus" class="sr-status" aria-hidden="true"></p><p id="srAnnouncement" class="sr-reader" role="status" aria-live="polite" aria-atomic="true"></p>
     <div id="srResult" class="sr-result" hidden><div><span class="sr-eyebrow" id="srResultTag"></span><h5 id="srResultTitle"></h5><p id="srResultText"></p></div><button type="button" class="sr-primary" id="srNext">Next rescue <span aria-hidden="true">↗</span></button></div>
   </div>
-  <div class="sr-footer"><span>Original fan encounters · Techniques adapted for play</span><details><summary>How to play</summary><p>Use the clue to guess the hidden word, one letter at a time. Every matching letter is revealed together. Correct guesses fracture the prison; each wrong guess advances the restraint. Save your teammate before six mistakes. Repeated letters cost nothing. Escape closes the arcade. Changing missions starts a new word; you can resume before starting another rescue.</p></details></div>
+  <div class="sr-footer"><span>Original fan encounters · Techniques adapted for play</span><details><summary>How to play</summary><p>Use the clue to guess the hidden word, one letter at a time. Every matching letter is revealed together. Correct guesses fracture the prison; each wrong guess advances the restraint. Save your teammate before six mistakes. Repeated letters cost nothing. Escape closes the arcade. Changing missions starts a new word; you can resume before starting another rescue.</p><button type="button" id="srToggleKeys" class="sr-text-button" aria-pressed="false">Show letter keys on desktop</button></details></div>
 `;
 const $ = selector => root.querySelector(selector);
+function usesLetterKeys() { return !desktopPointer.matches || showDesktopKeys; }
+function focusGuessInput() {
+  const target = usesLetterKeys() ? $('#srKeyboard button:not(:disabled)') : $('#srWord');
+  target?.focus({preventScroll:true});
+}
+function syncInputMode() {
+  root.dataset.keyboard = usesLetterKeys() ? 'touch' : 'physical';
+  $('#srToggleKeys').hidden = !desktopPointer.matches;
+  $('#srToggleKeys').setAttribute('aria-pressed', String(showDesktopKeys));
+  $('#srToggleKeys').textContent = showDesktopKeys ? 'Hide letter keys on desktop' : 'Show letter keys on desktop';
+  if (active && screen === 'play' && model.phase === 'playing' &&
+      (document.activeElement === $('#srWord') || document.activeElement?.matches('[data-letter]'))) focusGuessInput();
+}
+desktopPointer.addEventListener('change', syncInputMode);
+$('#srToggleKeys').addEventListener('click', () => { showDesktopKeys = !showDesktopKeys; syncInputMode(); });
+
 function clearEffects() {
   clearTimeout(effectTimer); clearTimeout(finishTimer);
   effectTimer = finishTimer = 0;
@@ -55,7 +73,6 @@ function setTheme(mission) {
   $('#srHeroName').textContent = mission.hero;
   $('#srCaptiveName').textContent = mission.captive;
   $('#srCaptiveState').textContent = 'TRAPPED';
-  if (screen === 'play') $('#srArt svg').setAttribute('viewBox', '0 70 900 360');
   $('#srEnemyName').textContent = mission.enemy;
   $('#srStage').setAttribute('aria-label', `${mission.hero} faces ${mission.enemy}. ${mission.captive} is trapped in a ${mission.jutsu.toLowerCase()}.`);
   $('.sr-bindings').innerHTML = bindingArt(mission, 0);
@@ -80,7 +97,7 @@ function openPlay() {
   $('#srCharacters').hidden = true; $('#srBriefing').hidden = true; $('#srPlay').hidden = false; $('#srChoose').hidden = false;
   $('#srResult').hidden = true; $('#srKeyboard').hidden = false; $('.sr-key-help').hidden = false;
   setTheme(selected); render();
-  $('#srKeyboard button:not(:disabled)')?.focus({preventScroll:true});
+  focusGuessInput();
 }
 function announce(message, word = '') {
   $('#srStatus').textContent = message;
@@ -109,6 +126,8 @@ function render() {
     button.classList.toggle('is-hit', hit); button.classList.toggle('is-miss', guessed && !hit);
     button.setAttribute('aria-label', `${c}${guessed?hit?', correct':', incorrect':', unguessed'}`);
   });
+  const missed = [...model.guessed].filter(c => !model.answer.includes(c));
+  $('#srMissed').textContent = missed.length ? missed.join('  ') : 'None yet';
   $('.sr-bindings').innerHTML = bindingArt(selected, model.misses);
   $('.sr-cracks').innerHTML = crackArt(model.progress);
   $('#srStage').setAttribute('aria-label', model.phase === 'won' ? `${selected.hero} shattered the ${selected.jutsu.toLowerCase()}. ${selected.captive} is safe.` : model.phase === 'lost' ? `${selected.enemy} completed the ${selected.jutsu.toLowerCase()}. ${selected.captive} is still trapped.` : `${selected.captive} is trapped. ${model.misses} of six restraint stages; ${Math.round(model.progress*100)} percent of the inscription solved. ${remaining} mistakes remain.`);
@@ -143,7 +162,7 @@ function guess(letter) {
     }
     finishTimer = window.setTimeout(()=>result(), motion.matches ? 0 : 1100);
   } else if (document.activeElement?.matches('[data-letter]:disabled')) {
-    $('#srKeyboard button:not(:disabled)')?.focus({preventScroll:true});
+    focusGuessInput();
   }
 }
 root.addEventListener('click', event=>{
@@ -164,11 +183,12 @@ export const shinobiRescue = {
     active = true; root.dataset.active = 'true';
     if (screen === 'choose') root.querySelector(`[data-shinobi="${selected.id}"]`).focus({preventScroll:true});
     else if (model.phase !== 'playing') result();
-    else $('#srKeyboard button:not(:disabled)')?.focus({preventScroll:true});
+    else focusGuessInput();
   },
   stop() {
     active = false; root.dataset.active = 'false'; clearEffects();
     if (screen === 'play' && model.phase !== 'playing') result(false);
   }
 };
+syncInputMode();
 choose();

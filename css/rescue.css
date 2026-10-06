@@ -1,5 +1,5 @@
 /* Shinobi Rescue: all game styles are scoped to the new arcade panel. */
-.game-modal[data-game="rescue"] .game-modal-content { width:min(1040px,100%); background:#10151e; border-color:#3b3942; padding:20px; }
+.game-modal[data-game="rescue"] .game-modal-content { width:min(960px,100%); background:#10151e; border-color:#3b3942; padding:20px; }
 .game-modal[data-game="rescue"] .game-modal-header { margin-bottom:12px; }
 .game-modal[data-game="rescue"] .game-heading h3 { color:#a7adba; font-size:11px; text-transform:uppercase; letter-spacing:.13em; }
 .rescue-game { --sr-accent:#ffba69; --sr-energy:#80e8ff; color:#f3efe9; font:14px/1.5 system-ui,sans-serif; }
@@ -17,7 +17,11 @@
 .sr-character[aria-pressed="true"] { background:color-mix(in srgb,var(--card-accent) 13%,#141925); border-color:var(--card-accent); box-shadow:inset 0 -2px var(--card-accent); }
 .sr-character:hover { border-color:var(--card-accent); }
 .sr-portrait { width:70px; height:78px; flex:0 0 70px; align-self:flex-end; background:radial-gradient(ellipse at bottom,var(--card-accent),transparent 75%); }
-.sr-portrait svg { width:100%; height:100%; display:block; transform:translateY(5px); }
+.sr-portrait { position:relative; background:#242635; }
+.sr-portrait-image { display:block; width:100%; height:100%; background-size:500% auto; background-position:17% 23%; background-repeat:no-repeat; }
+[data-shinobi="sasuke"] .sr-portrait-image { background-position:19% 18%; }
+[data-shinobi="sakura"] .sr-portrait-image { background-position:18% 25%; }
+[data-shinobi="kakashi"] .sr-portrait-image { background-position:19% 19%; }
 .sr-character-copy { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .sr-character strong { font-size:15px; }
 .sr-character small { font-size:10px; color:#b5b6c0; white-space:nowrap; }
@@ -28,7 +32,7 @@
 .sr-scene-top { position:absolute; top:17px; left:20px; right:20px; display:flex; justify-content:space-between; align-items:center; gap:12px; font:9px/1.5 ui-monospace,monospace; color:#e0d7d4; letter-spacing:.12em; text-shadow:0 1px 6px #10121c; }
 .sr-signal { display:flex; align-items:center; gap:6px; white-space:nowrap; }
 .sr-signal i { width:5px; height:5px; border-radius:50%; background:var(--sr-accent); box-shadow:0 0 10px var(--sr-accent); }
-.sr-nameplates { position:absolute; bottom:15px; left:0; right:0; display:grid; grid-template-columns:42% 18% 40%; pointer-events:none; }
+.sr-nameplates { position:absolute; bottom:15px; left:0; right:0; display:grid; grid-template-columns:46% 8% 46%; pointer-events:none; }
 .sr-nameplates span { display:flex; flex-direction:column; align-items:center; gap:2px; }
 .sr-nameplates small { font:8px/1.4 ui-monospace,monospace; letter-spacing:.18em; color:#aba8b6; }
 .sr-nameplates b { font-size:14px; font-weight:600; }
@@ -51,7 +55,8 @@
 .sr-pressure-track i.is-filled { background:#ee827e; box-shadow:0 0 12px #ee827e30; }
 .sr-puzzle-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:30px; align-items:center; }
 .sr-puzzle #srClue { color:#e2dfe4; font-size:14px; min-height:42px; margin:7px 0 14px; }
-.sr-word { display:flex; gap:5px; flex-wrap:wrap; }
+.sr-word { width:fit-content; max-width:100%; display:flex; gap:5px; flex-wrap:wrap; }
+.sr-word:focus-visible { outline:1px solid var(--sr-accent); outline-offset:6px; border-radius:4px; }
 .sr-word span { display:grid; place-items:center; width:clamp(22px,3vw,35px); height:41px; font:600 19px ui-monospace,monospace; background:#1a2330; border:1px solid #344251; border-bottom:2px solid #68798e; border-radius:4px; color:#8da0b5; }
 .sr-word .is-found { color:var(--sr-energy); border-color:color-mix(in srgb,var(--sr-energy) 40%,#273342); background:color-mix(in srgb,var(--sr-energy) 8%,#141c27); }
 .sr-word .is-revealed { color:#ff9a94; border-color:#aa6568; }
@@ -73,7 +78,7 @@
 .sr-footer summary { cursor:pointer; color:#c7ccd7; min-height:24px; }
 .sr-footer details p { padding:10px 0; text-align:left; line-height:1.7; font-size:12px; }
 .sr-reader { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
-.sr-impact-label { position:absolute; top:17%; left:24%; right:24%; text-align:center; font:600 11px/1.5 ui-monospace,monospace; color:var(--sr-energy); letter-spacing:.08em; opacity:0; text-shadow:0 2px 6px #10121c; }
+.sr-impact-label { position:absolute; top:9%; left:24%; right:24%; text-align:center; font:600 11px/1.5 ui-monospace,monospace; color:var(--sr-energy); letter-spacing:.08em; opacity:0; text-shadow:0 2px 6px #10121c; }
 .sr-miss .sr-impact-label { color:#ffd3ca; }
 .sr-hit .sr-impact-label,.sr-miss .sr-impact-label { animation:sr-label .65s ease-out; }
 .sr-prison { transform-box:fill-box; transform-origin:center; transition:opacity .5s; }
@@ -81,17 +86,17 @@
 .sr-bindings { transition:opacity .3s; }
 .sr-mote { animation:sr-drift 4s ease-in-out infinite alternate; }
 .sr-hit .sr-strike { animation:sr-strike .65s ease-out; }
-.sr-hit .sr-hero { animation:sr-lunge .6s ease-out; }
-.sr-miss .sr-captive { animation:sr-struggle .5s ease-out; }
+
+.sr-miss .sr-illustration { animation:sr-impact .45s ease-out; }
 .sr-miss .sr-prison { animation:sr-tighten .5s ease-out; }
 .rescue-game[data-phase="won"] .sr-prison { opacity:0; transform:scale(1.16); transition:opacity .6s .15s,transform .7s; }
 .rescue-game[data-phase="won"] .sr-shards { opacity:1; }
 .rescue-game[data-phase="won"] .sr-shards path { animation:sr-shatter .95s ease-out forwards; transform-box:fill-box; transform-origin:center; }
-.rescue-game[data-phase="won"] .sr-enemy { opacity:.2; transition:opacity 1s; }
-.rescue-game[data-phase="won"] .sr-captive { animation:sr-release 1s ease-out; }
+
+.rescue-game[data-phase="won"] .sr-rescue-light { animation:sr-release 1s ease-out; }
 .rescue-game[data-phase="won"] .sr-pressure-track i { background:var(--sr-energy); }
 .rescue-game[data-phase="lost"] .sr-prison { fill:#261f37; filter:brightness(.45); }
-.rescue-game[data-phase="lost"] .sr-captive { opacity:.25; transition:opacity .7s; }
+.rescue-game[data-phase="lost"] .sr-captive-veil { opacity:1; transition:opacity .7s; }
 .rescue-game[data-phase="lost"] .sr-stage { filter:saturate(.55); }
 .rescue-game[data-phase="lost"] .sr-cracks { opacity:.4; }
 .rescue-game[data-active="false"] *, .preview-rescue * { animation-play-state:paused!important; }
@@ -100,15 +105,26 @@
 @keyframes sr-drift { to { transform:translate(7px,-8px); opacity:.25; } }
 @keyframes sr-label { 0%{opacity:0;transform:translateY(8px)} 20%,75%{opacity:1} 100%{opacity:0;transform:translateY(-5px)} }
 @keyframes sr-strike { 0%{opacity:0;transform:translateX(-25px)} 30%{opacity:1} 65%{opacity:1;transform:translateX(58px)} 100%{opacity:0;transform:translateX(110px)} }
-@keyframes sr-lunge { 30%{transform:translate(17px,-3px)} }
-@keyframes sr-struggle { 25%{transform:translate(-3px,2px)} 50%{transform:translate(3px,5px)} 75%{transform:translate(-2px,2px)} }
+
+@keyframes sr-impact { 50%{filter:brightness(.75) saturate(.8)} }
 @keyframes sr-tighten { 50%{transform:scale(.96);filter:brightness(1.7)} }
 @keyframes sr-shatter { 0%{opacity:0} 15%{opacity:1} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--spin))} }
-@keyframes sr-release { 0%{filter:brightness(2)} 100%{filter:brightness(1)} }
-.rescue-game[data-screen="play"] .sr-scene-svg { aspect-ratio:2.5/1; }
+@keyframes sr-release { 20%{opacity:1} 100%{opacity:0} }
+.rescue-game[data-screen="play"] .sr-scene-svg { aspect-ratio:2/1; }
 .rescue-game[data-phase="won"] .sr-puzzle>.sr-eyebrow, .rescue-game[data-phase="lost"] .sr-puzzle>.sr-eyebrow,
 .rescue-game[data-phase="won"] #srClue, .rescue-game[data-phase="lost"] #srClue,
 .rescue-game[data-phase="won"] .sr-input, .rescue-game[data-phase="lost"] .sr-input { display:none; }
+.rescue-game[data-phase="won"] .sr-puzzle-layout, .rescue-game[data-phase="lost"] .sr-puzzle-layout { grid-template-columns:1fr; }
+/* Capability-based input: laptops/desktops type directly; touch keeps keys. */
+.sr-desktop-input { display:none; padding-left:25px; border-left:1px solid #343c48; }
+.sr-desktop-input #srTypeHint { font-size:13px; color:#dcdde2; margin-bottom:14px; }
+.sr-desktop-input .sr-missed-label { font:9px ui-monospace,monospace; color:#b6ad9d; letter-spacing:.12em; margin-bottom:6px; }
+.sr-desktop-input .sr-missed { font:14px ui-monospace,monospace; color:#f2aca7; letter-spacing:.18em; min-height:22px; }
+.sr-desktop-input>span { display:block; margin-top:10px; color:#939bad; font-size:10px; }
+.rescue-game[data-keyboard="physical"] .sr-input { display:none; }
+.rescue-game[data-keyboard="physical"] .sr-desktop-input { display:block; }
+.rescue-game[data-keyboard="physical"] .sr-puzzle-layout { grid-template-columns:minmax(0,1.6fr) minmax(180px,.8fr); }
+.rescue-game[data-phase="won"] .sr-desktop-input, .rescue-game[data-phase="lost"] .sr-desktop-input { display:none; }
 .rescue-game[data-phase="won"] .sr-puzzle-layout, .rescue-game[data-phase="lost"] .sr-puzzle-layout { grid-template-columns:1fr; }
 @media(max-width:650px) {
   .game-modal[data-game="rescue"] .game-modal-content { padding:13px; }
@@ -121,10 +137,10 @@
   .sr-character strong { font-size:13px; }
   .sr-character small { font-size:9px; }
   .sr-character-copy { gap:1px; }
-  .sr-scene-svg { width:128%; max-width:none; margin-left:-14%; aspect-ratio:2/1; }
+  .sr-scene-svg { width:100%; aspect-ratio:2/1; }
   .sr-scene-top { top:10px; left:10px; right:10px; font-size:7px; letter-spacing:.04em; }
   .sr-scene-top>span:first-child { max-width:46%; }
-  .sr-nameplates { bottom:10px; grid-template-columns:36% 30% 34%; }
+  .sr-nameplates { bottom:10px; grid-template-columns:46% 8% 46%; }
   .sr-nameplates b { font-size:11px; }
   .sr-nameplates small { font-size:7px; }
   .sr-briefing { grid-template-columns:1fr; gap:14px; padding-top:15px; }
@@ -132,10 +148,11 @@
   .sr-briefing p { font-size:12px; }
   .sr-deploy { align-items:stretch; }
   .sr-deploy>span { text-align:center; }
-  .sr-puzzle-layout { grid-template-columns:1fr; gap:17px; }
+  .sr-puzzle-layout, .rescue-game[data-keyboard="physical"] .sr-puzzle-layout { grid-template-columns:1fr; gap:17px; }
+  .sr-desktop-input { border-left:0; border-top:1px solid #343c48; padding:12px 0 0; }
   .sr-puzzle #srClue { min-height:0; font-size:13px; margin:5px 0 11px; }
   .sr-word { gap:4px; }
-  .sr-word span { width:calc((100% - 36px)/10); max-width:34px; height:36px; font-size:16px; }
+  .sr-word span { width:clamp(22px,7vw,32px); flex:0 0 clamp(22px,7vw,32px); height:36px; font-size:16px; }
   .sr-pressure { margin:12px 0 14px; }
   .sr-pressure>div:first-child { font-size:9px; }
   .sr-key-row { gap:4px; }
@@ -144,7 +161,7 @@
   .sr-result h5 { font-size:24px; }
   .sr-status { font-size:10px; }
   .sr-footer { font-size:9px; gap:10px; }
-  .sr-impact-label { font-size:8px; left:20%; right:20%; top:20%; }
+  .sr-impact-label { font-size:8px; left:20%; right:20%; top:12%; }
 }
 @media(prefers-reduced-motion:reduce) {
   .rescue-game *, .rescue-game *::before, .rescue-game *::after { animation:none!important; transition:none!important; }
