@@ -3,6 +3,7 @@ import { flappyBird } from './game-flappy.js';
 import { ghostbusters } from './game-ghosts.js';
 import { slimeCrossing } from './game-crossing.js';
 import { hunterRun } from './game-hunter.js';
+import { shinobiRescue } from './game-rescue.js';
 
 const toggle = document.getElementById('gameToggle');
 const footer = document.querySelector('.sidebar-footer');
@@ -16,6 +17,7 @@ const games = {
   flappy: { title: 'Flappy Bird', panel: document.getElementById('gameFlappyPanel'), controller: flappyBird },
   ghosts: { title: 'Ghostbusters', panel: document.getElementById('gameGhostPanel'), controller: ghostbusters },
   crossing: { title: 'Slime × NYC', panel: document.getElementById('gameCrossingPanel'), controller: slimeCrossing },
+  rescue: { title: 'Shinobi Rescue', panel: document.getElementById('gameRescuePanel'), controller: shinobiRescue },
   hunter: { title: 'Hunter × Hunter', panel: document.getElementById('gameHunterPanel'), controller: hunterRun }
 };
 let activeGame = null;
