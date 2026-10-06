@@ -1,5 +1,6 @@
 import { MISSIONS, MAX_MISSES, RescueModel, WordDeck } from './rescue-model.js';
-import { portrait, scene, bindingArt, crackArt } from './rescue-art.js';
+import { portrait, scene, setFrame, preloadSheet } from './rescue-art.js';
+import { STORIES, storyFrame, reaction } from './rescue-story.js';
 
 const root = document.getElementById('gameRescuePanel');
 const preview = document.getElementById('rescuePreview');
@@ -8,6 +9,8 @@ const deck = new WordDeck();
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const desktopPointer = window.matchMedia('(hover: hover) and (pointer: fine)');
 let showDesktopKeys = false;
+let introIndex = 0, idleTimer = 0, idleIndex = 0, beat = 0, loading = false;
+const seenIntros = new Set();
 let selected = MISSIONS[0], active = false, screen = 'choose', effectTimer = 0, finishTimer = 0;
 root.dataset.active = 'false';
 let records = {};
@@ -15,7 +18,7 @@ try {
   const saved = JSON.parse(localStorage.getItem('portfolio.shinobi-rescue.v1'));
   for (const mission of MISSIONS) records[mission.id] = Number.isSafeInteger(saved?.[mission.id]) && saved[mission.id] > 0 ? Math.min(99999, saved[mission.id]) : 0;
 } catch { /* Rescue counts remain available in this visit without storage. */ }
-if (preview) preview.innerHTML = scene(MISSIONS[0], 'rescue-preview');
+if (preview) preview.innerHTML = scene(MISSIONS[0]);
 
 root.innerHTML = `
   <div class="sr-heading"><div><span class="sr-eyebrow">NARUTO · A HANGMAN RESCUE</span><h4>Break the jutsu.</h4></div><button type="button" class="sr-text-button" id="srChoose" hidden>Change shinobi</button></div>
@@ -28,9 +31,14 @@ root.innerHTML = `
     <div class="sr-nameplates"><span><small>YOU</small><b id="srHeroName"></b></span><span><small id="srCaptiveState">TRAPPED</small><b id="srCaptiveName"></b></span><span><small>OPPONENT</small><b id="srEnemyName"></b></span></div>
     <div class="sr-impact-label" id="srImpact" aria-hidden="true"></div>
   </div>
+  <div id="srDialogue" class="sr-dialogue" hidden>
+    <span id="srSpeakerPortrait" class="sr-speaker-portrait" aria-hidden="true"></span>
+    <div class="sr-dialogue-copy"><span id="srSpeaker" class="sr-eyebrow"></span><p id="srLine" aria-live="polite" aria-atomic="true"></p></div>
+    <div class="sr-story-actions"><button type="button" id="srContinue" class="sr-story-next">Continue <span aria-hidden="true">→</span></button><button type="button" id="srSkip" class="sr-text-button">Skip opening</button></div>
+  </div>
   <div id="srBriefing" class="sr-briefing">
     <div><span class="sr-eyebrow" id="srMissionLabel"></span><h5 id="srMissionTitle"></h5><p id="srIntro"></p><p class="sr-rule">Correct letters crack the seal. Six wrong guesses complete it.</p></div>
-    <div class="sr-deploy"><button type="button" class="sr-primary" id="srBegin">Begin rescue <span aria-hidden="true">↗</span></button><button type="button" class="sr-text-button" id="srResume" hidden>Resume current rescue</button><span id="srRecord"></span></div>
+    <div class="sr-deploy"><button type="button" class="sr-primary" id="srBegin">Begin rescue <span aria-hidden="true">↗</span></button><button type="button" class="sr-text-button" id="srResume" hidden>Resume current rescue</button><span id="srRecord"></span><span id="srAssetStatus" role="status"></span></div>
   </div>
   <div id="srPlay" class="sr-play" hidden>
     <div class="sr-pressure"><div><span id="srJutsu"></span><strong id="srRemaining"></strong></div><div class="sr-pressure-track" aria-hidden="true">${Array.from({length:MAX_MISSES},()=>'<i></i>').join('')}</div></div>
@@ -40,9 +48,28 @@ root.innerHTML = `
     <p id="srStatus" class="sr-status" aria-hidden="true"></p><p id="srAnnouncement" class="sr-reader" role="status" aria-live="polite" aria-atomic="true"></p>
     <div id="srResult" class="sr-result" hidden><div><span class="sr-eyebrow" id="srResultTag"></span><h5 id="srResultTitle"></h5><p id="srResultText"></p></div><button type="button" class="sr-primary" id="srNext">Next rescue <span aria-hidden="true">↗</span></button></div>
   </div>
-  <div class="sr-footer"><span>Original fan encounters · Techniques adapted for play</span><details><summary>How to play</summary><p>Use the clue to guess the hidden word, one letter at a time. Every matching letter is revealed together. Correct guesses fracture the prison; each wrong guess advances the restraint. Save your teammate before six mistakes. Repeated letters cost nothing. Escape closes the arcade. Changing missions starts a new word; you can resume before starting another rescue.</p><button type="button" id="srToggleKeys" class="sr-text-button" aria-pressed="false">Show letter keys on desktop</button></details></div>
+  <div class="sr-footer"><span>Original fan encounters · Techniques adapted for play</span><details><summary>How to play</summary><p>Use the clue to guess the hidden word, one letter at a time. Every matching letter is revealed together. Correct guesses fracture the prison; each wrong guess advances the restraint. Save your teammate before six mistakes. Repeated letters cost nothing. Escape closes the arcade. The opening can be skipped. Dialogue has no time limit. Three illustrated threat levels and three damage levels show your progress. Changing missions starts a new word; you can resume before starting another rescue.</p><button type="button" id="srToggleKeys" class="sr-text-button" aria-pressed="false">Show letter keys on desktop</button></details></div>
 `;
 const $ = selector => root.querySelector(selector);
+function stopIdle() { clearTimeout(idleTimer); idleTimer = 0; }
+function say(line) {
+  const [role, words] = line;
+  $('#srSpeaker').textContent = selected[role];
+  $('#srLine').textContent = words;
+  $('#srSpeakerPortrait').style.backgroundImage = `url('images/shinobi/${selected.id}.webp')`;
+  $('#srSpeakerPortrait').dataset.role = role;
+  $('#srDialogue').dataset.speaker = role;
+}
+function scheduleIdle(reset = false) {
+  stopIdle(); if (reset) idleIndex = 0;
+  if (!active || document.hidden || screen !== 'play' || model.phase !== 'playing' || idleIndex >= 2) return;
+  idleTimer = window.setTimeout(() => {
+    if (active && !document.hidden && screen === 'play' && model.phase === 'playing') {
+      say(STORIES[selected.id].idle[idleIndex++]); scheduleIdle();
+    }
+  }, 18000);
+}
+
 function usesLetterKeys() { return !desktopPointer.matches || showDesktopKeys; }
 function focusGuessInput() {
   const target = usesLetterKeys() ? $('#srKeyboard button:not(:disabled)') : $('#srWord');
@@ -60,6 +87,7 @@ desktopPointer.addEventListener('change', syncInputMode);
 $('#srToggleKeys').addEventListener('click', () => { showDesktopKeys = !showDesktopKeys; syncInputMode(); });
 
 function clearEffects() {
+  stopIdle();
   clearTimeout(effectTimer); clearTimeout(finishTimer);
   effectTimer = finishTimer = 0;
   root.classList.remove('sr-hit', 'sr-miss');
@@ -68,18 +96,19 @@ function setTheme(mission) {
   root.dataset.mission = mission.id;
   root.style.setProperty('--sr-accent', mission.color);
   root.style.setProperty('--sr-energy', mission.energy);
-  $('#srArt').innerHTML = scene(mission);
+  $('#srArt').innerHTML = scene(mission, screen === 'play' ? 'focus' : 'opening');
   $('#srLocation').textContent = mission.location;
   $('#srHeroName').textContent = mission.hero;
   $('#srCaptiveName').textContent = mission.captive;
   $('#srCaptiveState').textContent = 'TRAPPED';
   $('#srEnemyName').textContent = mission.enemy;
   $('#srStage').setAttribute('aria-label', `${mission.hero} faces ${mission.enemy}. ${mission.captive} is trapped in a ${mission.jutsu.toLowerCase()}.`);
-  $('.sr-bindings').innerHTML = bindingArt(mission, 0);
+  void preloadSheet(mission.id).catch(() => {});
 }
 function choose(mission = selected) {
   clearEffects(); selected = mission; screen = 'choose';
   root.dataset.phase = 'ready'; root.dataset.screen = screen;
+  $('#srDialogue').hidden = true; $('#srAssetStatus').textContent = '';
   $('#srCharacters').hidden = false; $('#srBriefing').hidden = false; $('#srPlay').hidden = true; $('#srChoose').hidden = true;
   root.querySelectorAll('[data-shinobi]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.shinobi === mission.id)));
   setTheme(mission);
@@ -95,18 +124,49 @@ function choose(mission = selected) {
 function openPlay() {
   clearEffects(); screen = 'play'; root.dataset.screen = screen;
   $('#srCharacters').hidden = true; $('#srBriefing').hidden = true; $('#srPlay').hidden = false; $('#srChoose').hidden = false;
+  $('#srDialogue').hidden = false; $('.sr-story-actions').hidden = true;
   $('#srResult').hidden = true; $('#srKeyboard').hidden = false; $('.sr-key-help').hidden = false;
   setTheme(selected); render();
+  say(["captive", "I’m trapped. Break the inscription before the jutsu takes hold."]);
+  scheduleIdle(true);
   focusGuessInput();
 }
 function announce(message, word = '') {
   $('#srStatus').textContent = message;
   $('#srAnnouncement').textContent = message + (word ? ` Word: ${word}.` : '');
 }
-function begin() {
-  model.start(selected.id, deck.next(selected)); openPlay();
+async function begin() {
+  if (loading || !active) return;
+  const mission = selected; loading = true;
+  $('#srBegin').disabled = true; $('#srNext').disabled = true;
+  $('#srAssetStatus').textContent = 'Preparing the rescue scene…';
+  try { await preloadSheet(mission.id); }
+  catch {
+    $('#srAssetStatus').textContent = 'The rescue artwork could not load. Try again.';
+    if (screen === 'play') announce('The rescue artwork could not load. Try again.');
+    loading = false; $('#srBegin').disabled = false; $('#srNext').disabled = false; return;
+  }
+  loading = false; $('#srBegin').disabled = false; $('#srNext').disabled = false; $('#srAssetStatus').textContent = '';
+  if (!active || selected !== mission) return;
+  model.start(selected.id, deck.next(selected)); beat = 0;
+  if (seenIntros.has(selected.id)) { openPlay(); return; }
+  clearEffects(); screen = 'intro'; root.dataset.screen = screen; root.dataset.phase = 'ready';
+  $('#srCharacters').hidden = true; $('#srBriefing').hidden = true; $('#srPlay').hidden = true; $('#srChoose').hidden = false;
+  $('#srDialogue').hidden = false; $('.sr-story-actions').hidden = false;
+  setTheme(selected); introIndex = 0; showIntro();
+}
+function showIntro() {
+  say(STORIES[selected.id].intro[introIndex]);
+  $('#srContinue').firstChild.textContent = introIndex === 2 ? 'Break the jutsu ' : 'Continue ';
+  $('#srContinue').focus({preventScroll:true});
+}
+function enterRescue() {
+  seenIntros.add(selected.id); openPlay();
   announce(`${selected.captive} is trapped. Solve the inscription before six mistakes.`);
 }
+$('#srContinue').addEventListener('click', () => { if (introIndex < 2) { introIndex++; showIntro(); } else enterRescue(); });
+$('#srSkip').addEventListener('click', enterRescue);
+
 function render() {
   root.dataset.phase = model.phase;
   $('#srCaptiveState').textContent = model.phase === 'won' ? 'RESCUED' : 'TRAPPED';
@@ -128,14 +188,14 @@ function render() {
   });
   const missed = [...model.guessed].filter(c => !model.answer.includes(c));
   $('#srMissed').textContent = missed.length ? missed.join('  ') : 'None yet';
-  $('.sr-bindings').innerHTML = bindingArt(selected, model.misses);
-  $('.sr-cracks').innerHTML = crackArt(model.progress);
+  setFrame($('.sr-vn-composition'), storyFrame(model.phase, model.misses, model.progress));
   $('#srStage').setAttribute('aria-label', model.phase === 'won' ? `${selected.hero} shattered the ${selected.jutsu.toLowerCase()}. ${selected.captive} is safe.` : model.phase === 'lost' ? `${selected.enemy} completed the ${selected.jutsu.toLowerCase()}. ${selected.captive} is still trapped.` : `${selected.captive} is trapped. ${model.misses} of six restraint stages; ${Math.round(model.progress*100)} percent of the inscription solved. ${remaining} mistakes remain.`);
 }
 function result(focus = true) {
   finishTimer = 0;
   if (screen !== 'play' || model.phase === 'playing') return;
   const won = model.phase === 'won';
+  say(STORIES[selected.id][won ? 'won' : 'lost']);
   $('#srResult').hidden = false; $('#srKeyboard').hidden = true; $('.sr-key-help').hidden = true;
   $('#srResultTag').textContent = won ? `${selected.attack.toUpperCase()} · SEAL BROKEN` : 'MISSION FAILED';
   $('#srResultTitle').textContent = won ? `${selected.captive} is safe.` : 'The jutsu took hold.';
@@ -148,6 +208,8 @@ function guess(letter) {
   const outcome = model.guess(letter);
   if (outcome === 'ignored') return;
   clearEffects(); render();
+  say(reaction(selected.id, model.phase === 'playing' ? outcome : model.phase, model.misses, model.progress, beat++));
+  if (model.phase === 'playing') scheduleIdle(true);
   // Restart the short CSS response without an animation loop or blocked input.
   void root.offsetWidth;
   root.classList.add(outcome==='hit'?'sr-hit':'sr-miss');
@@ -182,13 +244,17 @@ export const shinobiRescue = {
   start() {
     active = true; root.dataset.active = 'true';
     if (screen === 'choose') root.querySelector(`[data-shinobi="${selected.id}"]`).focus({preventScroll:true});
+    else if (screen === 'intro') showIntro();
     else if (model.phase !== 'playing') result();
-    else focusGuessInput();
+    else { focusGuessInput(); scheduleIdle(); }
   },
   stop() {
     active = false; root.dataset.active = 'false'; clearEffects();
     if (screen === 'play' && model.phase !== 'playing') result(false);
   }
 };
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopIdle(); else scheduleIdle(); });
+window.addEventListener('blur', stopIdle);
+window.addEventListener('focus', () => scheduleIdle());
 syncInputMode();
 choose();
